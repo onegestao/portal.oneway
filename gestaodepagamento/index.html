@@ -669,8 +669,27 @@ function openPanel(id){
   pi.className='ph-ico'+(doc.compFileId?' comp':'');
   const isOv=doc.due&&new Date(doc.due+'T00:00:00')<new Date()&&doc.status!=='pago';
   document.getElementById('pMeta').innerHTML=`
-    <div class="pmi"><div class="pml">Competência</div><div class="pmv">${ML[doc.month]||doc.month} / 2025</div></div>
-    <div class="pmi"><div class="pml">Vencimento</div><div class="pmv" style="${isOv?'color:var(--s-vencido)':''}">${doc.due?fmtBR(doc.due):'Não definido'}</div></div>
+    <div class="pmi">
+      <div class="pml">Competência</div>
+      <select id="pMonth" style="width:100%;margin-top:4px;background:var(--ct-surface);border:1px solid var(--ct-border);border-radius:7px;color:var(--ct-text-1);font-family:var(--font-b);font-size:13px;padding:7px 10px;outline:none;transition:border-color .2s;appearance:none" onfocus="this.style.borderColor='var(--ow-orange)'" onblur="this.style.borderColor='var(--ct-border)'">
+        <option value="01" ${doc.month==='01'?'selected':''}>Jan / 2025</option>
+        <option value="02" ${doc.month==='02'?'selected':''}>Fev / 2025</option>
+        <option value="03" ${doc.month==='03'?'selected':''}>Mar / 2025</option>
+        <option value="04" ${doc.month==='04'?'selected':''}>Abr / 2025</option>
+        <option value="05" ${doc.month==='05'?'selected':''}>Mai / 2025</option>
+        <option value="06" ${doc.month==='06'?'selected':''}>Jun / 2025</option>
+        <option value="07" ${doc.month==='07'?'selected':''}>Jul / 2025</option>
+        <option value="08" ${doc.month==='08'?'selected':''}>Ago / 2025</option>
+        <option value="09" ${doc.month==='09'?'selected':''}>Set / 2025</option>
+        <option value="10" ${doc.month==='10'?'selected':''}>Out / 2025</option>
+        <option value="11" ${doc.month==='11'?'selected':''}>Nov / 2025</option>
+        <option value="12" ${doc.month==='12'?'selected':''}>Dez / 2025</option>
+      </select>
+    </div>
+    <div class="pmi">
+      <div class="pml">Vencimento</div>
+      <input type="date" id="pDue" value="${doc.due||''}" style="width:100%;margin-top:4px;background:var(--ct-surface);border:1px solid var(--ct-border);border-radius:7px;color:var(--ct-text-1);font-family:var(--font-b);font-size:13px;padding:7px 10px;outline:none;transition:border-color .2s" onfocus="this.style.borderColor='var(--ow-orange)'" onblur="this.style.borderColor='var(--ct-border)'">
+    </div>
     <div class="pmi"><div class="pml">Tamanho</div><div class="pmv">${doc.size||'—'}</div></div>
     <div class="pmi"><div class="pml">Status</div><div class="pmv"><span class="stb ${stCls(doc.status)}">${stLbl(doc.status)}</span></div></div>
     <div class="pmi" style="grid-column:1/-1">
@@ -731,13 +750,17 @@ async function savePanel(){
   const doc=docs.find(d=>d.id===activeId);if(!doc)return;
   const btn=document.getElementById('btnPanelSave');
   btn.disabled=true;
-  const nota=document.getElementById('pNota')?.value.trim();
+  const nota  = document.getElementById('pNota')?.value.trim();
+  const month = document.getElementById('pMonth')?.value;
+  const due   = document.getElementById('pDue')?.value;
   showLoading(true,'Salvando alterações...');
   try{
-    const r=await api({action:'updateRecord',id:activeId,status:panelSt,nota});
+    const r=await api({action:'updateRecord',id:activeId,status:panelSt,nota,month,due});
     if(r.ok){
       doc.status=panelSt;
-      if(nota!==undefined)doc.nota=nota;
+      if(nota  !==undefined) doc.nota  = nota;
+      if(month !==undefined) doc.month = month;
+      if(due   !==undefined) doc.due   = due;
       renderDocs();
       openPanel(activeId);
       showToast('Alterações salvas!');
