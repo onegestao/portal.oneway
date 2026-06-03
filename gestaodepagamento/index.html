@@ -150,10 +150,30 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
 .dab:hover{background:var(--ow-orange-light);color:var(--ow-orange)}
 .dab.del:hover{background:var(--s-vencido-bg);color:var(--s-vencido)}
 
-/* LIST VIEW */
-.dg.lv .dc{display:flex;flex-direction:row;border-radius:8px}
-.dg.lv .dc-top{flex:1;border-bottom:none;border-right:1px solid var(--ct-bg)}
-.dg.lv .dc-bot{min-width:200px;justify-content:flex-end;gap:14px}
+/* TABLE VIEW (list mode) */
+.docs-table{width:100%;border-collapse:collapse;background:var(--ct-surface);border-radius:10px;overflow:hidden;border:1px solid var(--ct-border)}
+.docs-table thead tr{background:#EFEFEF;border-bottom:2px solid var(--ct-border)}
+.docs-table thead th{padding:10px 14px;font-size:10px;font-weight:700;color:var(--ct-text-3);text-transform:uppercase;letter-spacing:.8px;text-align:left;white-space:nowrap;font-family:var(--font-m)}
+.docs-table tbody tr{border-bottom:1px solid var(--ct-bg);transition:background .15s;cursor:pointer}
+.docs-table tbody tr:last-child{border-bottom:none}
+.docs-table tbody tr:hover{background:var(--ow-orange-light)}
+.docs-table tbody td{padding:10px 14px;font-size:12.5px;color:var(--ct-text-1);vertical-align:middle}
+.dt-ico{width:36px;height:36px;border-radius:7px;background:var(--ow-orange-light);color:var(--ow-orange);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.dt-ico.hc{background:var(--s-pago-bg);color:var(--s-pago)}
+.dt-name{font-weight:700;color:var(--ct-text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.dt-sub{font-size:10px;color:var(--ct-text-3);margin-top:2px;font-weight:500}
+.dt-nota{font-size:11px;color:var(--ct-text-2);font-style:italic;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dt-mono{font-family:var(--font-m);font-size:11px;color:var(--ct-text-2)}
+.dt-ov{color:var(--s-vencido)!important;font-weight:700}
+.dt-status-cell{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.dt-eye{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;background:var(--ow-orange-light);color:var(--ow-orange);border:none;cursor:pointer;transition:.15s;font-size:13px;flex-shrink:0}
+.dt-eye:hover{background:var(--ow-orange);color:#fff}
+.dt-eye.gr{background:var(--s-pago-bg);color:var(--s-pago)}
+.dt-eye.gr:hover{background:var(--s-pago);color:#fff}
+.dt-acts{display:flex;gap:3px}
+.dt-btn{background:none;border:none;color:var(--ct-text-3);font-size:14px;padding:5px 6px;border-radius:5px;cursor:pointer;transition:.15s}
+.dt-btn:hover{background:var(--ow-orange-light);color:var(--ow-orange)}
+.dt-btn.del:hover{background:var(--s-vencido-bg);color:var(--s-vencido)}
 
 /* OVERLAY */
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
@@ -277,7 +297,6 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
     <div class="hdr-divider"></div>
     <span class="hdr-fname" id="hFname">Todos os Arquivos</span>
     <div class="hdr-right">
-      <select class="m-sel" id="monthFilter" onchange="renderDocs()"></select>
       <button class="btn-up" onclick="openUpModal()"><i class="ph-bold ph-upload-simple"></i> Enviar Arquivo</button>
     </div>
   </div>
@@ -328,8 +347,33 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
         <div class="sc"><div class="si ic-bl"><i class="ph-fill ph-calendar-check"></i></div><div><div class="sv" id="st-pd">0</div><div class="sl">Programados</div></div></div>
         <div class="sc"><div class="si ic-re"><i class="ph-fill ph-warning-circle"></i></div><div><div class="sv" id="st-ve">0</div><div class="sl">Vencidos</div></div></div>
       </div>
+      <div class="dz" id="dropZone">
+        <i class="ph-fill ph-cloud-arrow-up"></i>
+        <p>Arraste arquivos aqui <span style="color:var(--ct-text-3)">(PDF, Excel, CSV)</span></p>
+      </div>
       <div class="tb">
-        <div class="srch"><i class="ph-bold ph-magnifying-glass"></i><input type="text" id="srchIn" placeholder="Buscar arquivo..." oninput="renderDocs()"></div>
+        <div class="srch"><i class="ph-bold ph-magnifying-glass"></i><input type="text" id="srchIn" placeholder="Nome do arquivo..." oninput="renderDocs()"></div>
+        <select class="fslt" id="catFilter" onchange="renderDocs()">
+          <option value="">Todas as categorias</option>
+          <option value="das">DAS — Simples Nacional</option>
+          <option value="fgts">FGTS</option>
+          <option value="darf">DARF / IRRF</option>
+          <option value="inss">INSS / GPS</option>
+          <option value="folha">Folha de Pagamento</option>
+          <option value="adiantamento">Adiantamento</option>
+          <option value="rescisao">Rescisões</option>
+          <option value="ferias">Férias</option>
+          <option value="decimo">13º Salário</option>
+          <option value="vr">Vale Refeição / Alimentação</option>
+          <option value="vt">Vale Transporte</option>
+          <option value="seguro">Seguro de Vida</option>
+          <option value="convenio">Convênios Médicos</option>
+          <option value="gym">TotalPass / Gympass / Wellhub</option>
+          <option value="odonto">Plano Odontológico</option>
+          <option value="nf">Notas Fiscais</option>
+          <option value="outros">Outros</option>
+        </select>
+        <select class="fslt" id="compFilter" onchange="renderDocs()"></select>
         <select class="fslt" id="stFilter" onchange="renderDocs()">
           <option value="">Todos os status</option>
           <option value="programar">🟠 A Programar</option>
@@ -337,13 +381,13 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
           <option value="pago">🟢 Pagos</option>
           <option value="vencido">🔴 Vencidos</option>
         </select>
+        <div class="srch"><i class="ph-bold ph-note"></i><input type="text" id="notaFilter" placeholder="Filtrar nota..." oninput="renderDocs()"></div>
         <button class="btn-refresh" onclick="loadDocs()" title="Atualizar"><i class="ph-bold ph-arrows-clockwise"></i> Atualizar</button>
         <div class="vt">
           <button class="vb active" id="gbtn" onclick="setView('grid')"><i class="ph-bold ph-squares-four"></i></button>
           <button class="vb" id="lbtn" onclick="setView('list')"><i class="ph-bold ph-list-bullets"></i></button>
         </div>
       </div>
-      <div class="dz" id="dropZone"><i class="ph-fill ph-cloud-arrow-up"></i><p>Arraste PDFs aqui ou <strong onclick="openUpModal()">clique para enviar</strong></p></div>
       <div class="empty" id="emptyEl"><i class="ph-fill ph-folder-open"></i><div class="empty-t">Nenhum arquivo encontrado</div><div class="empty-s">Envie um PDF usando o botão "Enviar Arquivo".</div></div>
       <div class="dg" id="docsGrid"></div>
     </div>
@@ -355,10 +399,11 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
   <div class="modal">
     <div class="mhd"><span class="mt">Enviar Arquivo</span><button class="mc" onclick="closeUpModal()"><i class="ph-bold ph-x"></i></button></div>
     <div class="mdp" id="mdp" onclick="document.getElementById('fileIn').click()">
-      <i class="ph-fill ph-file-pdf"></i>
-      <p><strong>Clique ou arraste</strong> o arquivo PDF aqui<br><small style="color:#bbb;font-size:11px">Suporta PDF · Máx 30 MB por arquivo</small></p>
+      <i class="ph-fill ph-files"></i>
+      <p><strong>Clique ou arraste</strong> o arquivo aqui<br>
+      <small style="color:#bbb;font-size:11px">PDF, Excel (.xlsx), CSV · Máx 30 MB por arquivo</small></p>
     </div>
-    <input type="file" id="fileIn" accept=".pdf" multiple style="display:none" onchange="onFileSelect(event)">
+    <input type="file" id="fileIn" accept=".pdf,.xlsx,.xls,.ods,.csv" multiple style="display:none" onchange="onFileSelect(event)">
     <div id="fpArea"></div>
     <div class="fr"><label class="fl">Categoria / Pasta</label>
       <select class="fi-sel" id="mCat">
@@ -375,7 +420,9 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
     </div>
     <div class="fr3">
       <div><label class="fl">Competência</label>
-        <select class="fi-sel" id="mMon"></select>
+        <input type="text" class="fi-in" id="mMon" placeholder="Ex: 06/2026" maxlength="7"
+          oninput="fmtMonthInput(this)"
+          style="font-family:var(--font-m);letter-spacing:.5px">
       </div>
       <div><label class="fl">Vencimento</label><input type="date" class="fi-in" id="mDue"></div>
       <div><label class="fl">Status Inicial</label>
@@ -428,7 +475,7 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
   </div>
 </div>
 
-<input type="file" id="compIn" accept=".pdf,.png,.jpg,.jpeg" style="display:none" onchange="onCompSel(event)">
+<input type="file" id="compIn" accept=".pdf,.xlsx,.xls,.ods,.csv,.png,.jpg,.jpeg" style="display:none" onchange="onCompSel(event)">
 <div class="toast" id="toast"><i id="tIco" class="ph-fill ph-check-circle"></i><span id="tMsg"></span></div>
 
 <!-- PDF VIEWER -->
@@ -464,6 +511,23 @@ const CI={
 };
 const MN=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
+// Detecta tipo pelo nome do arquivo
+function fileExt(name){ return ((name||'').split('.').pop()||'').toLowerCase(); }
+function fileIcon(name){
+  const e=fileExt(name);
+  if(e==='pdf')                         return '📄';
+  if(['xlsx','xls','ods'].includes(e))  return '📊';
+  if(e==='csv')                         return '📋';
+  if(['doc','docx'].includes(e))        return '📝';
+  if(['png','jpg','jpeg','gif'].includes(e)) return '🖼️';
+  return '📎';
+}
+function isViewableInFrame(name){
+  // Google Drive preview suporta estes tipos nativamente
+  const e=fileExt(name);
+  return ['pdf','xlsx','xls','ods','csv','doc','docx','png','jpg','jpeg'].includes(e);
+}
+
 // Gera opções de mês dinamicamente: Jan/2025 até 18 meses no futuro
 function genMonthOptions(selected='', includeAll=false) {
   const start = new Date(2025, 0);
@@ -481,15 +545,54 @@ function genMonthOptions(selected='', includeAll=false) {
   return html;
 }
 
-// Formata valor de mês para exibição: "05/2025" → "Mai/2025"
+// Formata qualquer valor de mês para exibição: "05/2026" ou ISO → "Mai/2026"
 function fmtMonth(m) {
-  if(!m) return '—';
-  if(m.includes('/')) {
-    const [mm,yyyy] = m.split('/');
-    return (MN[parseInt(mm)-1]||mm)+'/'+yyyy;
+  if(m === null || m === undefined || m === '') return '—';
+  m = String(m).trim();
+  if(!m || m === 'undefined') return '—';
+  // ISO datetime (Sheets converteu "05/2026" em data automaticamente)
+  if(m.length > 7 && (m.includes('T') || /^\d{4}-\d{2}-\d{2}/.test(m))) {
+    try {
+      const d = new Date(m);
+      if(!isNaN(d.getTime())) return MN[d.getUTCMonth()] + '/' + d.getUTCFullYear();
+    } catch(e) {}
   }
-  // legado: só "05"
-  return (MN[parseInt(m)-1]||m)+'/2025';
+  // Formato MM/YYYY
+  if(m.includes('/')) {
+    const p = m.split('/');
+    if(p.length >= 2 && p[p.length-1].length === 4) {
+      const mm = parseInt(p[0]);
+      if(mm >= 1 && mm <= 12) return (MN[mm-1]||p[0]) + '/' + p[p.length-1];
+    }
+  }
+  // Legado: só número "05"
+  const n = parseInt(m);
+  if(n >= 1 && n <= 12) return (MN[n-1]||m) + '/2025';
+  return m;
+}
+
+// Retorna valor bruto editável "MM/AAAA" de qualquer formato armazenado
+function rawMonth(m) {
+  if(!m) return '';
+  m = String(m).trim();
+  if(/^\d{1,2}\/\d{4}$/.test(m)) return m;
+  if(m.length > 7 && (m.includes('T') || /^\d{4}-\d{2}-\d{2}/.test(m))) {
+    try {
+      const d = new Date(m);
+      if(!isNaN(d.getTime()))
+        return String(d.getUTCMonth()+1).padStart(2,'0') + '/' + d.getUTCFullYear();
+    } catch(e) {}
+  }
+  const n = parseInt(m);
+  if(n >= 1 && n <= 12) return String(n).padStart(2,'0') + '/2025';
+  return m;
+}
+
+// Auto-formata o campo de texto de competência enquanto digita: "052026" → "05/2026"
+function fmtMonthInput(el) {
+  let v = el.value.replace(/\D/g,'');
+  if(v.length > 2) v = v.slice(0,2) + '/' + v.slice(2,6);
+  el.value = v;
 }
 
 let docs=[], activeFolder='all', viewMode='grid', pendFiles=[], activeId=null, panelSt=null;
@@ -523,45 +626,75 @@ async function loadDocs() {
 
 // ── Render ────────────────────────────────────────
 function getFiltered() {
-  const q  = document.getElementById('srchIn').value.toLowerCase();
-  const mo = document.getElementById('monthFilter').value;
-  const st = document.getElementById('stFilter').value;
+  const q    = document.getElementById('srchIn').value.toLowerCase();
+  const mo   = document.getElementById('compFilter').value;
+  const st   = document.getElementById('stFilter').value;
+  const cat  = document.getElementById('catFilter').value;
+  const nota = document.getElementById('notaFilter').value.toLowerCase();
   return docs.filter(d =>
     (activeFolder==='all' || d.category===activeFolder)
-    && (!q  || d.name.toLowerCase().includes(q))
-    && (!mo || d.month===mo)
-    && (!st || d.status===st)
+    && (!q    || (d.name||'').toLowerCase().includes(q))
+    && (!mo   || rawMonth(d.month) === mo)
+    && (!st   || d.status===st)
+    && (!cat  || d.category===cat)
+    && (!nota || (d.nota||'').toLowerCase().includes(nota))
   );
 }
 
 function renderDocs() {
-  const list = getFiltered();
-  const grid = document.getElementById('docsGrid');
-  const empty= document.getElementById('emptyEl');
+  const list  = getFiltered();
+  const grid  = document.getElementById('docsGrid');
+  const empty = document.getElementById('emptyEl');
   document.getElementById('hFname').textContent = FL[activeFolder]||'Arquivos';
   updStats(); updCounts();
-  if (!list.length) { grid.innerHTML=''; empty.classList.add('vis'); return; }
+
+  if (!list.length) {
+    grid.innerHTML = '';
+    empty.classList.add('vis');
+    return;
+  }
   empty.classList.remove('vis');
-  grid.innerHTML = list.map((d,i) => {
-    const hc = !!d.compFileId;
-    const due = d.due ? fmtBR(d.due) : '—';
-    const isOv = d.due && new Date(d.due+'T00:00:00') < new Date() && d.status!=='pago';
+
+  try {
+    grid.innerHTML = viewMode === 'list' ? renderTable(list) : renderGrid(list);
+  } catch(e) {
+    console.error('Erro ao renderizar:', e);
+    grid.innerHTML = `<div style="padding:20px;background:#fee2e2;border-radius:8px;color:#dc2626;font-size:13px;font-weight:600">
+      <i class="ph-fill ph-warning-circle"></i> Erro ao exibir registros: ${e.message}.<br>
+      <small style="font-weight:400">Abra o Console do navegador (F12) para mais detalhes.</small>
+    </div>`;
+  }
+}
+
+function renderGrid(list) {
+  return list.map((d,i) => {
+    const hc     = !!(d.compFileId && d.compFileId !== '');
+    const due    = d.due   ? fmtBR(d.due) : '—';
+    const name   = d.name  || '(sem nome)';
+    const cat    = d.category || 'outros';
+    const status = d.status   || 'programar';
+    const nota   = d.nota  || '';
+    const month  = d.month || '';
+    const isOv   = d.due && d.status !== 'pago' && new Date(d.due+'T00:00:00') < new Date();
+    const ico    = hc ? '✅' : fileIcon(name);
     return `<div class="dc" style="animation-delay:${i*.04}s" onclick="openPanel('${d.id}')">
       <div class="dc-top">
-        <div class="dc-ico${hc?' hc':''}">${CI[d.category]||'📄'}</div>
+        <div class="dc-ico${hc?' hc':''}">${ico}</div>
         <div class="dc-info">
-          <div class="dc-name" title="${esc(d.name)}">${esc(d.name)}</div>
-          <div class="dc-cat">${FL[d.category]||d.category}</div>
+          <div class="dc-name" title="${esc(name)}">${esc(name)}</div>
+          <div class="dc-cat">${FL[cat]||cat}</div>
           <div class="dc-meta">
-            <span class="dmi"><i class="ph-bold ph-calendar"></i>${fmtMonth(d.month)}</span>
-            <span class="dmi" style="${isOv?'color:var(--s-vencido)':''}"><i class="ph-bold ph-alarm"></i>Venc: ${due}</span>
+            <span class="dmi"><i class="ph-bold ph-calendar"></i>${fmtMonth(month)}</span>
+            <span class="dmi" style="${isOv?'color:var(--s-vencido)':''}">
+              <i class="ph-bold ph-alarm"></i>Venc: ${due}
+            </span>
             ${hc?'<span class="dmi" style="color:var(--s-pago)"><i class="ph-fill ph-seal-check"></i>Comprovante</span>':''}
           </div>
-          ${d.nota?`<div class="dc-nota">${esc(d.nota)}</div>`:''}
+          ${nota?`<div class="dc-nota">${esc(nota)}</div>`:''}
         </div>
       </div>
       <div class="dc-bot">
-        <span class="stb ${stCls(d.status)}"><span class="stb-dot"></span>${stLbl(d.status)}</span>
+        <span class="stb ${stCls(status)}"><span class="stb-dot"></span>${stLbl(status)}</span>
         <div class="da">
           <button class="dab" title="Abrir" onclick="event.stopPropagation();openPanel('${d.id}')"><i class="ph-bold ph-arrow-square-out"></i></button>
           <button class="dab del" title="Excluir" onclick="event.stopPropagation();delDoc('${d.id}')"><i class="ph-bold ph-trash"></i></button>
@@ -569,6 +702,70 @@ function renderDocs() {
       </div>
     </div>`;
   }).join('');
+}
+
+function renderTable(list) {
+  const rows = list.map(d => {
+    const hc     = !!(d.compFileId && d.compFileId !== '');
+    const name   = d.name  || '(sem nome)';
+    const cat    = d.category || 'outros';
+    const status = d.status   || 'programar';
+    const nota   = d.nota  || '';
+    const month  = d.month || '';
+    const due    = d.due   ? fmtBR(d.due) : '—';
+    const isOv   = d.due && d.status !== 'pago' && new Date(d.due+'T00:00:00') < new Date();
+    const ico    = hc ? '✅' : fileIcon(name);
+
+    // Ícone de olho — abre o boleto se pago, ou comprovante se tiver
+    const eyeBtn = d.fileUrl
+      ? `<button class="dt-eye${hc?' gr':''}" title="${hc?'Abrir Comprovante':'Abrir Boleto'}"
+           onclick="event.stopPropagation();openFile('${hc?d.compFileUrl:d.fileUrl}','${esc(hc?d.compName||'Comprovante':name)}','${hc?'comp':'boleto'}')">
+           <i class="ph-bold ph-eye"></i>
+         </button>` : '';
+
+    return `<tr onclick="openPanel('${d.id}')">
+      <td><div class="dt-ico${hc?' hc':''}">${ico}</div></td>
+      <td>
+        <div style="font-size:11px;font-weight:700;color:var(--ct-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px">${FL[cat]||cat}</div>
+      </td>
+      <td>
+        <div class="dt-name" title="${esc(name)}">${esc(name)}</div>
+      </td>
+      <td><span class="dt-mono">${fmtMonth(month)}</span></td>
+      <td><span class="dt-mono${isOv?' dt-ov':''}">${due}</span></td>
+      <td>
+        <div class="dt-nota" title="${esc(nota)}">${nota ? esc(nota) : '<span style="color:var(--ct-text-3)">—</span>'}</div>
+      </td>
+      <td>
+        <div class="dt-status-cell">
+          <span class="stb ${stCls(status)}"><span class="stb-dot"></span>${stLbl(status)}</span>
+          ${eyeBtn}
+        </div>
+      </td>
+      <td>
+        <div class="dt-acts">
+          <button class="dt-btn" title="Detalhes" onclick="event.stopPropagation();openPanel('${d.id}')"><i class="ph-bold ph-arrow-square-out"></i></button>
+          <button class="dt-btn del" title="Excluir" onclick="event.stopPropagation();delDoc('${d.id}')"><i class="ph-bold ph-trash"></i></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  return `<table class="docs-table">
+    <thead>
+      <tr>
+        <th style="width:46px">Tipo</th>
+        <th style="width:150px">Categoria</th>
+        <th>Nome</th>
+        <th style="width:110px">Competência</th>
+        <th style="width:100px">Vencimento</th>
+        <th>Nota</th>
+        <th style="width:160px">Status</th>
+        <th style="width:70px">Ações</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>`;
 }
 
 function updStats() {
@@ -615,14 +812,20 @@ function selFolder(f,el){
   activeFolder=f;
   document.querySelectorAll('.fi').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
-  if(f!=='all') document.getElementById('mCat').value=f;
+  // Sync filters
+  if(f!=='all'){
+    document.getElementById('mCat').value=f;
+    document.getElementById('catFilter').value=f;
+  } else {
+    document.getElementById('catFilter').value='';
+  }
   renderDocs();
 }
 function setView(m){
   viewMode=m;
-  document.getElementById('docsGrid').classList.toggle('lv',m==='list');
   document.getElementById('gbtn').classList.toggle('active',m==='grid');
   document.getElementById('lbtn').classList.toggle('active',m==='list');
+  renderDocs();
 }
 
 // ── Upload modal ──────────────────────────────────
@@ -633,6 +836,8 @@ function openUpModal(){
   document.getElementById('mDue').value='';
   document.getElementById('mNota').value='';
   document.getElementById('btnSave').disabled=false;
+  const now=new Date();
+  document.getElementById('mMon').value=String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear();
   document.getElementById('upOv').classList.add('open');
 }
 function closeUpModal(){document.getElementById('upOv').classList.remove('open');}
@@ -685,9 +890,12 @@ function openPanel(id){
   document.getElementById('pMeta').innerHTML=`
     <div class="pmi">
       <div class="pml">Competência</div>
-      <select id="pMonth" style="width:100%;margin-top:4px;background:var(--ct-surface);border:1px solid var(--ct-border);border-radius:7px;color:var(--ct-text-1);font-family:var(--font-b);font-size:13px;padding:7px 10px;outline:none;transition:border-color .2s;appearance:none" onfocus="this.style.borderColor='var(--ow-orange)'" onblur="this.style.borderColor='var(--ct-border)'">
-        ${genMonthOptions(doc.month)}
-      </select>
+      <input type="text" id="pMonth" value="${rawMonth(doc.month)}"
+        placeholder="Ex: 06/2026" maxlength="7"
+        oninput="fmtMonthInput(this)"
+        style="width:100%;margin-top:4px;background:var(--ct-surface);border:1px solid var(--ct-border);border-radius:7px;color:var(--ct-text-1);font-family:var(--font-m);font-size:13px;padding:7px 10px;outline:none;transition:border-color .2s;letter-spacing:.5px"
+        onfocus="this.style.borderColor='var(--ow-orange)'"
+        onblur="this.style.borderColor='var(--ct-border)'">
     </div>
     <div class="pmi">
       <div class="pml">Vencimento</div>
@@ -838,16 +1046,21 @@ mdpEl.addEventListener('dragover',e=>{e.preventDefault();mdpEl.classList.add('dr
 mdpEl.addEventListener('dragleave',()=>mdpEl.classList.remove('drag'));
 mdpEl.addEventListener('drop',e=>{
   e.preventDefault();mdpEl.classList.remove('drag');
-  const files=Array.from(e.dataTransfer.files).filter(f=>f.type==='application/pdf'||f.name.toLowerCase().endsWith('.pdf'));
+  const allowed=['pdf','xlsx','xls','ods','csv'];
+  const files=Array.from(e.dataTransfer.files).filter(f=>allowed.includes(f.name.split('.').pop().toLowerCase()));
   if(files.length){pendFiles=files;renderFP();}
 });
 document.getElementById('dropZone').addEventListener('dragover',e=>{e.preventDefault();document.getElementById('dropZone').classList.add('drag');});
 document.getElementById('dropZone').addEventListener('dragleave',()=>document.getElementById('dropZone').classList.remove('drag'));
 document.getElementById('dropZone').addEventListener('drop',e=>{
   e.preventDefault();document.getElementById('dropZone').classList.remove('drag');
-  const files=Array.from(e.dataTransfer.files).filter(f=>f.type==='application/pdf'||f.name.toLowerCase().endsWith('.pdf'));
+  const ALLOWED_EXT = ['pdf','xlsx','xls','ods','csv'];
+  const files=Array.from(e.dataTransfer.files).filter(f=>{
+    const ext=f.name.split('.').pop().toLowerCase();
+    return ALLOWED_EXT.includes(ext);
+  });
   if(files.length){pendFiles=files;openUpModal();renderFP();}
-  else showToast('Apenas PDFs são aceitos na central.','warn');
+  else showToast('Tipos aceitos: PDF, Excel, CSV.','warn');
 });
 
 // ── Toast ─────────────────────────────────────────
@@ -868,9 +1081,9 @@ function showToast(msg,type='ok'){
 // Popula os selects de mês dinamicamente
 function initMonthSelects() {
   const now  = new Date();
-  const curr = String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear();
-  document.getElementById('monthFilter').innerHTML = genMonthOptions('', true);
-  document.getElementById('mMon').innerHTML        = genMonthOptions(curr);
+  const curr = String(now.getMonth()+1).padStart(2,'0') + '/' + now.getFullYear();
+  document.getElementById('compFilter').innerHTML = genMonthOptions('', true);
+  document.getElementById('mMon').value = curr;
 }
 
 // ── Init ──────────────────────────────────────────
