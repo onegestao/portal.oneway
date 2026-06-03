@@ -277,15 +277,7 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
     <div class="hdr-divider"></div>
     <span class="hdr-fname" id="hFname">Todos os Arquivos</span>
     <div class="hdr-right">
-      <select class="m-sel" id="monthFilter" onchange="renderDocs()">
-        <option value="">Todas as competências</option>
-        <option value="01">Janeiro 2025</option><option value="02">Fevereiro 2025</option>
-        <option value="03">Março 2025</option><option value="04">Abril 2025</option>
-        <option value="05" selected>Maio 2025</option><option value="06">Junho 2025</option>
-        <option value="07">Julho 2025</option><option value="08">Agosto 2025</option>
-        <option value="09">Setembro 2025</option><option value="10">Outubro 2025</option>
-        <option value="11">Novembro 2025</option><option value="12">Dezembro 2025</option>
-      </select>
+      <select class="m-sel" id="monthFilter" onchange="renderDocs()"></select>
       <button class="btn-up" onclick="openUpModal()"><i class="ph-bold ph-upload-simple"></i> Enviar Arquivo</button>
     </div>
   </div>
@@ -383,12 +375,7 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
     </div>
     <div class="fr3">
       <div><label class="fl">Competência</label>
-        <select class="fi-sel" id="mMon">
-          <option value="01">Jan/25</option><option value="02">Fev/25</option><option value="03">Mar/25</option>
-          <option value="04">Abr/25</option><option value="05" selected>Mai/25</option><option value="06">Jun/25</option>
-          <option value="07">Jul/25</option><option value="08">Ago/25</option><option value="09">Set/25</option>
-          <option value="10">Out/25</option><option value="11">Nov/25</option><option value="12">Dez/25</option>
-        </select>
+        <select class="fi-sel" id="mMon"></select>
       </div>
       <div><label class="fl">Vencimento</label><input type="date" class="fi-in" id="mDue"></div>
       <div><label class="fl">Status Inicial</label>
@@ -475,8 +462,35 @@ const CI={
   rescisao:'📝',ferias:'☂️',decimo:'🎁',vr:'🍽️',vt:'🚌',
   seguro:'❤️',convenio:'🩺',gym:'🏋️',odonto:'🦷',nf:'📃',outros:'📁'
 };
-const ML={'01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun',
-          '07':'Jul','08':'Ago','09':'Set','10':'Out','11':'Nov','12':'Dez'};
+const MN=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+// Gera opções de mês dinamicamente: Jan/2025 até 18 meses no futuro
+function genMonthOptions(selected='', includeAll=false) {
+  const start = new Date(2025, 0);
+  const end   = new Date(); end.setMonth(end.getMonth() + 18);
+  let html = includeAll ? '<option value="">Todas as competências</option>' : '';
+  let cur  = new Date(start);
+  while(cur <= end) {
+    const mm   = String(cur.getMonth()+1).padStart(2,'0');
+    const yyyy = cur.getFullYear();
+    const val  = mm+'/'+yyyy;
+    const lbl  = MN[cur.getMonth()]+' / '+yyyy;
+    html += `<option value="${val}"${selected===val?' selected':''}>${lbl}</option>`;
+    cur.setMonth(cur.getMonth()+1);
+  }
+  return html;
+}
+
+// Formata valor de mês para exibição: "05/2025" → "Mai/2025"
+function fmtMonth(m) {
+  if(!m) return '—';
+  if(m.includes('/')) {
+    const [mm,yyyy] = m.split('/');
+    return (MN[parseInt(mm)-1]||mm)+'/'+yyyy;
+  }
+  // legado: só "05"
+  return (MN[parseInt(m)-1]||m)+'/2025';
+}
 
 let docs=[], activeFolder='all', viewMode='grid', pendFiles=[], activeId=null, panelSt=null;
 
@@ -539,7 +553,7 @@ function renderDocs() {
           <div class="dc-name" title="${esc(d.name)}">${esc(d.name)}</div>
           <div class="dc-cat">${FL[d.category]||d.category}</div>
           <div class="dc-meta">
-            <span class="dmi"><i class="ph-bold ph-calendar"></i>${ML[d.month]||d.month}/25</span>
+            <span class="dmi"><i class="ph-bold ph-calendar"></i>${fmtMonth(d.month)}</span>
             <span class="dmi" style="${isOv?'color:var(--s-vencido)':''}"><i class="ph-bold ph-alarm"></i>Venc: ${due}</span>
             ${hc?'<span class="dmi" style="color:var(--s-pago)"><i class="ph-fill ph-seal-check"></i>Comprovante</span>':''}
           </div>
@@ -663,7 +677,7 @@ function openPanel(id){
   const doc=docs.find(d=>d.id===id);if(!doc)return;
   activeId=id; panelSt=doc.status;
   document.getElementById('pNm').textContent=doc.name;
-  document.getElementById('pSb').textContent=`${FL[doc.category]||doc.category} · ${ML[doc.month]||doc.month}/25`;
+  document.getElementById('pSb').textContent=`${FL[doc.category]||doc.category} · ${fmtMonth(doc.month)}`;
   const pi=document.getElementById('pIco');
   pi.innerHTML=doc.compFileId?'<i class="ph-fill ph-seal-check"></i>':'<i class="ph-fill ph-file-pdf"></i>';
   pi.className='ph-ico'+(doc.compFileId?' comp':'');
@@ -672,18 +686,7 @@ function openPanel(id){
     <div class="pmi">
       <div class="pml">Competência</div>
       <select id="pMonth" style="width:100%;margin-top:4px;background:var(--ct-surface);border:1px solid var(--ct-border);border-radius:7px;color:var(--ct-text-1);font-family:var(--font-b);font-size:13px;padding:7px 10px;outline:none;transition:border-color .2s;appearance:none" onfocus="this.style.borderColor='var(--ow-orange)'" onblur="this.style.borderColor='var(--ct-border)'">
-        <option value="01" ${doc.month==='01'?'selected':''}>Jan / 2025</option>
-        <option value="02" ${doc.month==='02'?'selected':''}>Fev / 2025</option>
-        <option value="03" ${doc.month==='03'?'selected':''}>Mar / 2025</option>
-        <option value="04" ${doc.month==='04'?'selected':''}>Abr / 2025</option>
-        <option value="05" ${doc.month==='05'?'selected':''}>Mai / 2025</option>
-        <option value="06" ${doc.month==='06'?'selected':''}>Jun / 2025</option>
-        <option value="07" ${doc.month==='07'?'selected':''}>Jul / 2025</option>
-        <option value="08" ${doc.month==='08'?'selected':''}>Ago / 2025</option>
-        <option value="09" ${doc.month==='09'?'selected':''}>Set / 2025</option>
-        <option value="10" ${doc.month==='10'?'selected':''}>Out / 2025</option>
-        <option value="11" ${doc.month==='11'?'selected':''}>Nov / 2025</option>
-        <option value="12" ${doc.month==='12'?'selected':''}>Dez / 2025</option>
+        ${genMonthOptions(doc.month)}
       </select>
     </div>
     <div class="pmi">
@@ -862,7 +865,16 @@ function showToast(msg,type='ok'){
   tTimer=setTimeout(()=>t.classList.remove('show'),3600);
 }
 
+// Popula os selects de mês dinamicamente
+function initMonthSelects() {
+  const now  = new Date();
+  const curr = String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear();
+  document.getElementById('monthFilter').innerHTML = genMonthOptions('', true);
+  document.getElementById('mMon').innerHTML        = genMonthOptions(curr);
+}
+
 // ── Init ──────────────────────────────────────────
+initMonthSelects();
 loadDocs();
 </script>
 </body>
