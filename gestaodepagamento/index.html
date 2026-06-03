@@ -77,7 +77,7 @@ aside{width:var(--sw);background:var(--sb-bg);border-right:1px solid var(--sb-li
 
 /* MAIN */
 main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:column}
-.mi{padding:24px 28px 40px;flex:1}
+.mi{padding:20px 20px 40px;flex:1}
 
 /* STATS */
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
@@ -98,7 +98,7 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
 .srch{display:flex;align-items:center;gap:7px;background:var(--ct-surface);border:1px solid var(--ct-border);border-radius:7px;padding:7px 11px;transition:border-color .2s}
 .srch:focus-within{border-color:var(--ow-orange)}
 .srch i{color:var(--ct-text-3);font-size:14px}
-.srch input{background:none;border:none;outline:none;color:var(--ct-text-1);font-family:var(--font-b);font-size:13px;width:170px}
+.srch input{background:none;border:none;outline:none;color:var(--ct-text-1);font-family:var(--font-b);font-size:13px;width:110px}
 .srch input::placeholder{color:var(--ct-text-3)}
 .fslt{background:var(--ct-surface);border:1px solid var(--ct-border);color:var(--ct-text-2);font-family:var(--font-b);font-size:12px;font-weight:600;padding:7px 11px;border-radius:7px;cursor:pointer;outline:none}
 .fslt:focus{border-color:var(--ow-orange)}
@@ -186,28 +186,29 @@ input[type=checkbox].cb{
   padding:2px 6px;border-radius:10px;
   min-width:18px;text-align:center;
 }
-.docs-table{width:100%;border-collapse:collapse;background:var(--ct-surface);border-radius:10px;overflow:hidden;border:1px solid var(--ct-border)}
+.docs-table{width:100%;border-collapse:collapse;background:var(--ct-surface);border-radius:10px;overflow:hidden;border:1px solid var(--ct-border);table-layout:auto}
 .docs-table thead tr{background:#EFEFEF;border-bottom:2px solid var(--ct-border)}
-.docs-table thead th{padding:10px 14px;font-size:10px;font-weight:700;color:var(--ct-text-3);text-transform:uppercase;letter-spacing:.8px;text-align:left;white-space:nowrap;font-family:var(--font-m)}
+.docs-table thead th{padding:10px 10px;font-size:10px;font-weight:700;color:var(--ct-text-3);text-transform:uppercase;letter-spacing:.8px;text-align:left;white-space:nowrap;font-family:var(--font-m)}
 .docs-table tbody tr{border-bottom:1px solid var(--ct-bg);transition:background .15s;cursor:pointer}
 .docs-table tbody tr:last-child{border-bottom:none}
 .docs-table tbody tr:hover{background:var(--ow-orange-light)}
-.docs-table tbody td{padding:10px 14px;font-size:12.5px;color:var(--ct-text-1);vertical-align:middle}
-.dt-ico{width:36px;height:36px;border-radius:7px;background:var(--ow-orange-light);color:var(--ow-orange);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.docs-table tbody td{padding:9px 10px;font-size:12px;color:var(--ct-text-1);vertical-align:middle}
+.dt-ico{width:34px;height:34px;border-radius:7px;background:var(--ow-orange-light);color:var(--ow-orange);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
 .dt-ico.hc{background:var(--s-pago-bg);color:var(--s-pago)}
-.dt-name{font-weight:700;color:var(--ct-text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
-.dt-sub{font-size:10px;color:var(--ct-text-3);margin-top:2px;font-weight:500}
-.dt-nota{font-size:11px;color:var(--ct-text-2);font-style:italic;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dt-name{font-weight:700;color:var(--ct-text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
+.dt-sub{font-size:10px;color:var(--ct-text-3);margin-top:2px;font-weight:500;white-space:nowrap}
+.dt-nota{font-size:11px;color:var(--ct-text-2);font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
 .dt-mono{font-family:var(--font-m);font-size:11px;color:var(--ct-text-2)}
 .dt-ov{color:var(--s-vencido)!important;font-weight:700}
-.dt-status-cell{display:flex;align-items:center;gap:6px;white-space:nowrap}
-.dt-eye{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;background:var(--ow-orange-light);color:var(--ow-orange);border:none;cursor:pointer;transition:.15s;font-size:13px;flex-shrink:0}
+.dt-status-cell{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.dt-eye{display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:5px;background:var(--ow-orange-light);color:var(--ow-orange);border:none;cursor:pointer;transition:.15s;font-size:12px;flex-shrink:0}
 .dt-eye:hover{background:var(--ow-orange);color:#fff}
 .dt-eye.gr{background:var(--s-pago-bg);color:var(--s-pago)}
 .dt-eye.gr:hover{background:var(--s-pago);color:#fff}
-.docs-table tbody tr.sel-row{ background:var(--ow-orange-light)!important; }
-.docs-table tbody tr.sel-row:hover{ background:#ffe0cc!important; }
-.dt-btn{background:none;border:none;color:var(--ct-text-3);font-size:14px;padding:5px 6px;border-radius:5px;cursor:pointer;transition:.15s}
+.docs-table tbody tr.sel-row{background:var(--ow-orange-light)!important}
+.docs-table tbody tr.sel-row:hover{background:#ffe0cc!important}
+.dt-acts{display:flex;gap:2px}
+.dt-btn{background:none;border:none;color:var(--ct-text-3);font-size:14px;padding:4px 5px;border-radius:5px;cursor:pointer;transition:.15s}
 .dt-btn:hover{background:var(--ow-orange-light);color:var(--ow-orange)}
 .dt-btn.del:hover{background:var(--s-vencido-bg);color:var(--s-vencido)}
 
@@ -392,9 +393,9 @@ input[type=checkbox].cb{
         <p>Arraste arquivos aqui <span style="color:var(--ct-text-3)">(PDF, Excel, CSV)</span></p>
       </div>
       <div class="tb">
-        <div class="srch"><i class="ph-bold ph-magnifying-glass"></i><input type="text" id="srchIn" placeholder="Nome do arquivo..." oninput="renderDocs()"></div>
+        <div class="srch"><i class="ph-bold ph-magnifying-glass"></i><input type="text" id="srchIn" placeholder="Nome..." oninput="renderDocs()"></div>
         <select class="fslt" id="catFilter" onchange="renderDocs()">
-          <option value="">Todas as categorias</option>
+          <option value="">Categoria</option>
           <option value="das">DAS — Simples Nacional</option>
           <option value="fgts">FGTS</option>
           <option value="darf">DARF / IRRF</option>
@@ -415,13 +416,13 @@ input[type=checkbox].cb{
         </select>
         <select class="fslt" id="compFilter" onchange="renderDocs()"></select>
         <select class="fslt" id="stFilter" onchange="renderDocs()">
-          <option value="">Todos os status</option>
+          <option value="">Status</option>
           <option value="programar">🟠 A Programar</option>
           <option value="programado">🔵 Programados</option>
           <option value="pago">🟢 Pagos</option>
           <option value="vencido">🔴 Vencidos</option>
         </select>
-        <div class="srch"><i class="ph-bold ph-note"></i><input type="text" id="notaFilter" placeholder="Filtrar nota..." oninput="renderDocs()"></div>
+        <div class="srch"><i class="ph-bold ph-note"></i><input type="text" id="notaFilter" placeholder="Nota..." oninput="renderDocs()"></div>
         <button class="btn-refresh" onclick="loadDocs()" title="Atualizar"><i class="ph-bold ph-arrows-clockwise"></i> Atualizar</button>
         <div class="vt">
           <button class="vb active" id="gbtn" onclick="setView('grid')"><i class="ph-bold ph-squares-four"></i></button>
@@ -572,7 +573,7 @@ function isViewableInFrame(name){
 function genMonthOptions(selected='', includeAll=false) {
   const start = new Date(2025, 0);
   const end   = new Date(); end.setMonth(end.getMonth() + 18);
-  let html = includeAll ? '<option value="">Todas as competências</option>' : '';
+  let html = includeAll ? '<option value="">Competência</option>' : '';
   let cur  = new Date(start);
   while(cur <= end) {
     const mm   = String(cur.getMonth()+1).padStart(2,'0');
@@ -918,15 +919,15 @@ function renderTable(list) {
   return `<table class="docs-table">
     <thead>
       <tr>
-        <th class="cb-col"><div class="cb-wrap"><input type="checkbox" class="cb" id="cbAll" ${allSel?'checked':''} onchange="toggleSelectAll(this.checked)"></div></th>
-        <th style="width:46px">Tipo</th>
-        <th style="width:150px">Categoria</th>
+        <th style="width:36px"><div class="cb-wrap"><input type="checkbox" class="cb" id="cbAll" ${allSel?'checked':''} onchange="toggleSelectAll(this.checked)"></div></th>
+        <th style="width:44px">Tipo</th>
+        <th style="width:148px">Categoria</th>
         <th>Nome</th>
-        <th style="width:110px">Competência</th>
-        <th style="width:100px">Vencimento</th>
-        <th>Nota</th>
-        <th style="width:160px">Status</th>
-        <th style="width:70px">Ações</th>
+        <th style="width:96px">Competência</th>
+        <th style="width:96px">Vencimento</th>
+        <th style="width:200px">Nota</th>
+        <th style="width:132px">Status</th>
+        <th style="width:62px">Ações</th>
       </tr>
     </thead>
     <tbody>${rows}</tbody>
