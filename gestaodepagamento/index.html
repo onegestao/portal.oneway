@@ -6,6 +6,7 @@
 <title>Central de Guias & Pagamentos | ONE WAY</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><text y='203' font-size='224'>📂</text></svg>">
 <script src="https://unpkg.com/@phosphor-icons/web"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -150,7 +151,41 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
 .dab:hover{background:var(--ow-orange-light);color:var(--ow-orange)}
 .dab.del:hover{background:var(--s-vencido-bg);color:var(--s-vencido)}
 
-/* TABLE VIEW (list mode) */
+/* CHECKBOX SELECTION */
+.cb-col{width:38px;text-align:center;padding:10px 6px!important}
+.cb-wrap{display:flex;align-items:center;justify-content:center}
+input[type=checkbox].cb{
+  width:15px;height:15px;cursor:pointer;
+  accent-color:var(--ow-orange);flex-shrink:0;
+  border-radius:3px;
+}
+.dc{position:relative}
+.dc-checkbox{
+  position:absolute;top:10px;left:10px;z-index:10;
+  display:none;
+}
+.dc:hover .dc-checkbox,
+.dc.selected .dc-checkbox{ display:flex; }
+.dc.selected{ border-color:var(--ow-orange);box-shadow:0 0 0 2px var(--ow-orange-glow); }
+.dc.selected .dc-checkbox input{ display:block; }
+
+/* DOWNLOAD BUTTON */
+.btn-dl{
+  display:none;align-items:center;gap:7px;
+  background:var(--ct-surface);color:var(--ow-orange);
+  border:1.5px solid var(--ow-orange);
+  padding:8px 14px;border-radius:7px;
+  font-family:var(--font-b);font-size:12px;font-weight:700;
+  cursor:pointer;transition:.2s;white-space:nowrap;
+}
+.btn-dl.vis{display:flex}
+.btn-dl:hover{background:var(--ow-orange);color:#fff}
+.sel-count{
+  background:var(--ow-orange);color:#fff;
+  font-size:10px;font-weight:800;
+  padding:2px 6px;border-radius:10px;
+  min-width:18px;text-align:center;
+}
 .docs-table{width:100%;border-collapse:collapse;background:var(--ct-surface);border-radius:10px;overflow:hidden;border:1px solid var(--ct-border)}
 .docs-table thead tr{background:#EFEFEF;border-bottom:2px solid var(--ct-border)}
 .docs-table thead th{padding:10px 14px;font-size:10px;font-weight:700;color:var(--ct-text-3);text-transform:uppercase;letter-spacing:.8px;text-align:left;white-space:nowrap;font-family:var(--font-m)}
@@ -170,7 +205,8 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
 .dt-eye:hover{background:var(--ow-orange);color:#fff}
 .dt-eye.gr{background:var(--s-pago-bg);color:var(--s-pago)}
 .dt-eye.gr:hover{background:var(--s-pago);color:#fff}
-.dt-acts{display:flex;gap:3px}
+.docs-table tbody tr.sel-row{ background:var(--ow-orange-light)!important; }
+.docs-table tbody tr.sel-row:hover{ background:#ffe0cc!important; }
 .dt-btn{background:none;border:none;color:var(--ct-text-3);font-size:14px;padding:5px 6px;border-radius:5px;cursor:pointer;transition:.15s}
 .dt-btn:hover{background:var(--ow-orange-light);color:var(--ow-orange)}
 .dt-btn.del:hover{background:var(--s-vencido-bg);color:var(--s-vencido)}
@@ -297,6 +333,10 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
     <div class="hdr-divider"></div>
     <span class="hdr-fname" id="hFname">Todos os Arquivos</span>
     <div class="hdr-right">
+      <button class="btn-dl" id="btnDownload" onclick="downloadSelected()">
+        <i class="ph-bold ph-download-simple"></i>
+        Baixar ZIP <span class="sel-count" id="selCount">0</span>
+      </button>
       <button class="btn-up" onclick="openUpModal()"><i class="ph-bold ph-upload-simple"></i> Enviar Arquivo</button>
     </div>
   </div>
@@ -492,7 +532,7 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
 // ══════════════════════════════════════════════════
 //  ⚠️  CONFIGURE AQUI — cole a URL do seu Apps Script
 // ══════════════════════════════════════════════════
-const API = 'https://script.google.com/macros/s/AKfycbzc3H8BKcB9VGOoCfH-MH421NUYWB3zucKo2KPskqzwM1HmN4olePdypX870XVurx9oeA/exec';
+const API = 'https://script.google.com/macros/s/AKfycbytITfGL-Y3hdoUtHasskCjrABTwOEncnaAWbWYJMXZamcV9mwyifrHiIrjVDm2SBCdVA/exec';
 
 // ── Constantes ────────────────────────────────────
 const FL={
@@ -596,6 +636,7 @@ function fmtMonthInput(el) {
 }
 
 let docs=[], activeFolder='all', viewMode='grid', pendFiles=[], activeId=null, panelSt=null;
+let selectedIds = new Set();
 
 // ── Loading ───────────────────────────────────────
 function showLoading(on, txt='Aguarde...') {
@@ -616,7 +657,7 @@ async function loadDocs() {
   try {
     const res = await fetch(`${API}?action=getRecords`);
     const data = await res.json();
-    if (data.ok) { docs = data.records; renderDocs(); }
+    if (data.ok) { docs = data.records; selectedIds.clear(); updSelectionUI(); renderDocs(); }
     else showToast('Erro ao carregar: ' + (data.error||''), 'err');
   } catch(e) {
     showToast('Falha de conexão com o servidor.', 'err');
@@ -624,7 +665,121 @@ async function loadDocs() {
   showLoading(false);
 }
 
-// ── Render ────────────────────────────────────────
+// ── Seleção ───────────────────────────────────────
+function toggleSelect(id, e) {
+  if(e) e.stopPropagation();
+  if(selectedIds.has(id)) selectedIds.delete(id);
+  else selectedIds.add(id);
+  updSelectionUI();
+  // Atualiza visual do card/linha sem re-renderizar tudo
+  const card = document.querySelector(`.dc[data-id="${id}"]`);
+  if(card) card.classList.toggle('selected', selectedIds.has(id));
+  const cb = document.querySelector(`input.cb[data-id="${id}"]`);
+  if(cb) cb.checked = selectedIds.has(id);
+  // Atualiza "selecionar todos"
+  const cbAll = document.getElementById('cbAll');
+  const filtered = getFiltered();
+  if(cbAll) cbAll.checked = filtered.length > 0 && filtered.every(d => selectedIds.has(d.id));
+}
+
+function toggleSelectAll(checked) {
+  const filtered = getFiltered();
+  filtered.forEach(d => checked ? selectedIds.add(d.id) : selectedIds.delete(d.id));
+  updSelectionUI();
+
+  if(viewMode === 'list') {
+    filtered.forEach(d => {
+      const cb  = document.querySelector(`input.cb[data-id="${d.id}"]`);
+      const row = cb?.closest('tr');
+      if(cb)  cb.checked = checked;
+      if(row) row.classList.toggle('sel-row', checked);
+    });
+  } else {
+    filtered.forEach(d => {
+      const card = document.querySelector(`.dc[data-id="${d.id}"]`);
+      if(!card) return;
+      card.classList.toggle('selected', checked);
+      const cb = card.querySelector('input.cb');
+      if(cb) cb.checked = checked;
+    });
+  }
+}
+
+function updSelectionUI() {
+  const n = selectedIds.size;
+  const btn = document.getElementById('btnDownload');
+  const cnt = document.getElementById('selCount');
+  btn.classList.toggle('vis', n > 0);
+  cnt.textContent = n;
+}
+
+// ── Download ZIP ──────────────────────────────────
+async function downloadSelected() {
+  if(!selectedIds.size) return;
+
+  if(typeof JSZip === 'undefined') {
+    showToast('Biblioteca ZIP não carregou. Recarregue a página.','err');
+    return;
+  }
+
+  const selected = docs.filter(d => selectedIds.has(d.id) && d.fileId);
+  if(!selected.length) { showToast('Nenhum arquivo com anexo selecionado.','warn'); return; }
+
+  showLoading(true, `Preparando ${selected.length} arquivo(s)...`);
+  const zip   = new JSZip();
+  let ok      = 0;
+  const erros = [];
+
+  for(let i=0; i<selected.length; i++) {
+    const d = selected[i];
+    showLoading(true, `Baixando ${i+1}/${selected.length}: ${d.name}`);
+    try {
+      const r = await api({action:'getFileContent', fileId: d.fileId});
+      if(r.ok && r.base64) {
+        zip.file(d.name, r.base64, {base64:true});
+        ok++;
+      } else {
+        erros.push(`${d.name}: ${r.error||'sem resposta do servidor'}`);
+        console.error('Falha getFileContent:', d.name, r);
+      }
+      if(d.compFileId) {
+        const r2 = await api({action:'getFileContent', fileId: d.compFileId});
+        if(r2.ok && r2.base64) zip.file('COMP_'+(d.compName||d.name), r2.base64, {base64:true});
+      }
+    } catch(e) {
+      erros.push(`${d.name}: ${e.message}`);
+      console.error('Erro baixando', d.name, e);
+    }
+  }
+
+  if(!ok) {
+    showLoading(false);
+    showToast(`Falha: ${erros[0]||'erro desconhecido'}`, 'err');
+    console.error('Erros de download:', erros);
+    setTimeout(()=>showToast('⚠️ Verifique se o Apps Script foi republicado com a versão mais recente.','warn'), 3600);
+    return;
+  }
+
+  showLoading(true, 'Gerando ZIP...');
+  try {
+    const blob = await zip.generateAsync({type:'blob'});
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = `OneWay_${new Date().toISOString().slice(0,10)}.zip`;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    const msg = erros.length
+      ? `${ok} de ${selected.length} baixados (${erros.length} falharam — veja F12)`
+      : `${ok} arquivo(s) baixados com sucesso!`;
+    showToast(msg, erros.length ? 'warn' : 'ok');
+  } catch(e) {
+    showToast('Erro ao gerar ZIP: '+e.message,'err');
+    console.error('JSZip erro:', e);
+  }
+  showLoading(false);
+}
 function getFiltered() {
   const q    = document.getElementById('srchIn').value.toLowerCase();
   const mo   = document.getElementById('compFilter').value;
@@ -677,7 +832,11 @@ function renderGrid(list) {
     const month  = d.month || '';
     const isOv   = d.due && d.status !== 'pago' && new Date(d.due+'T00:00:00') < new Date();
     const ico    = hc ? '✅' : fileIcon(name);
-    return `<div class="dc" style="animation-delay:${i*.04}s" onclick="openPanel('${d.id}')">
+    const isSel  = selectedIds.has(d.id);
+    return `<div class="dc${isSel?' selected':''}" data-id="${d.id}" style="animation-delay:${i*.04}s" onclick="openPanel('${d.id}')">
+      <div class="dc-checkbox" onclick="event.stopPropagation()">
+        <input type="checkbox" class="cb" data-id="${d.id}" ${isSel?'checked':''} onchange="toggleSelect('${d.id}',event)">
+      </div>
       <div class="dc-top">
         <div class="dc-ico${hc?' hc':''}">${ico}</div>
         <div class="dc-info">
@@ -715,6 +874,7 @@ function renderTable(list) {
     const due    = d.due   ? fmtBR(d.due) : '—';
     const isOv   = d.due && d.status !== 'pago' && new Date(d.due+'T00:00:00') < new Date();
     const ico    = hc ? '✅' : fileIcon(name);
+    const isSel  = selectedIds.has(d.id);
 
     // Ícone de olho — abre o boleto se pago, ou comprovante se tiver
     const eyeBtn = d.fileUrl
@@ -723,7 +883,10 @@ function renderTable(list) {
            <i class="ph-bold ph-eye"></i>
          </button>` : '';
 
-    return `<tr onclick="openPanel('${d.id}')">
+    return `<tr onclick="openPanel('${d.id}')" class="${isSel?'sel-row':''}">
+      <td class="cb-col" onclick="event.stopPropagation()">
+        <div class="cb-wrap"><input type="checkbox" class="cb" data-id="${d.id}" ${isSel?'checked':''} onchange="toggleSelect('${d.id}',event)"></div>
+      </td>
       <td><div class="dt-ico${hc?' hc':''}">${ico}</div></td>
       <td>
         <div style="font-size:11px;font-weight:700;color:var(--ct-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px">${FL[cat]||cat}</div>
@@ -751,9 +914,11 @@ function renderTable(list) {
     </tr>`;
   }).join('');
 
+  const allSel = list.length > 0 && list.every(d => selectedIds.has(d.id));
   return `<table class="docs-table">
     <thead>
       <tr>
+        <th class="cb-col"><div class="cb-wrap"><input type="checkbox" class="cb" id="cbAll" ${allSel?'checked':''} onchange="toggleSelectAll(this.checked)"></div></th>
         <th style="width:46px">Tipo</th>
         <th style="width:150px">Categoria</th>
         <th>Nome</th>
