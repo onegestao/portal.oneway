@@ -8,7 +8,7 @@
 <script src="https://unpkg.com/@phosphor-icons/web"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --ow-orange:#C85A00; --ow-orange-mid:#E06B10;
@@ -26,8 +26,15 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
 body{background:var(--sb-bg);color:var(--ct-text-1);font-family:var(--font-b);display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
-.sb-scroll::-webkit-scrollbar{width:3px}.sb-scroll::-webkit-scrollbar-track{background:transparent}.sb-scroll::-webkit-scrollbar-thumb{background:#555;border-radius:2px}
-main::-webkit-scrollbar{width:6px}main::-webkit-scrollbar-track{background:var(--ct-bg)}main::-webkit-scrollbar-thumb{background:#ddd;border-radius:3px}
+.sb-scroll::-webkit-scrollbar{width:3px}.sb-scroll::-webkit-scrollbar-thumb{background:#555;border-radius:2px}
+main::-webkit-scrollbar{width:6px}main::-webkit-scrollbar-thumb{background:#ddd;border-radius:3px}
+
+/* LOADING OVERLAY */
+.loading-ov{position:fixed;inset:0;background:rgba(255,255,255,0.85);backdrop-filter:blur(3px);z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;opacity:0;pointer-events:none;transition:opacity .2s}
+.loading-ov.vis{opacity:1;pointer-events:all}
+.spinner{width:36px;height:36px;border:3px solid var(--ct-border);border-top-color:var(--ow-orange);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-family:var(--font-d);font-size:14px;font-weight:700;color:var(--ct-text-2)}
 
 /* HEADER */
 header{height:var(--hh);background:#0d0d0d;border-bottom:1px solid var(--sb-line);display:flex;align-items:center;flex-shrink:0;z-index:200}
@@ -67,7 +74,7 @@ aside{width:var(--sw);background:var(--sb-bg);border-right:1px solid var(--sb-li
 .sb-bar{height:3px;background:#444;border-radius:2px;overflow:hidden}
 .sb-fill{height:100%;width:0;background:var(--ow-orange);border-radius:2px;transition:width .5s}
 
-/* MAIN (white) */
+/* MAIN */
 main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:column}
 .mi{padding:24px 28px 40px;flex:1}
 
@@ -97,6 +104,8 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
 .vt{display:flex;gap:3px;background:var(--ct-border);border-radius:7px;padding:3px;margin-left:auto}
 .vb{background:none;border:none;color:var(--ct-text-3);padding:5px 8px;border-radius:5px;cursor:pointer;font-size:13px;transition:.15s}
 .vb.active{background:var(--ct-surface);color:var(--ow-orange);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.btn-refresh{display:flex;align-items:center;gap:5px;background:var(--ct-surface);border:1px solid var(--ct-border);color:var(--ct-text-2);font-family:var(--font-b);font-size:12px;font-weight:600;padding:7px 11px;border-radius:7px;cursor:pointer;transition:.2s}
+.btn-refresh:hover{border-color:var(--ow-orange);color:var(--ow-orange)}
 
 /* EMPTY */
 .empty{display:none;flex-direction:column;align-items:center;justify-content:center;padding:80px 32px;text-align:center}
@@ -128,6 +137,7 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
 .dc-meta{display:flex;gap:10px;margin-top:5px;flex-wrap:wrap}
 .dmi{display:flex;align-items:center;gap:3px;font-family:var(--font-m);font-size:9.5px;color:var(--ct-text-3)}
 .dmi i{font-size:10px}
+.dc-nota{margin-top:7px;padding:6px 9px;background:var(--ct-bg);border-left:3px solid var(--ow-orange);border-radius:4px;font-size:11px;color:var(--ct-text-2);line-height:1.4;font-style:italic}
 .dc-bot{padding:9px 14px;display:flex;align-items:center;justify-content:space-between;background:var(--ct-bg)}
 .stb{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px}
 .stb-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
@@ -166,13 +176,13 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
 .fpi-n{flex:1;font-size:12px;font-weight:600;color:var(--ct-text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fpi-s{font-family:var(--font-m);font-size:10px;color:var(--ct-text-3);flex-shrink:0}
 .fr{margin-bottom:12px}
-.fr2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px}
 .fl{display:block;font-size:10px;font-weight:700;color:var(--ct-text-3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
 .fi-in,.fi-sel{width:100%;background:var(--ct-bg);border:1px solid var(--ct-border);border-radius:7px;color:var(--ct-text-1);font-family:var(--font-b);font-size:13px;padding:9px 11px;outline:none;transition:border-color .2s;appearance:none}
 .fi-in:focus,.fi-sel:focus{border-color:var(--ow-orange);background:#fff}
-.bsv{width:100%;background:var(--ow-orange);color:#fff;border:none;border-radius:8px;padding:12px;font-family:var(--font-d);font-size:13px;font-weight:700;cursor:pointer;transition:.2s;margin-top:4px}
+.bsv{width:100%;background:var(--ow-orange);color:#fff;border:none;border-radius:8px;padding:12px;font-family:var(--font-d);font-size:13px;font-weight:700;cursor:pointer;transition:.2s;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px}
 .bsv:hover{background:var(--ow-orange-mid);box-shadow:0 5px 18px rgba(200,90,0,.25)}
+.bsv:disabled{opacity:.6;cursor:not-allowed}
 
 /* PANEL */
 .pov{position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(2px);z-index:600;opacity:0;pointer-events:none;transition:opacity .25s}
@@ -222,17 +232,18 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
 .cu p{font-size:12px;color:var(--ct-text-2)}
 .cu strong{color:var(--s-pago)}
 .pft{padding:14px 22px;border-top:1px solid var(--ct-border);display:flex;gap:9px;flex-shrink:0}
-.bps{flex:1;background:var(--ow-orange);color:#fff;border:none;border-radius:8px;padding:11px;font-family:var(--font-d);font-size:13px;font-weight:700;cursor:pointer;transition:.2s}
+.bps{flex:1;background:var(--ow-orange);color:#fff;border:none;border-radius:8px;padding:11px;font-family:var(--font-d);font-size:13px;font-weight:700;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:7px}
 .bps:hover{background:var(--ow-orange-mid)}
+.bps:disabled{opacity:.6;cursor:not-allowed}
 .bpd{background:none;color:var(--s-vencido);border:1px solid var(--s-vencido-bg);border-radius:8px;padding:9px 13px;font-size:14px;cursor:pointer;transition:.15s}
 .bpd:hover{background:var(--s-vencido-bg)}
 
 /* TOAST */
-.toast{position:fixed;bottom:22px;right:22px;background:var(--ct-surface);border:1px solid var(--ct-border);color:var(--ct-text-1);padding:11px 16px;border-radius:9px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;z-index:999;transform:translateX(130%);transition:transform .3s ease;box-shadow:0 6px 20px rgba(0,0,0,.10)}
+.toast{position:fixed;bottom:22px;right:22px;background:var(--ct-surface);border:1px solid var(--ct-border);color:var(--ct-text-1);padding:11px 16px;border-radius:9px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;z-index:1100;transform:translateX(130%);transition:transform .3s ease;box-shadow:0 6px 20px rgba(0,0,0,.10)}
 .toast.show{transform:translateX(0)}
 .toast i{font-size:16px}
 
-/* PDF VIEWER OVERLAY */
+/* PDF VIEWER */
 .pdf-ov{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:900;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .25s}
 .pdf-ov.open{opacity:1;pointer-events:all}
 .pdf-bar{height:52px;background:#1a1a1a;display:flex;align-items:center;padding:0 20px;gap:14px;flex-shrink:0;border-bottom:1px solid #333}
@@ -246,6 +257,12 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
 </style>
 </head>
 <body>
+
+<!-- LOADING -->
+<div class="loading-ov" id="loadingOv">
+  <div class="spinner"></div>
+  <div class="loading-txt" id="loadingTxt">Carregando...</div>
+</div>
 
 <header>
   <div class="hdr-sb">
@@ -275,7 +292,6 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
 </header>
 
 <div class="app-body">
-  <!-- SIDEBAR -->
   <aside>
     <div class="sb-scroll">
       <div class="sb-lbl">Visão Geral</div>
@@ -307,12 +323,11 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
       <div class="fi" onclick="selFolder('outros',this)"><i class="ph-fill ph-folder-open fi-ic"></i><span class="fi-nm">Outros</span><span class="fi-ct" id="cnt-outros">0</span></div>
     </div>
     <div class="sb-stor">
-      <div class="sb-stor-lbl"><span id="stGb">0.0 GB / 10 GB</span><span id="stTxt">0%</span></div>
+      <div class="sb-stor-lbl"><span id="stGb">0.0 GB / 15 GB</span><span id="stTxt">0%</span></div>
       <div class="sb-bar"><div class="sb-fill" id="stFill"></div></div>
     </div>
   </aside>
 
-  <!-- MAIN -->
   <main>
     <div class="mi">
       <div class="stats">
@@ -330,9 +345,10 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
           <option value="pago">🟢 Pagos</option>
           <option value="vencido">🔴 Vencidos</option>
         </select>
+        <button class="btn-refresh" onclick="loadDocs()" title="Atualizar"><i class="ph-bold ph-arrows-clockwise"></i> Atualizar</button>
         <div class="vt">
-          <button class="vb active" id="gbtn" onclick="setView('grid')" title="Grade"><i class="ph-bold ph-squares-four"></i></button>
-          <button class="vb" id="lbtn" onclick="setView('list')" title="Lista"><i class="ph-bold ph-list-bullets"></i></button>
+          <button class="vb active" id="gbtn" onclick="setView('grid')"><i class="ph-bold ph-squares-four"></i></button>
+          <button class="vb" id="lbtn" onclick="setView('list')"><i class="ph-bold ph-list-bullets"></i></button>
         </div>
       </div>
       <div class="dz" id="dropZone"><i class="ph-fill ph-cloud-arrow-up"></i><p>Arraste PDFs aqui ou <strong onclick="openUpModal()">clique para enviar</strong></p></div>
@@ -342,13 +358,13 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
   </main>
 </div>
 
-<!-- UPLOAD MODAL -->
+<!-- MODAL UPLOAD -->
 <div class="ov" id="upOv" onclick="handleUpOvClick(event)">
   <div class="modal">
     <div class="mhd"><span class="mt">Enviar Arquivo</span><button class="mc" onclick="closeUpModal()"><i class="ph-bold ph-x"></i></button></div>
     <div class="mdp" id="mdp" onclick="document.getElementById('fileIn').click()">
       <i class="ph-fill ph-file-pdf"></i>
-      <p><strong>Clique ou arraste</strong> o arquivo PDF aqui<br><small style="color:#bbb;font-size:11px">Suporta PDF · Máx 10 MB</small></p>
+      <p><strong>Clique ou arraste</strong> o arquivo PDF aqui<br><small style="color:#bbb;font-size:11px">Suporta PDF · Máx 30 MB por arquivo</small></p>
     </div>
     <input type="file" id="fileIn" accept=".pdf" multiple style="display:none" onchange="onFileSelect(event)">
     <div id="fpArea"></div>
@@ -386,7 +402,7 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
     <div class="fr"><label class="fl">📝 Nota Explicativa</label>
       <textarea class="fi-in" id="mNota" rows="3" placeholder="Ex: NF aguardando aprovação dos gestores X, Y e Z..." style="resize:vertical;min-height:72px;line-height:1.5"></textarea>
     </div>
-    <button class="bsv" onclick="saveUpload()"><i class="ph-bold ph-upload-simple"></i> &nbsp;Salvar no Sistema</button>
+    <button class="bsv" id="btnSave" onclick="saveUpload()"><i class="ph-bold ph-upload-simple"></i> Salvar no Sistema</button>
   </div>
 </div>
 
@@ -419,7 +435,7 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
       </div>
     </div>
     <div class="pft">
-      <button class="bps" onclick="savePanel()"><i class="ph-bold ph-floppy-disk"></i> &nbsp;Salvar Alterações</button>
+      <button class="bps" id="btnPanelSave" onclick="savePanel()"><i class="ph-bold ph-floppy-disk"></i> Salvar Alterações</button>
       <button class="bpd" onclick="delFromPanel()" title="Excluir"><i class="ph-bold ph-trash"></i></button>
     </div>
   </div>
@@ -439,6 +455,12 @@ main{flex:1;overflow-y:auto;background:var(--ct-bg);display:flex;flex-direction:
 </div>
 
 <script>
+// ══════════════════════════════════════════════════
+//  ⚠️  CONFIGURE AQUI — cole a URL do seu Apps Script
+// ══════════════════════════════════════════════════
+const API = 'https://script.google.com/macros/s/AKfycbzc3H8BKcB9VGOoCfH-MH421NUYWB3zucKo2KPskqzwM1HmN4olePdypX870XVurx9oeA/exec';
+
+// ── Constantes ────────────────────────────────────
 const FL={
   all:'Todos os Arquivos',das:'DAS — Simples Nacional',fgts:'FGTS',
   darf:'DARF / IRRF',inss:'INSS / GPS',folha:'Folha de Pagamento',
@@ -456,64 +478,72 @@ const CI={
 const ML={'01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun',
           '07':'Jul','08':'Ago','09':'Set','10':'Out','11':'Nov','12':'Dez'};
 
-let docs=JSON.parse(localStorage.getItem('ow_docs_v3')||'[]');
-let activeFolder='all',viewMode='grid',pendFiles=[],activeId=null,panelSt=null;
+let docs=[], activeFolder='all', viewMode='grid', pendFiles=[], activeId=null, panelSt=null;
 
-function checkExpiry(){
-  const today=new Date();today.setHours(0,0,0,0);
-  let ch=false;
-  docs.forEach(d=>{
-    if(d.status==='pago')return;
-    if(!d.due)return;
-    const due=new Date(d.due+'T00:00:00');
-    if(due<today&&d.status!=='vencido'){d.status='vencido';ch=true;}
-  });
-  if(ch)saveDocs();
+// ── Loading ───────────────────────────────────────
+function showLoading(on, txt='Aguarde...') {
+  const el = document.getElementById('loadingOv');
+  document.getElementById('loadingTxt').textContent = txt;
+  el.classList.toggle('vis', on);
 }
 
-function getFiltered(){
-  const q=document.getElementById('srchIn').value.toLowerCase();
-  const mo=document.getElementById('monthFilter').value;
-  const st=document.getElementById('stFilter').value;
-  return docs.filter(d=>
-    (activeFolder==='all'||d.category===activeFolder)
-    &&(!q||d.name.toLowerCase().includes(q))
-    &&(!mo||d.month===mo)
-    &&(!st||d.status===st)
+// ── API call ──────────────────────────────────────
+async function api(payload) {
+  const res = await fetch(API, { method:'POST', body: JSON.stringify(payload) });
+  return res.json();
+}
+
+// ── Load docs from Sheets ─────────────────────────
+async function loadDocs() {
+  showLoading(true, 'Carregando registros...');
+  try {
+    const res = await fetch(`${API}?action=getRecords`);
+    const data = await res.json();
+    if (data.ok) { docs = data.records; renderDocs(); }
+    else showToast('Erro ao carregar: ' + (data.error||''), 'err');
+  } catch(e) {
+    showToast('Falha de conexão com o servidor.', 'err');
+  }
+  showLoading(false);
+}
+
+// ── Render ────────────────────────────────────────
+function getFiltered() {
+  const q  = document.getElementById('srchIn').value.toLowerCase();
+  const mo = document.getElementById('monthFilter').value;
+  const st = document.getElementById('stFilter').value;
+  return docs.filter(d =>
+    (activeFolder==='all' || d.category===activeFolder)
+    && (!q  || d.name.toLowerCase().includes(q))
+    && (!mo || d.month===mo)
+    && (!st || d.status===st)
   );
 }
 
-function stCls(s){return{pago:'st-pa',programar:'st-pr',programado:'st-pd',vencido:'st-ve'}[s]||'st-pr';}
-function stLbl(s){return{pago:'Pago',programar:'Programar',programado:'Programado',vencido:'Vencido'}[s]||s;}
-function fmtBR(iso){if(!iso)return'—';const[y,m,d]=iso.split('-');return`${d}/${m}/${y}`;}
-function fmtSz(b){if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(1)+' MB';}
-function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
-function saveDocs(){localStorage.setItem('ow_docs_v3',JSON.stringify(docs));}
-
-function renderDocs(){
-  const list=getFiltered();
-  const grid=document.getElementById('docsGrid');
-  const empty=document.getElementById('emptyEl');
-  document.getElementById('hFname').textContent=FL[activeFolder]||'Arquivos';
-  updStats();updCounts();
-  if(!list.length){grid.innerHTML='';empty.classList.add('vis');return;}
+function renderDocs() {
+  const list = getFiltered();
+  const grid = document.getElementById('docsGrid');
+  const empty= document.getElementById('emptyEl');
+  document.getElementById('hFname').textContent = FL[activeFolder]||'Arquivos';
+  updStats(); updCounts();
+  if (!list.length) { grid.innerHTML=''; empty.classList.add('vis'); return; }
   empty.classList.remove('vis');
-  grid.innerHTML=list.map((d,i)=>{
-    const hc=!!d.compData;
-    const due=d.due?fmtBR(d.due):'—';
-    const isOverdue=d.due&&new Date(d.due+'T00:00:00')<new Date()&&d.status!=='pago';
-    return`<div class="dc" style="animation-delay:${i*.04}s" onclick="openPanel('${d.id}')">
+  grid.innerHTML = list.map((d,i) => {
+    const hc = !!d.compFileId;
+    const due = d.due ? fmtBR(d.due) : '—';
+    const isOv = d.due && new Date(d.due+'T00:00:00') < new Date() && d.status!=='pago';
+    return `<div class="dc" style="animation-delay:${i*.04}s" onclick="openPanel('${d.id}')">
       <div class="dc-top">
         <div class="dc-ico${hc?' hc':''}">${CI[d.category]||'📄'}</div>
         <div class="dc-info">
-          <div class="dc-name" title="${d.name}">${d.name}</div>
+          <div class="dc-name" title="${esc(d.name)}">${esc(d.name)}</div>
           <div class="dc-cat">${FL[d.category]||d.category}</div>
           <div class="dc-meta">
             <span class="dmi"><i class="ph-bold ph-calendar"></i>${ML[d.month]||d.month}/25</span>
-            <span class="dmi" style="${isOverdue?'color:var(--s-vencido)':''}"><i class="ph-bold ph-alarm"></i>Venc: ${due}</span>
+            <span class="dmi" style="${isOv?'color:var(--s-vencido)':''}"><i class="ph-bold ph-alarm"></i>Venc: ${due}</span>
             ${hc?'<span class="dmi" style="color:var(--s-pago)"><i class="ph-fill ph-seal-check"></i>Comprovante</span>':''}
           </div>
-          ${d.nota?`<div style="margin-top:7px;padding:6px 9px;background:var(--ct-bg);border-left:3px solid var(--ow-orange);border-radius:4px;font-size:11px;color:var(--ct-text-2);line-height:1.4;font-style:italic;">${d.nota}</div>`:''}
+          ${d.nota?`<div class="dc-nota">${esc(d.nota)}</div>`:''}
         </div>
       </div>
       <div class="dc-bot">
@@ -527,38 +557,51 @@ function renderDocs(){
   }).join('');
 }
 
-function updStats(){
-  document.getElementById('st-tot').textContent=docs.length;
-  document.getElementById('st-prg').textContent=docs.filter(d=>d.status==='programar').length;
-  document.getElementById('st-pd').textContent=docs.filter(d=>d.status==='programado').length;
-  document.getElementById('st-ve').textContent=docs.filter(d=>d.status==='vencido').length;
+function updStats() {
+  document.getElementById('st-tot').textContent = docs.length;
+  document.getElementById('st-prg').textContent = docs.filter(d=>d.status==='programar').length;
+  document.getElementById('st-pd').textContent  = docs.filter(d=>d.status==='programado').length;
+  document.getElementById('st-ve').textContent  = docs.filter(d=>d.status==='vencido').length;
 }
-function updCounts(){
+function updCounts() {
   const cats=['all','das','fgts','darf','inss','folha','adiantamento','rescisao',
               'ferias','decimo','vr','vt','seguro','convenio','gym','odonto','nf','outros'];
   cats.forEach(c=>{
     const el=document.getElementById('cnt-'+c);
-    if(el)el.textContent=c==='all'?docs.length:docs.filter(d=>d.category===c).length;
+    if(el) el.textContent = c==='all' ? docs.length : docs.filter(d=>d.category===c).length;
   });
-  // Storage: estimate size from base64 lengths
-  const MAX_GB=10;
-  let totalBytes=0;
-  docs.forEach(d=>{
-    if(d.fileData)totalBytes+=Math.round(d.fileData.length*0.75);
-    if(d.compData)totalBytes+=Math.round(d.compData.length*0.75);
-  });
-  const usedGB=totalBytes/1073741824;
-  const pct=Math.min(100,Math.round(usedGB/MAX_GB*100));
-  document.getElementById('stFill').style.width=pct+'%';
-  document.getElementById('stTxt').textContent=pct+'%';
-  document.getElementById('stGb').textContent=usedGB.toFixed(2)+' GB / '+MAX_GB+' GB';
+  // Storage display (Google Drive personal = 15 GB)
+  const MAX_GB = 15;
+  const usedGB = docs.reduce((acc,d) => {
+    if(d.size) {
+      const m = d.size.match(/([\d.]+)\s*(GB|MB|KB|B)/i);
+      if(m) {
+        const n = parseFloat(m[1]);
+        const u = m[2].toUpperCase();
+        acc += u==='GB'?n : u==='MB'?n/1024 : u==='KB'?n/1048576 : n/1073741824;
+      }
+    }
+    return acc;
+  }, 0);
+  const pct = Math.min(100, Math.round(usedGB/MAX_GB*100));
+  document.getElementById('stFill').style.width = pct+'%';
+  document.getElementById('stTxt').textContent  = pct+'%';
+  document.getElementById('stGb').textContent   = usedGB.toFixed(2)+' GB / '+MAX_GB+' GB';
 }
 
+function stCls(s){return{pago:'st-pa',programar:'st-pr',programado:'st-pd',vencido:'st-ve'}[s]||'st-pr';}
+function stLbl(s){return{pago:'Pago',programar:'Programar',programado:'Programado',vencido:'Vencido'}[s]||s;}
+function fmtBR(iso){if(!iso)return'—';const[y,m,d]=iso.split('-');return`${d}/${m}/${y}`;}
+function fmtSz(b){if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(1)+' MB';}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function toBase64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsDataURL(file);});}
+
+// ── Folder select ─────────────────────────────────
 function selFolder(f,el){
   activeFolder=f;
   document.querySelectorAll('.fi').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
-  if(f!=='all')document.getElementById('mCat').value=f;
+  if(f!=='all') document.getElementById('mCat').value=f;
   renderDocs();
 }
 function setView(m){
@@ -568,13 +611,14 @@ function setView(m){
   document.getElementById('lbtn').classList.toggle('active',m==='list');
 }
 
-/* UPLOAD MODAL */
+// ── Upload modal ──────────────────────────────────
 function openUpModal(){
   pendFiles=[];
   document.getElementById('fpArea').innerHTML='';
   document.getElementById('fileIn').value='';
   document.getElementById('mDue').value='';
   document.getElementById('mNota').value='';
+  document.getElementById('btnSave').disabled=false;
   document.getElementById('upOv').classList.add('open');
 }
 function closeUpModal(){document.getElementById('upOv').classList.remove('open');}
@@ -582,42 +626,47 @@ function handleUpOvClick(e){if(e.target===document.getElementById('upOv'))closeU
 
 function onFileSelect(e){pendFiles=Array.from(e.target.files);renderFP();}
 function renderFP(){
-  document.getElementById('fpArea').innerHTML=pendFiles.map(f=>`
-    <div class="fpi"><i class="ph-fill ph-file-pdf"></i><span class="fpi-n">${f.name}</span><span class="fpi-s">${fmtSz(f.size)}</span></div>`).join('');
+  document.getElementById('fpArea').innerHTML=pendFiles.map(f=>
+    `<div class="fpi"><i class="ph-fill ph-file-pdf"></i><span class="fpi-n">${esc(f.name)}</span><span class="fpi-s">${fmtSz(f.size)}</span></div>`
+  ).join('');
 }
 
-function saveUpload(){
+async function saveUpload(){
   if(!pendFiles.length){showToast('Selecione ao menos um arquivo!','warn');return;}
+  const btn=document.getElementById('btnSave');
+  btn.disabled=true;
   const cat=document.getElementById('mCat').value;
   const mon=document.getElementById('mMon').value;
   const due=document.getElementById('mDue').value;
-  const st=document.getElementById('mSt').value;
+  const st =document.getElementById('mSt').value;
   const nota=document.getElementById('mNota').value.trim();
-  let saved=0;
-  const next=idx=>{
-    if(idx>=pendFiles.length){saveDocs();closeUpModal();renderDocs();showToast(`${saved} arquivo(s) salvo(s)!`);return;}
-    const f=pendFiles[idx];
-    const r=new FileReader();
-    r.onload=ev=>{
-      docs.push({id:genId(),name:f.name,category:cat,month:mon,due,status:st,nota,
-                 size:fmtSz(f.size),fileData:ev.target.result,compData:null,compName:null,
-                 uploadedAt:new Date().toISOString()});
-      saved++;next(idx+1);
-    };
-    r.readAsDataURL(f);
-  };
-  next(0);
+  closeUpModal();
+
+  let ok=0;
+  for(const f of pendFiles){
+    showLoading(true, `Enviando ${f.name}...`);
+    try{
+      const b64=await toBase64(f);
+      const data=await api({action:'uploadFile',name:f.name,category:cat,month:mon,
+                            due,status:st,nota,size:fmtSz(f.size),base64:b64,mimeType:f.type||'application/pdf'});
+      if(data.ok) ok++;
+      else showToast('Erro: '+(data.error||'falha no upload'),'err');
+    }catch(e){showToast('Erro de conexão no upload.','err');}
+  }
+  showLoading(false);
+  if(ok) showToast(`${ok} arquivo(s) enviado(s) com sucesso!`);
+  await loadDocs();
 }
 
-/* PANEL */
+// ── Panel ─────────────────────────────────────────
 function openPanel(id){
   const doc=docs.find(d=>d.id===id);if(!doc)return;
-  activeId=id;panelSt=doc.status;
+  activeId=id; panelSt=doc.status;
   document.getElementById('pNm').textContent=doc.name;
   document.getElementById('pSb').textContent=`${FL[doc.category]||doc.category} · ${ML[doc.month]||doc.month}/25`;
   const pi=document.getElementById('pIco');
-  pi.innerHTML=doc.compData?'<i class="ph-fill ph-seal-check"></i>':'<i class="ph-fill ph-file-pdf"></i>';
-  pi.className='ph-ico'+(doc.compData?' comp':'');
+  pi.innerHTML=doc.compFileId?'<i class="ph-fill ph-seal-check"></i>':'<i class="ph-fill ph-file-pdf"></i>';
+  pi.className='ph-ico'+(doc.compFileId?' comp':'');
   const isOv=doc.due&&new Date(doc.due+'T00:00:00')<new Date()&&doc.status!=='pago';
   document.getElementById('pMeta').innerHTML=`
     <div class="pmi"><div class="pml">Competência</div><div class="pmv">${ML[doc.month]||doc.month} / 2025</div></div>
@@ -626,18 +675,19 @@ function openPanel(id){
     <div class="pmi"><div class="pml">Status</div><div class="pmv"><span class="stb ${stCls(doc.status)}">${stLbl(doc.status)}</span></div></div>
     <div class="pmi" style="grid-column:1/-1">
       <div class="pml">📝 Nota Explicativa</div>
-      <textarea id="pNota" rows="3" placeholder="Ex: NF aguardando aprovação dos gestores X, Y e Z..." style="width:100%;margin-top:5px;background:var(--ct-surface);border:1px solid var(--ct-border);border-radius:7px;color:var(--ct-text-1);font-family:var(--font-b);font-size:12px;padding:9px 11px;outline:none;resize:vertical;min-height:68px;line-height:1.5;transition:border-color .2s" onfocus="this.style.borderColor='var(--ow-orange)'" onblur="this.style.borderColor='var(--ct-border)'">${doc.nota||''}</textarea>
+      <textarea id="pNota" rows="3" placeholder="Ex: NF aguardando aprovação dos gestores X, Y e Z..." style="width:100%;margin-top:5px;background:var(--ct-bg);border:1px solid var(--ct-border);border-radius:7px;color:var(--ct-text-1);font-family:var(--font-b);font-size:12px;padding:9px 11px;outline:none;resize:vertical;min-height:68px;line-height:1.5;transition:border-color .2s" onfocus="this.style.borderColor='var(--ow-orange)'" onblur="this.style.borderColor='var(--ct-border)'">${esc(doc.nota||'')}</textarea>
     </div>`;
   document.querySelectorAll('.sab').forEach(b=>b.classList.remove('act-pa','act-pr','act-pd','act-ve'));
   const mp={programar:'act-pr',programado:'act-pd',pago:'act-pa',vencido:'act-ve'};
-  const ab=document.querySelector(`.sab.s-${doc.status==='programar'?'pr':doc.status==='programado'?'pd':doc.status==='pago'?'pa':'ve'}`);
+  const sel={programar:'s-pr',programado:'s-pd',pago:'s-pa',vencido:'s-ve'}[doc.status];
+  const ab=document.querySelector('.sab.'+sel);
   if(ab)ab.classList.add(mp[doc.status]);
-  /* boleto */
+  // Boleto
   const bb=document.getElementById('boletoBox');
-  bb.innerHTML=doc.fileData
-    ?`<div class="att-row" onclick="openFile('${id}','boleto')">
+  bb.innerHTML=doc.fileUrl
+    ?`<div class="att-row" onclick="openFile('${esc(doc.fileUrl)}','${esc(doc.name)}','boleto')">
         <div class="att-ico pdf"><i class="ph-fill ph-file-pdf"></i></div>
-        <div class="att-inf"><div class="att-n">${doc.name}</div><div class="att-s">${doc.size||'PDF'} · Boleto / Guia Original</div></div>
+        <div class="att-inf"><div class="att-n">${esc(doc.name)}</div><div class="att-s">${doc.size||'PDF'} · Boleto / Guia Original · Google Drive</div></div>
         <span class="att-btn"><i class="ph-bold ph-eye"></i> Abrir</span></div>`
     :`<div style="padding:14px;text-align:center;color:var(--ct-text-3);font-size:12px">Nenhum arquivo anexado</div>`;
   renderCompArea(doc);
@@ -646,11 +696,11 @@ function openPanel(id){
 
 function renderCompArea(doc){
   const a=document.getElementById('compArea');
-  if(doc.compData){
+  if(doc.compFileId){
     a.innerHTML=`<div class="att-box">
-      <div class="att-row" onclick="openFile('${doc.id}','comp')">
+      <div class="att-row" onclick="openFile('${esc(doc.compFileUrl)}','${esc(doc.compName||'Comprovante')}','comp')">
         <div class="att-ico comp"><i class="ph-fill ph-seal-check"></i></div>
-        <div class="att-inf"><div class="att-n">${doc.compName||'Comprovante'}</div><div class="att-s">Comprovante de Pagamento</div></div>
+        <div class="att-inf"><div class="att-n">${esc(doc.compName||'Comprovante')}</div><div class="att-s">Comprovante de Pagamento · Google Drive</div></div>
         <span class="att-btn gr"><i class="ph-bold ph-eye"></i> Abrir</span>
       </div>
       <div class="att-sep"></div>
@@ -658,16 +708,11 @@ function renderCompArea(doc){
         <div class="att-ico rep"><i class="ph-bold ph-arrow-clockwise"></i></div>
         <div class="att-inf"><div class="att-n" style="color:var(--ct-text-3)">Substituir comprovante</div></div>
       </div></div>`;
-  } else {
-    a.innerHTML=`<div class="cu" id="cuArea" onclick="trigComp('${doc.id}')">
+  }else{
+    a.innerHTML=`<div class="cu" onclick="trigComp('${doc.id}')">
       <i class="ph-fill ph-upload-simple"></i>
       <p><strong>Clique ou arraste</strong> o comprovante aqui<br><small style="color:#bbb;font-size:11px">PDF, PNG ou JPG</small></p></div>`;
   }
-}
-
-function trigComp(id){
-  document.getElementById('compIn').dataset.docId=id;
-  document.getElementById('compIn').click();
 }
 
 function closePanel(){document.getElementById('pOv').classList.remove('open');activeId=null;}
@@ -682,62 +727,86 @@ function setSt(s){
   if(b)b.classList.add(mp[s]);
 }
 
-function savePanel(){
+async function savePanel(){
   const doc=docs.find(d=>d.id===activeId);if(!doc)return;
-  doc.status=panelSt;
-  const notaEl=document.getElementById('pNota');
-  if(notaEl)doc.nota=notaEl.value.trim();
-  saveDocs();renderDocs();openPanel(activeId);
-  showToast('Alterações salvas!');
+  const btn=document.getElementById('btnPanelSave');
+  btn.disabled=true;
+  const nota=document.getElementById('pNota')?.value.trim();
+  showLoading(true,'Salvando alterações...');
+  try{
+    const r=await api({action:'updateRecord',id:activeId,status:panelSt,nota});
+    if(r.ok){
+      doc.status=panelSt;
+      if(nota!==undefined)doc.nota=nota;
+      renderDocs();
+      openPanel(activeId);
+      showToast('Alterações salvas!');
+    }else showToast('Erro: '+(r.error||''),'err');
+  }catch(e){showToast('Erro de conexão.','err');}
+  showLoading(false);
+  btn.disabled=false;
 }
 
-function delFromPanel(){
-  if(!confirm('Excluir este arquivo?'))return;
-  docs=docs.filter(d=>d.id!==activeId);
-  saveDocs();closePanel();renderDocs();showToast('Arquivo excluído.');
+async function delFromPanel(){
+  if(!confirm('Excluir este arquivo? Ele será movido para a lixeira do Drive.'))return;
+  showLoading(true,'Excluindo...');
+  try{
+    const r=await api({action:'deleteRecord',id:activeId});
+    if(r.ok){closePanel();await loadDocs();showToast('Arquivo excluído.');}
+    else showToast('Erro: '+(r.error||''),'err');
+  }catch(e){showToast('Erro de conexão.','err');}
+  showLoading(false);
 }
 
-function openFile(id,type){
-  const doc=docs.find(d=>d.id===id);if(!doc)return;
-  const data=type==='comp'?doc.compData:doc.fileData;
-  if(!data){showToast('Arquivo não encontrado.','warn');return;}
-  const isComp=type==='comp';
-  document.getElementById('pdfTitle').textContent=isComp?(doc.compName||'Comprovante'):doc.name;
+async function delDoc(id){
+  if(!confirm('Excluir este arquivo? Ele será movido para a lixeira do Drive.'))return;
+  showLoading(true,'Excluindo...');
+  try{
+    const r=await api({action:'deleteRecord',id});
+    if(r.ok){await loadDocs();showToast('Arquivo excluído.');}
+    else showToast('Erro: '+(r.error||''),'err');
+  }catch(e){showToast('Erro de conexão.','err');}
+  showLoading(false);
+}
+
+// ── Comprovante ───────────────────────────────────
+function trigComp(id){document.getElementById('compIn').dataset.docId=id;document.getElementById('compIn').click();}
+
+async function onCompSel(e){
+  const f=e.target.files[0];if(!f)return;
+  const id=e.target.dataset.docId||activeId;
+  showLoading(true,'Enviando comprovante...');
+  try{
+    const b64=await toBase64(f);
+    const r=await api({action:'uploadComp',id,name:f.name,base64:b64,mimeType:f.type||'application/pdf'});
+    if(r.ok){
+      const doc=docs.find(d=>d.id===id);
+      if(doc){doc.compFileId=r.compFileId;doc.compFileUrl=r.compFileUrl;doc.compName=f.name;doc.status='pago';}
+      renderDocs();
+      if(activeId===id)openPanel(id);
+      showToast('Comprovante enviado! Status → Pago.');
+    }else showToast('Erro: '+(r.error||''),'err');
+  }catch(err){showToast('Erro de conexão.','err');}
+  showLoading(false);
+  e.target.value='';
+}
+
+// ── PDF Viewer ────────────────────────────────────
+function openFile(url,title,type){
+  if(!url){showToast('Arquivo não disponível.','warn');return;}
+  document.getElementById('pdfTitle').textContent=title;
   const typeEl=document.getElementById('pdfType');
-  typeEl.textContent=isComp?'Comprovante':'Boleto / Guia';
-  typeEl.className='pdf-bar-type '+(isComp?'comp':'boleto');
-  document.getElementById('pdfFrame').src=data;
+  typeEl.textContent=type==='comp'?'Comprovante':'Boleto / Guia';
+  typeEl.className='pdf-bar-type '+(type==='comp'?'comp':'boleto');
+  document.getElementById('pdfFrame').src=url;
   document.getElementById('pdfOv').classList.add('open');
 }
 function closePdfViewer(){
   document.getElementById('pdfOv').classList.remove('open');
-  // Small delay before clearing src to avoid flash
   setTimeout(()=>{document.getElementById('pdfFrame').src='';},300);
 }
 
-function delDoc(id){
-  if(!confirm('Excluir este arquivo?'))return;
-  docs=docs.filter(d=>d.id!==id);saveDocs();renderDocs();showToast('Arquivo excluído.');
-}
-
-/* COMPROVANTE */
-function onCompSel(e){
-  const f=e.target.files[0];if(!f)return;
-  const id=e.target.dataset.docId||activeId;
-  const doc=docs.find(d=>d.id===id);if(!doc)return;
-  const r=new FileReader();
-  r.onload=ev=>{
-    doc.compData=ev.target.result;doc.compName=f.name;
-    if(doc.status!=='pago'){doc.status='pago';panelSt='pago';}
-    saveDocs();renderDocs();
-    if(activeId===id)openPanel(id);
-    showToast('Comprovante anexado — status alterado para Pago!');
-    e.target.value='';
-  };
-  r.readAsDataURL(f);
-}
-
-/* DRAG & DROP */
+// ── Drag & Drop ───────────────────────────────────
 const mdpEl=document.getElementById('mdp');
 mdpEl.addEventListener('dragover',e=>{e.preventDefault();mdpEl.classList.add('drag');});
 mdpEl.addEventListener('dragleave',()=>mdpEl.classList.remove('drag'));
@@ -746,7 +815,6 @@ mdpEl.addEventListener('drop',e=>{
   const files=Array.from(e.dataTransfer.files).filter(f=>f.type==='application/pdf'||f.name.toLowerCase().endsWith('.pdf'));
   if(files.length){pendFiles=files;renderFP();}
 });
-
 document.getElementById('dropZone').addEventListener('dragover',e=>{e.preventDefault();document.getElementById('dropZone').classList.add('drag');});
 document.getElementById('dropZone').addEventListener('dragleave',()=>document.getElementById('dropZone').classList.remove('drag'));
 document.getElementById('dropZone').addEventListener('drop',e=>{
@@ -756,23 +824,23 @@ document.getElementById('dropZone').addEventListener('drop',e=>{
   else showToast('Apenas PDFs são aceitos na central.','warn');
 });
 
-/* TOAST */
+// ── Toast ─────────────────────────────────────────
 let tTimer;
 function showToast(msg,type='ok'){
   const t=document.getElementById('toast');
   const cfg={ok:{cls:'ph-fill ph-check-circle',c:'var(--s-pago)',b:'#bbf7d0'},
-              warn:{cls:'ph-fill ph-warning-circle',c:'var(--s-avencer)',b:'#fde68a'},
+              warn:{cls:'ph-fill ph-warning-circle',c:'var(--s-programar)',b:'#fed7aa'},
               err:{cls:'ph-fill ph-x-circle',c:'var(--s-vencido)',b:'#fecaca'}}[type];
   document.getElementById('tIco').className=cfg.cls;
   document.getElementById('tIco').style.color=cfg.c;
   document.getElementById('tMsg').textContent=msg;
-  document.getElementById('toast').style.borderColor=cfg.b;
-  t.classList.add('show');clearTimeout(tTimer);tTimer=setTimeout(()=>t.classList.remove('show'),3400);
+  t.style.borderColor=cfg.b;
+  t.classList.add('show');clearTimeout(tTimer);
+  tTimer=setTimeout(()=>t.classList.remove('show'),3600);
 }
 
-checkExpiry();
-renderDocs();
-setInterval(checkExpiry,3600000);
+// ── Init ──────────────────────────────────────────
+loadDocs();
 </script>
 </body>
 </html>
