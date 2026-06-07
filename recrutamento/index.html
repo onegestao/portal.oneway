@@ -659,7 +659,7 @@ body{
 <div class="toasts" id="toasts"></div>
 
 <!-- ============ DATA ============ -->
-<script id="app-data" type="application/json">{"candidates":[{"id":1,"name":"Modelo (Priscilla)","client":"Cliente Teste","vacancy":"Analista de Controladoria","status":"Finalista","dateSent":"2025-03-08","age":"27 anos","education":"MBA em Controladoria","location":"Barueri/SP","pretension":"R$ 4.200,00","start":"Imediato","techHighlights":"Experiência em controladoria, DRE, Balanço e Forecast.","attentionPoints":"Afastamento temporário do mercado.","techScope":"Domínio de escrituração contábil e indicadores financeiros.","tools":"Excel Avançado, Datasul.","careerContext":"Retorno após período dedicado à família.","behavioralSynthesis":"Perfil analítico, organizado e comunicativo.","behavioralEvidence":"Histórico de liderança de pequenas equipes.","behavioralMatch":"Alta aderência à cultura da empresa.","conclusion":"Candidata com forte base técnica e fit cultural. Recomendamos avançar.","recommendation":"Avançar para avaliação técnica","nextSteps":"Agendar teste técnico.","competencies":[{"name":"Atenção aos Detalhes","concept":"Foco e precisão","req":5,"alc":4},{"name":"Comunicação","concept":"Clareza verbal","req":5,"alc":4},{"name":"Organização","concept":"Gestão de tempo","req":5,"alc":5},{"name":"Proatividade","concept":"Antecipação","req":5,"alc":3},{"name":"Comportamento","concept":"Atitudes do profissional","req":5,"alc":4},{"name":"Liderança","concept":"Capacidade de liderar","req":5,"alc":3}],"attachments":[],"folderUrl":""}],"activeId":1,"config":{"webappUrl":"","rootFolder":"Recrutamento — Currículos"}}</script>
+<script id="app-data" type="application/json">{"candidates":[{"id":1,"name":"Modelo (Priscilla)","client":"Cliente Teste","vacancy":"Analista de Controladoria","status":"Finalista","dateSent":"2025-03-08","age":"27 anos","education":"MBA em Controladoria","location":"Barueri/SP","pretension":"R$ 4.200,00","start":"Imediato","techHighlights":"Experiência em controladoria, DRE, Balanço e Forecast.","attentionPoints":"Afastamento temporário do mercado.","techScope":"Domínio de escrituração contábil e indicadores financeiros.","tools":"Excel Avançado, Datasul.","careerContext":"Retorno após período dedicado à família.","behavioralSynthesis":"Perfil analítico, organizado e comunicativo.","behavioralEvidence":"Histórico de liderança de pequenas equipes.","behavioralMatch":"Alta aderência à cultura da empresa.","conclusion":"Candidata com forte base técnica e fit cultural. Recomendamos avançar.","recommendation":"Avançar para avaliação técnica","nextSteps":"Agendar teste técnico.","competencies":[{"name":"Atenção aos Detalhes","concept":"Foco e precisão","req":5,"alc":4},{"name":"Comunicação","concept":"Clareza verbal","req":5,"alc":4},{"name":"Organização","concept":"Gestão de tempo","req":5,"alc":5},{"name":"Proatividade","concept":"Antecipação","req":5,"alc":3},{"name":"Comportamento","concept":"Atitudes do profissional","req":5,"alc":4},{"name":"Liderança","concept":"Capacidade de liderar","req":5,"alc":3}],"attachments":[],"folderUrl":""}],"activeId":1,"config":{"webappUrl":"https://script.google.com/macros/s/AKfycbxw8Td6LSUGvIbTUfp9YLeTWHU805eP9lM3iRJy8LI4lY24YgdY3WZWDqR3RfkUcuPu/exec","rootFolder":"Recrutamento — Currículos"}}</script>
 
 <!-- ============ LOGIC ============ -->
 <script>
@@ -674,13 +674,17 @@ const DEF_COMPS = [
 const STMAP = {"Em Análise":"analise","Finalista":"finalista","Reprovado":"reprovado","Contratado":"contratado"};
 const STCOLOR = {"Em Análise":"#b8893b","Finalista":"#6e2a3c","Reprovado":"#b23a48","Contratado":"#2f7d57"};
 
+// Link fixo do Web App (Apps Script). Pré-configurado — pode ser alterado nas Configurações se necessário.
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxw8Td6LSUGvIbTUfp9YLeTWHU805eP9lM3iRJy8LI4lY24YgdY3WZWDqR3RfkUcuPu/exec";
+
 const app = {
-  data:{candidates:[],activeId:null,config:{webappUrl:"",rootFolder:"Recrutamento — Currículos"}},
+  data:{candidates:[],activeId:null,config:{webappUrl:WEBAPP_URL,rootFolder:"Recrutamento — Currículos"}},
 
   init(){
     try{ this.data = JSON.parse(document.getElementById('app-data').textContent); }
-    catch(e){ this.data = {candidates:[],activeId:null,config:{webappUrl:"",rootFolder:"Recrutamento — Currículos"}}; }
-    if(!this.data.config) this.data.config = {webappUrl:"",rootFolder:"Recrutamento — Currículos"};
+    catch(e){ this.data = {candidates:[],activeId:null,config:{webappUrl:WEBAPP_URL,rootFolder:"Recrutamento — Currículos"}}; }
+    if(!this.data.config) this.data.config = {webappUrl:WEBAPP_URL,rootFolder:"Recrutamento — Currículos"};
+    if(!this.data.config.webappUrl) this.data.config.webappUrl = WEBAPP_URL; // link fixo
     this.data.candidates.forEach(c=>{ if(!c.attachments) c.attachments=[]; if(!c.competencies) c.competencies=JSON.parse(JSON.stringify(DEF_COMPS)); });
     if(!this.data.activeId && this.data.candidates.length) this.data.activeId = this.data.candidates[0].id;
     this.bindFields();
