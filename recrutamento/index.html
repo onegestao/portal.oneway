@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recrutamento · Parecer de Candidatos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --wine:#6e2a3c; --wine-700:#561f2e; --wine-deep:#2a1218; --wine-deeper:#1d0c11;
+  --gold:#b8893b; --gold-soft:#e7d2a6; --gold-bg:#f3e9d4;
+  --paper:#f7f1ea; --card:#ffffff; --ink:#241a1d; --muted:#857579; --faint:#a99ca0;
+  --line:#e8ddd4; --line-soft:#f0e7df;
+  --ok:#2f7d57; --warn:#b07c12; --bad:#b23a48; --info:#4a6b8a;
+  --shadow:0 1px 2px rgba(42,18,24,.05),0 12px 34px -16px rgba(42,18,24,.28);
+  --shadow-sm:0 1px 2px rgba(42,18,24,.06);
+  --side-w:296px; --bar-h:72px;
+}
+*{box-sizing:border-box;outline:none;-webkit-tap-highlight-color:transparent}
+html{background:var(--wine-deep);height:100%}
+body{
+  margin:0;height:100dvh;display:flex;overflow:hidden;
+  font-family:'Hanken Grotesk',system-ui,sans-serif;color:var(--ink);
+  background:var(--paper);font-size:14px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#d8cabf;border-radius:8px;border:3px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:#c4b1a4;background-clip:padding-box}
+.serif{font-family:'Fraunces',Georgia,serif}
+
+/* ============ SIDEBAR ============ */
+.sidebar{
+  width:var(--side-w);flex-shrink:0;display:flex;flex-direction:column;color:#f3e6df;
+  background:linear-gradient(176deg,var(--wine-deep) 0%,var(--wine-deeper) 100%);
+  position:relative;z-index:60;transition:transform .32s cubic-bezier(.4,0,.2,1);
+}
+.sidebar::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 60% at 100% 0%,rgba(184,137,59,.10),transparent 60%);}
+.brand{display:flex;align-items:center;gap:13px;padding:22px 22px 18px;position:relative;z-index:2}
+.seal{width:42px;height:42px;border-radius:11px;flex-shrink:0;display:grid;place-items:center;
+  background:linear-gradient(150deg,var(--gold) 0%,#9a6f2c 100%);color:#fff;
+  box-shadow:0 6px 16px -6px rgba(184,137,59,.7),inset 0 1px 0 rgba(255,255,255,.35);
+  font-family:'Fraunces',serif;font-weight:600;font-size:20px;letter-spacing:.5px}
+.brand .bt{line-height:1.05}
+.brand .bt b{font-family:'Fraunces',serif;font-weight:600;font-size:21px;color:#fff;letter-spacing:.2px}
+.brand .bt span{display:block;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-soft);margin-top:3px;font-weight:600}
+
+.search{padding:4px 18px 14px;position:relative;z-index:2}
+.search .wrap{position:relative;display:flex;align-items:center}
+.search svg{position:absolute;left:13px;width:15px;height:15px;color:rgba(243,230,223,.5)}
+.search input{
+  width:100%;border:1px solid rgba(243,230,223,.14);background:rgba(0,0,0,.22);color:#fff;
+  border-radius:10px;padding:10px 12px 10px 36px;font:inherit;font-size:13px;transition:.18s}
+.search input::placeholder{color:rgba(243,230,223,.42)}
+.search input:focus{border-color:var(--gold);background:rgba(0,0,0,.34)}
+
+.list{flex:1;overflow-y:auto;padding:2px 12px 12px}
+.list::-webkit-scrollbar-thumb{background:rgba(243,230,223,.18);background-clip:padding-box}
+.cand{
+  display:flex;align-items:center;gap:11px;padding:11px 11px;border-radius:11px;cursor:pointer;
+  margin-bottom:4px;position:relative;transition:.16s;border:1px solid transparent}
+.cand:hover{background:rgba(255,255,255,.05)}
+.cand.active{background:rgba(184,137,59,.13);border-color:rgba(184,137,59,.32)}
+.cand.active::before{content:"";position:absolute;left:-12px;top:11px;bottom:11px;width:3px;border-radius:0 3px 3px 0;background:var(--gold)}
+.mono{width:38px;height:38px;border-radius:10px;flex-shrink:0;display:grid;place-items:center;
+  font-family:'Fraunces',serif;font-weight:600;font-size:15px;color:#fff;
+  background:linear-gradient(150deg,rgba(255,255,255,.16),rgba(255,255,255,.04));
+  border:1px solid rgba(255,255,255,.12)}
+.cand.active .mono{background:linear-gradient(150deg,var(--gold),#9a6f2c);border-color:transparent}
+.cand .ci{flex:1;min-width:0}
+.cand .ci .nm{font-weight:600;font-size:13.5px;color:#fbf2ec;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cand .ci .rl{font-size:11.5px;color:rgba(243,230,223,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.cand .sdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.cand .del{position:absolute;right:8px;top:50%;transform:translateY(-50%);opacity:0;
+  width:28px;height:28px;border-radius:8px;border:none;background:rgba(178,58,72,.9);color:#fff;
+  display:grid;place-items:center;cursor:pointer;transition:.16s}
+.cand:hover .del{opacity:1}
+.cand .del:hover{background:#d04254}
+.cand .del svg{width:14px;height:14px}
+.empty-list{padding:26px 14px;text-align:center;font-size:12.5px;color:rgba(243,230,223,.5)}
+
+.side-foot{padding:14px 18px 16px;border-top:1px solid rgba(243,230,223,.1);position:relative;z-index:2}
+.btn-new{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:12px;border-radius:11px;border:1px solid var(--gold);background:transparent;color:var(--gold-soft);
+  font:inherit;font-weight:700;font-size:13.5px;cursor:pointer;transition:.18s;letter-spacing:.01em}
+.btn-new:hover{background:var(--gold);color:#2a1218;border-color:var(--gold)}
+.btn-new svg{width:16px;height:16px}
+.conn{display:flex;align-items:center;gap:8px;margin-top:13px;font-size:11.5px;color:rgba(243,230,223,.6)}
+.conn .cdot{width:8px;height:8px;border-radius:50%;background:var(--faint);box-shadow:0 0 0 0 rgba(47,125,87,.5);flex-shrink:0}
+.conn.on .cdot{background:#56c98c;animation:pulse 2.4s infinite}
+.conn.off .cdot{background:#d8636f}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(86,201,140,.5)}70%{box-shadow:0 0 0 7px rgba(86,201,140,0)}100%{box-shadow:0 0 0 0 rgba(86,201,140,0)}}
+.conn .gear{margin-left:auto;background:none;border:none;color:rgba(243,230,223,.55);cursor:pointer;padding:5px;border-radius:7px;display:grid;place-items:center;transition:.16s}
+.conn .gear:hover{color:var(--gold-soft);background:rgba(255,255,255,.06)}
+.conn .gear svg{width:16px;height:16px}
+
+/* ============ MAIN ============ */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--paper)}
+.topbar{
+  height:var(--bar-h);flex-shrink:0;display:flex;align-items:center;gap:14px;padding:0 26px;
+  background:rgba(247,241,234,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);z-index:40}
+.menu-btn{display:none;background:none;border:none;color:var(--wine);cursor:pointer;padding:6px}
+.menu-btn svg{width:24px;height:24px}
+.tb-title{display:flex;align-items:center;gap:14px;min-width:0;flex:1}
+.tb-mono{width:46px;height:46px;border-radius:12px;flex-shrink:0;display:grid;place-items:center;color:#fff;
+  font-family:'Fraunces',serif;font-weight:600;font-size:18px;
+  background:linear-gradient(150deg,var(--wine) 0%,var(--wine-700) 100%);box-shadow:var(--shadow-sm)}
+.tb-txt{min-width:0}
+.tb-txt h1{margin:0;font-family:'Fraunces',serif;font-weight:600;font-size:21px;color:var(--ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15}
+.tb-txt .sub{display:flex;align-items:center;gap:9px;margin-top:2px}
+.tb-txt .sub small{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;letter-spacing:.02em;
+  display:inline-flex;align-items:center;gap:5px}
+.badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.badge.b-analise{background:var(--gold-bg);color:#8a6414}
+.badge.b-finalista{background:#eadbe0;color:var(--wine)}
+.badge.b-reprovado{background:#f6e0e2;color:var(--bad)}
+.badge.b-contratado{background:#dcefe4;color:var(--ok)}
+
+.actions{display:flex;align-items:center;gap:9px}
+.ib{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:10px;font:inherit;
+  font-weight:600;font-size:13px;cursor:pointer;transition:.17s;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.ib:hover{border-color:#d6c7ba;background:#fdfaf6;transform:translateY(-1px)}
+.ib svg{width:16px;height:16px}
+.ib.prim{background:var(--wine);color:#fff;border-color:var(--wine)}
+.ib.prim:hover{background:var(--wine-700)}
+.ib.dark{background:var(--ink);color:#fff;border-color:var(--ink)}
+.ib.dark:hover{background:#000}
+.ib.icon-only{padding:9px 10px}
+
+.scroll{flex:1;overflow-y:auto;padding:34px 26px 80px}
+
+/* ============ DOSSIER ============ */
+.dossier{max-width:920px;margin:0 auto;background:var(--card);border-radius:18px;box-shadow:var(--shadow);
+  overflow:hidden;border:1px solid var(--line-soft);animation:rise .5s cubic-bezier(.2,.7,.3,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.doc-head{position:relative;padding:26px 38px;color:#f5e9e2;overflow:hidden;
+  background:linear-gradient(135deg,var(--wine) 0%,var(--wine-deep) 100%)}
+.doc-head::after{content:"";position:absolute;right:-40px;top:-40px;width:220px;height:220px;border-radius:50%;
+  background:radial-gradient(circle,rgba(184,137,59,.22),transparent 70%)}
+.doc-head .dh-row{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;position:relative;z-index:2;flex-wrap:wrap}
+.doc-head .logo{font-family:'Fraunces',serif;font-weight:600;font-size:23px;letter-spacing:.3px}
+.doc-head .logo span{display:block;font-family:'Hanken Grotesk';font-weight:600;font-size:10.5px;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--gold-soft);margin-top:4px}
+.doc-head .meta{text-align:right;font-size:12px;line-height:1.7;color:rgba(245,233,226,.78)}
+.doc-head .meta b{display:block;font-family:'Fraunces',serif;font-size:15px;color:#fff;font-weight:500;margin-bottom:1px}
+.doc-head .meta .conf{display:inline-block;margin-top:5px;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
+  border:1px solid rgba(231,210,166,.4);color:var(--gold-soft);padding:2px 9px;border-radius:20px}
+.gold-rule{height:3px;background:linear-gradient(90deg,var(--gold),transparent)}
+
+.adh{display:flex;align-items:center;gap:16px;margin-top:20px;position:relative;z-index:2;
+  background:rgba(0,0,0,.18);border:1px solid rgba(231,210,166,.18);border-radius:13px;padding:14px 18px}
+.adh .ring{position:relative;width:58px;height:58px;flex-shrink:0}
+.adh .ring svg{transform:rotate(-90deg)}
+.adh .ring .pct{position:absolute;inset:0;display:grid;place-items:center;font-family:'Fraunces',serif;
+  font-weight:600;font-size:16px;color:#fff}
+.adh .at b{font-family:'Fraunces',serif;font-weight:500;font-size:15px;color:#fff;display:block}
+.adh .at span{font-size:11.5px;color:rgba(245,233,226,.7)}
+
+.doc-body{padding:14px 38px 40px}
+.section{margin-top:30px}
+.sec-head{display:flex;align-items:center;gap:11px;margin-bottom:16px}
+.sec-head .num{font-family:'Fraunces',serif;font-size:13px;font-weight:600;color:var(--gold);
+  width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:var(--gold-bg);flex-shrink:0}
+.sec-head h2{margin:0;font-family:'Fraunces',serif;font-weight:600;font-size:17px;color:var(--ink)}
+.sec-head .ln{flex:1;height:1px;background:var(--line)}
+
+.row{display:grid;gap:14px;margin-bottom:14px}
+.row.c2{grid-template-columns:1fr 1fr}
+.row.c3{grid-template-columns:1fr 1fr 1fr}
+.row.c21{grid-template-columns:2fr 2fr 1fr}
+.row.c31{grid-template-columns:3fr 1fr}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.field input,.field textarea,.field select{
+  width:100%;font:inherit;font-size:13.5px;color:var(--ink);background:#fdfbf8;
+  border:1px solid var(--line);border-radius:10px;padding:10px 12px;transition:.16s;resize:none}
+.field textarea{line-height:1.55;overflow:hidden}
+.field input:hover,.field textarea:hover,.field select:hover{border-color:#d8cabf}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--wine);background:#fff;box-shadow:0 0 0 3px rgba(110,42,60,.08)}
+.field input.lead{font-family:'Fraunces',serif;font-weight:600;font-size:17px;color:var(--wine)}
+.field select{appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23857579' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:34px}
+.field select.reco{background-color:var(--wine);color:#fff;font-weight:700;border-color:var(--wine);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23e7d2a6' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")}
+.field.final textarea{background:#fbf6f2;border-color:#ecdfd6;font-size:14px}
+
+/* competency table */
+.comp{border:1px solid var(--line);border-radius:13px;overflow:hidden}
+.comp table{width:100%;border-collapse:collapse;font-size:13px}
+.comp thead th{background:#faf5f0;text-align:left;padding:11px 14px;font-size:10.5px;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)}
+.comp thead th.c{text-align:center;width:78px}
+.comp thead th.m{width:120px;text-align:center}
+.comp tbody td{padding:7px 10px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+.comp tbody tr:last-child td{border-bottom:none}
+.comp tbody tr:hover{background:#fdfaf6}
+.comp td input[type=text]{border:1px solid transparent;background:transparent;padding:7px 9px;font-size:13px;border-radius:7px}
+.comp td input[type=text]:hover{background:#fff;border-color:var(--line)}
+.comp td input[type=text]:focus{background:#fff;border-color:var(--wine);box-shadow:0 0 0 3px rgba(110,42,60,.07)}
+.comp td .cn{font-weight:600;color:var(--ink)}
+.comp td .sc{width:54px;text-align:center;font-weight:700;border:1px solid var(--line);border-radius:8px;
+  padding:7px 4px;font-size:13.5px;background:#fdfbf8;color:var(--wine);margin:0 auto;display:block}
+.comp td .sc:focus{border-color:var(--wine);background:#fff}
+.comp .meter{height:7px;border-radius:5px;background:#eee5dc;overflow:hidden;position:relative}
+.comp .meter i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;transition:width .4s,background .3s}
+.comp tfoot td{padding:12px 14px;background:#faf5f0;border-top:1px solid var(--line)}
+.comp .addc{display:inline-flex;align-items:center;gap:6px;background:none;border:1px dashed var(--gold);
+  color:var(--gold);padding:6px 12px;border-radius:8px;font:inherit;font-weight:600;font-size:12.5px;cursor:pointer;transition:.16s}
+.comp .addc:hover{background:var(--gold-bg)}
+.comp .addc svg{width:14px;height:14px}
+.comp .rmc{background:none;border:none;color:var(--faint);cursor:pointer;padding:5px;border-radius:6px;display:grid;place-items:center}
+.comp .rmc:hover{color:var(--bad);background:#f6e0e2}
+.comp .rmc svg{width:15px;height:15px}
+
+/* attachments / CV */
+.drop{border:2px dashed var(--gold-soft);border-radius:14px;padding:26px 20px;text-align:center;
+  background:linear-gradient(180deg,#fdf9f1,#fdfbf8);cursor:pointer;transition:.18s;position:relative}
+.drop:hover{border-color:var(--gold);background:#fbf4e6}
+.drop.drag{border-color:var(--gold);background:var(--gold-bg);transform:scale(1.005)}
+.drop .ic{width:46px;height:46px;border-radius:12px;margin:0 auto 10px;display:grid;place-items:center;
+  background:var(--gold-bg);color:var(--gold)}
+.drop .ic svg{width:23px;height:23px}
+.drop b{font-size:14px;color:var(--ink)}
+.drop b u{color:var(--wine);text-underline-offset:2px}
+.drop small{display:block;margin-top:4px;font-size:11.5px;color:var(--muted)}
+.drop .folder-link{display:inline-flex;align-items:center;gap:5px;margin-top:11px;font-size:12px;font-weight:600;
+  color:var(--wine);text-decoration:none;border:1px solid var(--line);background:#fff;padding:6px 11px;border-radius:8px}
+.drop .folder-link:hover{border-color:var(--wine)}
+.drop .folder-link svg{width:14px;height:14px}
+
+.files{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:9px}
+.fitem{display:flex;align-items:center;gap:12px;padding:11px 13px;border:1px solid var(--line);border-radius:11px;background:#fdfbf8;transition:.16s}
+.fitem:hover{border-color:#d8cabf;background:#fff}
+.fitem .fic{width:38px;height:38px;border-radius:9px;display:grid;place-items:center;flex-shrink:0;
+  background:#f6e0e2;color:var(--bad)}
+.fitem .fic.doc{background:#dbe7f3;color:var(--info)}
+.fitem .fic.img{background:#dcefe4;color:var(--ok)}
+.fitem .fic.gen{background:var(--gold-bg);color:var(--gold)}
+.fitem .fic svg{width:18px;height:18px}
+.fitem .fi{flex:1;min-width:0}
+.fitem .fi .fn{font-weight:600;font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fitem .fi .fm{font-size:11.5px;color:var(--muted);margin-top:1px}
+.fitem .fa{display:flex;gap:6px;flex-shrink:0}
+.fitem .fa a,.fitem .fa button{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:#fff;
+  display:grid;place-items:center;cursor:pointer;color:var(--muted);transition:.16s;text-decoration:none}
+.fitem .fa a:hover{color:var(--wine);border-color:var(--wine)}
+.fitem .fa button:hover{color:var(--bad);border-color:var(--bad);background:#fdf2f3}
+.fitem .fa svg{width:15px;height:15px}
+.fitem.up{opacity:.65}
+.fitem.up .fic{background:var(--gold-bg);color:var(--gold)}
+.spin{width:18px;height:18px;border:2.5px solid var(--gold-soft);border-top-color:var(--gold);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* empty state */
+.empty{max-width:460px;margin:80px auto;text-align:center;animation:rise .5s both}
+.empty .es{width:74px;height:74px;border-radius:18px;margin:0 auto 18px;display:grid;place-items:center;
+  background:linear-gradient(150deg,var(--wine),var(--wine-deep));color:var(--gold-soft);box-shadow:var(--shadow)}
+.empty .es svg{width:34px;height:34px}
+.empty h2{font-family:'Fraunces',serif;font-weight:600;font-size:22px;margin:0 0 8px}
+.empty p{color:var(--muted);margin:0 0 22px;font-size:14px}
+
+/* ============ MODAL ============ */
+.modal-bg{position:fixed;inset:0;background:rgba(29,12,17,.55);backdrop-filter:blur(4px);z-index:200;
+  display:none;align-items:center;justify-content:center;padding:20px;animation:fade .2s}
+.modal-bg.show{display:flex}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal{background:var(--card);border-radius:18px;width:100%;max-width:520px;box-shadow:0 30px 70px -20px rgba(29,12,17,.6);
+  overflow:hidden;animation:rise .3s both}
+.modal .mh{padding:22px 26px;background:linear-gradient(135deg,var(--wine),var(--wine-deep));color:#fff;
+  display:flex;align-items:center;gap:13px}
+.modal .mh .mi{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;background:rgba(255,255,255,.13)}
+.modal .mh .mi svg{width:21px;height:21px;color:var(--gold-soft)}
+.modal .mh h3{margin:0;font-family:'Fraunces',serif;font-weight:600;font-size:19px}
+.modal .mh p{margin:2px 0 0;font-size:12px;color:rgba(245,233,226,.75)}
+.modal .mb{padding:24px 26px}
+.modal .mb .field{margin-bottom:16px}
+.modal .mb .field input{font-size:13px}
+.hint{font-size:11.5px;color:var(--muted);line-height:1.55;background:#faf5f0;border:1px solid var(--line-soft);
+  border-radius:10px;padding:11px 13px;margin-bottom:4px}
+.hint b{color:var(--wine)}
+.cfg-status{font-size:12.5px;font-weight:600;padding:10px 13px;border-radius:9px;margin-top:4px;display:none;align-items:center;gap:8px}
+.cfg-status.show{display:flex}
+.cfg-status.ok{background:#dcefe4;color:var(--ok)}
+.cfg-status.err{background:#f6e0e2;color:var(--bad)}
+.cfg-status.load{background:var(--gold-bg);color:#8a6414}
+.cfg-status svg{width:15px;height:15px}
+.modal .mf{padding:16px 26px 22px;display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--line-soft)}
+
+/* ============ VIEWER (pré-visualização) ============ */
+.viewer-bg{position:fixed;inset:0;background:rgba(20,8,12,.8);backdrop-filter:blur(6px);z-index:250;
+  display:none;flex-direction:column;padding:26px 28px 22px;animation:fade .2s}
+.viewer-bg.show{display:flex}
+.viewer-top{display:flex;align-items:center;gap:14px;max-width:1040px;width:100%;margin:0 auto 14px;color:#f5e9e2}
+.viewer-top .vmono{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;flex-shrink:0;
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12)}
+.viewer-top .vmono svg{width:20px;height:20px;color:var(--gold-soft)}
+.viewer-top .vt{flex:1;min-width:0}
+.viewer-top .vt b{font-family:'Fraunces',serif;font-weight:500;font-size:17px;color:#fff;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.viewer-top .vt span{font-size:11.5px;color:rgba(245,233,226,.62)}
+.viewer-top .va{display:flex;gap:9px;flex-shrink:0}
+.viewer-top .va a,.viewer-top .va button{display:inline-flex;align-items:center;gap:7px;padding:10px 14px;border-radius:10px;
+  font:inherit;font-weight:600;font-size:12.5px;cursor:pointer;text-decoration:none;transition:.16s;
+  border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#f5e9e2}
+.viewer-top .va a:hover,.viewer-top .va button:hover{background:rgba(255,255,255,.16)}
+.viewer-top .va svg{width:15px;height:15px}
+.viewer-top .va .close{background:var(--gold);color:#2a1218;border-color:var(--gold)}
+.viewer-top .va .close:hover{background:#c89846}
+.viewer-frame{flex:1;max-width:1040px;width:100%;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;
+  box-shadow:0 30px 80px -20px rgba(0,0,0,.7);position:relative}
+.viewer-frame iframe{width:100%;height:100%;border:none;display:block}
+.viewer-frame .vload{position:absolute;inset:0;display:grid;place-items:center;align-content:center;gap:12px;
+  background:#fff;color:var(--muted);font-size:13px;text-align:center}
+.viewer-frame .vload .spin{width:28px;height:28px}
+@media(max-width:900px){.viewer-bg{padding:14px}.viewer-top .va a span,.viewer-top .va button span{display:none}.viewer-top .vmono{display:none}}
+@media print{.viewer-bg{display:none!important}}
+
+/* ============ DANGER MODAL ============ */
+.modal.danger .mh{background:linear-gradient(135deg,#a52c39 0%,#5e1822 100%)}
+.danger-hint{background:#fbeef0;border-color:#f3d4d8;color:#7a2530}
+.danger-hint b{color:#a52c39}
+.danger-list{list-style:none;margin:0 0 16px;padding:0;display:flex;flex-direction:column;gap:7px;max-height:170px;overflow:auto}
+.danger-list li{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--ink);
+  background:#fdfbf8;border:1px solid var(--line);border-radius:9px;padding:9px 12px}
+.danger-list li::before{content:"";width:8px;height:8px;border-radius:2px;background:#b23a48;flex-shrink:0}
+.danger-list li.none{font-weight:500;color:var(--muted);background:#faf5f0}
+.danger-list li.none::before{background:var(--faint)}
+#dangerPass{font-size:14px;letter-spacing:.06em}
+.ib.danger-btn{background:#b23a48;color:#fff;border-color:#b23a48}
+.ib.danger-btn:hover{background:#9e2b38;border-color:#9e2b38}
+
+/* ============ TOASTS ============ */
+.toasts{position:fixed;bottom:22px;right:22px;z-index:300;display:flex;flex-direction:column;gap:10px;max-width:340px}
+.toast{display:flex;align-items:flex-start;gap:11px;background:var(--ink);color:#fff;padding:13px 15px;border-radius:12px;
+  box-shadow:0 14px 36px -10px rgba(0,0,0,.45);animation:toastIn .3s cubic-bezier(.2,.8,.3,1);font-size:13px;border-left:3px solid var(--gold)}
+.toast.ok{border-left-color:#56c98c}
+.toast.err{border-left-color:#e06b78}
+.toast .ti{flex-shrink:0;margin-top:1px}
+.toast .ti svg{width:17px;height:17px}
+.toast b{display:block;font-weight:700;margin-bottom:1px}
+.toast span{color:rgba(255,255,255,.78);font-size:12px}
+@keyframes toastIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+.toast.out{animation:toastOut .3s forwards}
+@keyframes toastOut{to{opacity:0;transform:translateX(24px)}}
+
+.overlay{display:none;position:fixed;inset:0;background:rgba(29,12,17,.5);z-index:50}
+.overlay.show{display:block}
+
+/* ============ RESPONSIVE ============ */
+@media(max-width:900px){
+  .sidebar{position:fixed;top:0;bottom:0;left:0;transform:translateX(-100%)}
+  .sidebar.open{transform:none;box-shadow:0 0 60px rgba(0,0,0,.5)}
+  .menu-btn{display:grid;place-items:center}
+  .scroll{padding:20px 14px 70px}
+  .doc-head,.doc-body{padding-left:22px;padding-right:22px}
+  .row.c2,.row.c3,.row.c21,.row.c31{grid-template-columns:1fr}
+  .tb-mono{display:none}
+  .lbl-hide{display:none}
+  .actions .ib span{display:none}
+  .ib{padding:9px 11px}
+}
+
+/* ============ PRINT ============ */
+@media print{
+  @page{margin:14mm}
+  html,body{height:auto;overflow:visible;background:#fff;display:block}
+  .sidebar,.topbar,.overlay,.toasts,.modal-bg,.drop{display:none!important}
+  .scroll{overflow:visible;padding:0}
+  .main{display:block}
+  .dossier{box-shadow:none;border:none;border-radius:0;max-width:100%;animation:none}
+  .doc-head{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .badge,.sec-head .num,.comp thead th,.comp tfoot td,.comp .meter,.comp .meter i,.adh,.field select.reco,.fitem .fic{
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .field input,.field textarea,.field select{border:none;background:transparent!important;padding:2px 0;box-shadow:none}
+  .field select{background-image:none}
+  .comp td input[type=text],.comp td .sc{border:none;background:transparent!important}
+  .comp .addc,.comp .rmc,.field select.reco{box-shadow:none}
+  .comp .addc{display:none}
+  .fitem .fa{display:none}
+  .section{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay" onclick="app.toggleSidebar()"></div>
+
+<!-- ============ SIDEBAR ============ -->
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <div class="seal">R</div>
+    <div class="bt"><b>Recrutamento</b><span>OneWay · Seleção</span></div>
+  </div>
+  <div class="search">
+    <div class="wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="text" id="searchInput" placeholder="Buscar candidato, vaga…" oninput="app.renderSidebar()">
+    </div>
+  </div>
+  <div class="list" id="candidateList"></div>
+  <div class="side-foot">
+    <button class="btn-new" onclick="app.addCandidate()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Nova Avaliação
+    </button>
+    <div class="conn off" id="conn">
+      <span class="cdot"></span>
+      <span id="connText">Drive não conectado</span>
+      <button class="gear" onclick="app.openSettings()" title="Configurar conexão">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- ============ MAIN ============ -->
+<div class="main">
+  <header class="topbar">
+    <button class="menu-btn" onclick="app.toggleSidebar()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <div class="tb-title">
+      <div class="tb-mono" id="tbMono">—</div>
+      <div class="tb-txt">
+        <h1 id="tbName">Recrutamento</h1>
+        <div class="sub"><span class="badge b-analise" id="tbBadge" style="display:none"></span><small id="tbRole"></small></div>
+      </div>
+    </div>
+    <div class="actions">
+      <input type="file" id="importInput" accept=".json" hidden onchange="app.importJSON(this)">
+      <button class="ib icon-only" onclick="document.getElementById('importInput').click()" title="Importar backup (.json)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M12 3v13M8 11l4 4 4-4"/></svg>
+      </button>
+      <button class="ib" onclick="app.saveHTML()" title="Salvar uma cópia do app (.html)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+        <span>Salvar App</span>
+      </button>
+      <button class="ib prim" onclick="window.print()" title="Gerar PDF / Imprimir parecer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+        <span>PDF</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="scroll">
+    <!-- EMPTY STATE -->
+    <div class="empty" id="emptyState" style="display:none">
+      <div class="es"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13A4 4 0 0 1 16 11"/></svg></div>
+      <h2>Nenhuma avaliação aberta</h2>
+      <p>Crie um novo parecer para começar a registrar a análise do candidato.</p>
+      <button class="ib prim" onclick="app.addCandidate()" style="margin:0 auto">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> Nova Avaliação
+      </button>
+    </div>
+
+    <!-- DOSSIER -->
+    <div class="dossier" id="dossier" style="display:none">
+      <div class="doc-head">
+        <div class="dh-row">
+          <div class="logo">Recrutamento<span>OneWay Mão de Obra</span></div>
+          <div class="meta"><b>Parecer do Candidato</b>Recrutamento Especializado<span class="conf">Confidencial</span></div>
+        </div>
+        <div class="adh">
+          <div class="ring">
+            <svg width="58" height="58"><circle cx="29" cy="29" r="24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="6"/><circle id="adhRing" cx="29" cy="29" r="24" fill="none" stroke="#e7d2a6" stroke-width="6" stroke-linecap="round" stroke-dasharray="150.8" stroke-dashoffset="150.8"/></svg>
+            <div class="pct" id="adhPct">0%</div>
+          </div>
+          <div class="at"><b id="adhLabel">Aderência geral</b><span>Competências alcançadas × requeridas</span></div>
+        </div>
+      </div>
+      <div class="gold-rule"></div>
+
+      <div class="doc-body">
+        <!-- 1. IDENTIFICAÇÃO -->
+        <div class="section">
+          <div class="sec-head"><span class="num">1</span><h2>Identificação</h2><span class="ln"></span></div>
+          <div class="row c21">
+            <div class="field"><label>Cliente</label><input type="text" data-field="client" placeholder="Empresa contratante"></div>
+            <div class="field"><label>Vaga</label><input type="text" data-field="vacancy" placeholder="Cargo"></div>
+            <div class="field"><label>Data</label><input type="date" data-field="dateSent"></div>
+          </div>
+          <div class="row c31">
+            <div class="field"><label>Candidato</label><input type="text" class="lead" data-field="name" placeholder="Nome completo"></div>
+            <div class="field"><label>Status</label>
+              <select data-field="status">
+                <option value="Em Análise">Em Análise</option>
+                <option value="Finalista">Finalista</option>
+                <option value="Reprovado">Reprovado</option>
+                <option value="Contratado">Contratado</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. RESUMO PROFISSIONAL -->
+        <div class="section">
+          <div class="sec-head"><span class="num">2</span><h2>Resumo Profissional</h2><span class="ln"></span></div>
+          <div class="row c2">
+            <div class="field"><label>Idade</label><input type="text" data-field="age" placeholder="Ex.: 27 anos"></div>
+            <div class="field"><label>Local</label><input type="text" data-field="location" placeholder="Cidade/UF"></div>
+          </div>
+          <div class="row c2">
+            <div class="field"><label>Pretensão</label><input type="text" data-field="pretension" placeholder="R$"></div>
+            <div class="field"><label>Disponibilidade de Início</label><input type="text" data-field="start" placeholder="Ex.: Imediato"></div>
+          </div>
+          <div class="row"><div class="field"><label>Formação</label><input type="text" data-field="education" placeholder="Escolaridade / cursos"></div></div>
+          <div class="row c2">
+            <div class="field"><label>Destaques Técnicos</label><textarea data-field="techHighlights" rows="4"></textarea></div>
+            <div class="field"><label>Pontos de Atenção</label><textarea data-field="attentionPoints" rows="4"></textarea></div>
+          </div>
+        </div>
+
+        <!-- 3. VALIDAÇÃO TÉCNICA -->
+        <div class="section">
+          <div class="sec-head"><span class="num">3</span><h2>Validação Técnica</h2><span class="ln"></span></div>
+          <div class="row"><div class="field"><label>Escopo Técnico</label><textarea data-field="techScope" rows="3"></textarea></div></div>
+          <div class="row"><div class="field"><label>Ferramentas</label><textarea data-field="tools" rows="2"></textarea></div></div>
+          <div class="row"><div class="field"><label>Contexto de Carreira</label><textarea data-field="careerContext" rows="3"></textarea></div></div>
+        </div>
+
+        <!-- 4. COMPETÊNCIAS -->
+        <div class="section">
+          <div class="sec-head"><span class="num">4</span><h2>Competências</h2><span class="ln"></span></div>
+          <div class="comp">
+            <table>
+              <thead><tr><th>Competência</th><th>Conceito</th><th class="c">Req.</th><th class="c">Alc.</th><th class="m">Aderência</th><th style="width:42px"></th></tr></thead>
+              <tbody id="competencyBody"></tbody>
+              <tfoot><tr><td colspan="6"><button class="addc" onclick="app.addComp()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> Adicionar competência</button></td></tr></tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- 5. PERFIL COMPORTAMENTAL -->
+        <div class="section">
+          <div class="sec-head"><span class="num">5</span><h2>Perfil Comportamental</h2><span class="ln"></span></div>
+          <div class="row"><div class="field"><label>Síntese</label><textarea data-field="behavioralSynthesis" rows="3"></textarea></div></div>
+          <div class="row"><div class="field"><label>Evidências</label><textarea data-field="behavioralEvidence" rows="2"></textarea></div></div>
+          <div class="row"><div class="field"><label>Aderência à Cultura</label><textarea data-field="behavioralMatch" rows="2"></textarea></div></div>
+        </div>
+
+        <!-- 6. CURRÍCULO & ANEXOS -->
+        <div class="section">
+          <div class="sec-head"><span class="num">6</span><h2>Currículo &amp; Anexos</h2><span class="ln"></span></div>
+          <input type="file" id="fileInput" multiple hidden onchange="app.handleFiles(this.files); this.value=''">
+          <div class="drop" id="dropZone" onclick="document.getElementById('fileInput').click()">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M12 16V3M7 8l5-5 5 5"/></svg></div>
+            <b>Arraste o currículo aqui ou <u>clique para enviar</u></b>
+            <small>PDF, DOC, DOCX, imagens — salvos no Drive na pasta do candidato</small>
+            <a class="folder-link" id="folderLink" href="#" target="_blank" rel="noopener" style="display:none" onclick="event.stopPropagation()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              Abrir pasta no Drive
+            </a>
+          </div>
+          <ul class="files" id="attachmentList"></ul>
+        </div>
+
+        <!-- 7. CONCLUSÃO -->
+        <div class="section">
+          <div class="sec-head"><span class="num">7</span><h2>Conclusão</h2><span class="ln"></span></div>
+          <div class="row"><div class="field final"><label>Parecer Final</label><textarea data-field="conclusion" rows="4"></textarea></div></div>
+          <div class="row c2">
+            <div class="field"><label>Recomendação</label>
+              <select data-field="recommendation" class="reco">
+                <option value="Avançar para avaliação técnica">Avançar para avaliação técnica</option>
+                <option value="Avançar para entrevista com gestor">Avançar para entrevista com gestor</option>
+                <option value="Manter no Banco">Manter no Banco de Talentos</option>
+                <option value="Declinar">Declinar</option>
+              </select>
+            </div>
+            <div class="field"><label>Próximos Passos</label><input type="text" data-field="nextSteps" placeholder="Ex.: Agendar teste técnico"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SETTINGS MODAL ============ -->
+<div class="modal-bg" id="settingsModal">
+  <div class="modal">
+    <div class="mh">
+      <div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+      <div><h3>Conexão com o Google Drive</h3><p>Onde os currículos serão arquivados</p></div>
+    </div>
+    <div class="mb">
+      <div class="field">
+        <label>URL do Web App (Apps Script)</label>
+        <input type="text" id="cfgUrl" placeholder="https://script.google.com/macros/s/…/exec">
+      </div>
+      <div class="field">
+        <label>Nome da pasta raiz no Drive</label>
+        <input type="text" id="cfgFolder" placeholder="Recrutamento — Currículos">
+      </div>
+      <div class="hint">Cada candidato recebe automaticamente uma <b>subpasta própria</b> dentro dessa pasta raiz. Implante o arquivo <b>Codigo.gs</b> como <b>App da Web</b> (executar como você, acesso “Qualquer pessoa”) e cole a URL <b>/exec</b> acima.</div>
+      <div class="cfg-status" id="cfgStatus"></div>
+    </div>
+    <div class="mf">
+      <button class="ib" onclick="app.testConn()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+        Testar
+      </button>
+      <button class="ib prim" onclick="app.saveSettings()">Salvar conexão</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DANGER MODAL (exclusão de pasta) ============ -->
+<div class="modal-bg" id="dangerModal">
+  <div class="modal danger">
+    <div class="mh">
+      <div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></div>
+      <div><h3>Excluir candidato</h3><p>Remove a avaliação e a pasta no Google Drive</p></div>
+    </div>
+    <div class="mb">
+      <div class="hint danger-hint">Você vai excluir a avaliação de <b id="dangerCand">—</b><span id="dangerFolderWrap"> e mover para a <b>lixeira do Google Drive</b> a pasta <b id="dangerFolder">—</b> com o(s) arquivo(s) abaixo</span>:</div>
+      <ul class="danger-list" id="dangerList"></ul>
+      <div class="field"><label>Senha de confirmação</label>
+        <input type="password" id="dangerPass" placeholder="Digite a senha para excluir" autocomplete="off" onkeydown="if(event.key==='Enter')app.confirmDanger()">
+      </div>
+      <div class="cfg-status err" id="dangerErr"></div>
+    </div>
+    <div class="mf">
+      <button class="ib" onclick="app.closeDanger()">Cancelar</button>
+      <button class="ib danger-btn" onclick="app.confirmDanger()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+        Excluir definitivamente
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ VIEWER MODAL ============ -->
+<div class="viewer-bg" id="viewerModal">
+  <div class="viewer-top">
+    <div class="vmono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></div>
+    <div class="vt"><b id="vName">Documento</b><span id="vMeta">Pré-visualização do Google Drive</span></div>
+    <div class="va">
+      <a id="vOpen" href="#" target="_blank" rel="noopener" title="Abrir no Drive">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6M10 14L21 3"/></svg>
+        <span>Abrir no Drive</span>
+      </a>
+      <button class="close" onclick="app.closeViewer()" title="Fechar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        <span>Fechar</span>
+      </button>
+    </div>
+  </div>
+  <div class="viewer-frame">
+    <div class="vload" id="vLoad"><div class="spin"></div>Carregando pré-visualização…</div>
+    <iframe id="vFrame" referrerpolicy="no-referrer" allow="autoplay"></iframe>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<!-- ============ DATA ============ -->
+<script id="app-data" type="application/json">{"candidates":[{"id":1,"name":"Modelo (Priscilla)","client":"Cliente Teste","vacancy":"Analista de Controladoria","status":"Finalista","dateSent":"2025-03-08","age":"27 anos","education":"MBA em Controladoria","location":"Barueri/SP","pretension":"R$ 4.200,00","start":"Imediato","techHighlights":"Experiência em controladoria, DRE, Balanço e Forecast.","attentionPoints":"Afastamento temporário do mercado.","techScope":"Domínio de escrituração contábil e indicadores financeiros.","tools":"Excel Avançado, Datasul.","careerContext":"Retorno após período dedicado à família.","behavioralSynthesis":"Perfil analítico, organizado e comunicativo.","behavioralEvidence":"Histórico de liderança de pequenas equipes.","behavioralMatch":"Alta aderência à cultura da empresa.","conclusion":"Candidata com forte base técnica e fit cultural. Recomendamos avançar.","recommendation":"Avançar para avaliação técnica","nextSteps":"Agendar teste técnico.","competencies":[{"name":"Atenção aos Detalhes","concept":"Foco e precisão","req":5,"alc":4},{"name":"Comunicação","concept":"Clareza verbal","req":5,"alc":4},{"name":"Organização","concept":"Gestão de tempo","req":5,"alc":5},{"name":"Proatividade","concept":"Antecipação","req":5,"alc":3},{"name":"Comportamento","concept":"Atitudes do profissional","req":5,"alc":4},{"name":"Liderança","concept":"Capacidade de liderar","req":5,"alc":3}],"attachments":[],"folderUrl":""}],"activeId":1,"config":{"webappUrl":"","rootFolder":"Recrutamento — Currículos"}}</script>
+
+<!-- ============ LOGIC ============ -->
+<script>
+const DEF_COMPS = [
+  {name:"Atenção aos Detalhes",concept:"Foco e precisão",req:5,alc:0},
+  {name:"Comunicação",concept:"Clareza verbal",req:5,alc:0},
+  {name:"Organização",concept:"Gestão de tempo",req:5,alc:0},
+  {name:"Proatividade",concept:"Antecipação",req:5,alc:0},
+  {name:"Comportamento",concept:"Atitudes do profissional",req:5,alc:0},
+  {name:"Liderança",concept:"Capacidade de liderar",req:5,alc:0}
+];
+const STMAP = {"Em Análise":"analise","Finalista":"finalista","Reprovado":"reprovado","Contratado":"contratado"};
+const STCOLOR = {"Em Análise":"#b8893b","Finalista":"#6e2a3c","Reprovado":"#b23a48","Contratado":"#2f7d57"};
+
+const app = {
+  data:{candidates:[],activeId:null,config:{webappUrl:"",rootFolder:"Recrutamento — Currículos"}},
+
+  init(){
+    try{ this.data = JSON.parse(document.getElementById('app-data').textContent); }
+    catch(e){ this.data = {candidates:[],activeId:null,config:{webappUrl:"",rootFolder:"Recrutamento — Currículos"}}; }
+    if(!this.data.config) this.data.config = {webappUrl:"",rootFolder:"Recrutamento — Currículos"};
+    this.data.candidates.forEach(c=>{ if(!c.attachments) c.attachments=[]; if(!c.competencies) c.competencies=JSON.parse(JSON.stringify(DEF_COMPS)); });
+    if(!this.data.activeId && this.data.candidates.length) this.data.activeId = this.data.candidates[0].id;
+    this.bindFields();
+    this.renderSidebar();
+    this.loadActive();
+    this.setupDrop();
+    this.refreshConn();
+  },
+
+  active(){ return this.data.candidates.find(c=>c.id===this.data.activeId); },
+
+  toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); },
+
+  initials(name){ const p=(name||'').trim().split(/\s+/).filter(Boolean); if(!p.length) return '—'; return ((p[0][0]||'')+(p[1]?p[1][0]:'')).toUpperCase(); },
+
+  /* ---------- SIDEBAR ---------- */
+  renderSidebar(){
+    const list=document.getElementById('candidateList');
+    const q=(document.getElementById('searchInput').value||'').toLowerCase().trim();
+    let items=this.data.candidates;
+    if(q) items=items.filter(c=>[c.name,c.vacancy,c.client].some(v=>(v||'').toLowerCase().includes(q)));
+    list.innerHTML='';
+    if(!this.data.candidates.length){ list.innerHTML='<div class="empty-list">Nenhuma avaliação ainda.<br>Crie a primeira abaixo.</div>'; return; }
+    if(!items.length){ list.innerHTML='<div class="empty-list">Nada encontrado para “'+q+'”.</div>'; return; }
+    items.forEach(c=>{
+      const d=document.createElement('div');
+      d.className='cand'+(c.id===this.data.activeId?' active':'');
+      d.onclick=()=>{ this.data.activeId=c.id; this.renderSidebar(); this.loadActive(); if(window.innerWidth<=900) this.toggleSidebar(); };
+      d.innerHTML=`<div class="mono">${this.initials(c.name)}</div>
+        <div class="ci"><div class="nm">${this.esc(c.name||'Sem nome')}</div><div class="rl">${this.esc(c.vacancy||'Sem cargo')}</div></div>
+        <span class="sdot" style="background:${STCOLOR[c.status]||'#a99ca0'}"></span>
+        <button class="del" title="Apagar" onclick="app.deleteCandidate(${c.id},event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button>`;
+      list.appendChild(d);
+    });
+  },
+
+  addCandidate(){
+    const id=Date.now();
+    this.data.candidates.push({id,name:"Novo Candidato",client:"",vacancy:"",status:"Em Análise",dateSent:new Date().toISOString().split('T')[0],
+      competencies:JSON.parse(JSON.stringify(DEF_COMPS)),attachments:[],folderUrl:""});
+    this.data.activeId=id;
+    this.renderSidebar(); this.loadActive();
+    if(window.innerWidth<=900 && document.getElementById('sidebar').classList.contains('open')) this.toggleSidebar();
+    document.querySelector('[data-field="name"]').focus();
+  },
+
+  deleteCandidate(id,ev){
+    ev.stopPropagation();
+    this.openDanger(id);
+  },
+
+  /* ---------- LOAD / BIND ---------- */
+  loadActive(){
+    const a=this.active();
+    const dossier=document.getElementById('dossier'), empty=document.getElementById('emptyState');
+    if(!a){ dossier.style.display='none'; empty.style.display='block';
+      document.getElementById('tbName').textContent='Recrutamento';
+      document.getElementById('tbRole').textContent=''; document.getElementById('tbMono').textContent='—';
+      document.getElementById('tbBadge').style.display='none'; return; }
+    dossier.style.display='block'; empty.style.display='none';
+    document.querySelectorAll('[data-field]').forEach(el=>{ el.value=a[el.dataset.field]||''; });
+    document.querySelectorAll('.field textarea').forEach(this.grow);
+    this.renderComps(a);
+    this.renderAttachments(a);
+    this.refreshHeader(a);
+    this.refreshAdherence(a);
+  },
+
+  bindFields(){
+    document.querySelectorAll('[data-field]').forEach(el=>{
+      const h=e=>{ const a=this.active(); if(!a) return; a[e.target.dataset.field]=e.target.value;
+        const f=e.target.dataset.field;
+        if(f==='name'||f==='vacancy'||f==='status'){ this.refreshHeader(a); this.renderSidebar(); } };
+      el.addEventListener('input',h); el.addEventListener('change',h);
+      if(el.tagName==='TEXTAREA') el.addEventListener('input',e=>this.grow(e.target));
+      if(el.dataset.field==='name') el.addEventListener('blur',()=>this.syncFolderName());
+    });
+  },
+
+  grow(el){ el.style.height='auto'; el.style.height=(el.scrollHeight+2)+'px'; },
+
+  refreshHeader(a){
+    document.getElementById('tbName').textContent=a.name||'Sem nome';
+    document.getElementById('tbMono').textContent=this.initials(a.name);
+    document.getElementById('tbRole').textContent=[a.vacancy,a.client].filter(Boolean).join(' · ')||'Sem cargo';
+    const b=document.getElementById('tbBadge');
+    b.style.display='inline-flex'; b.className='badge b-'+(STMAP[a.status]||'analise'); b.textContent=a.status||'Em Análise';
+  },
+
+  /* ---------- COMPETENCIES ---------- */
+  renderComps(a){
+    const tb=document.getElementById('competencyBody'); tb.innerHTML='';
+    (a.competencies||[]).forEach((c,i)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td><input type="text" class="cn" value="${this.esc(c.name)}" onchange="app.updateComp(${i},'name',this.value)"></td>
+        <td><input type="text" value="${this.esc(c.concept)}" onchange="app.updateComp(${i},'concept',this.value)"></td>
+        <td><input type="number" class="sc" min="0" max="5" value="${c.req}" onchange="app.updateComp(${i},'req',this.value)"></td>
+        <td><input type="number" class="sc" min="0" max="5" value="${c.alc}" onchange="app.updateComp(${i},'alc',this.value)"></td>
+        <td><div class="meter"><i id="m${i}"></i></div></td>
+        <td style="text-align:center"><button class="rmc" title="Remover" onclick="app.removeComp(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></td>`;
+      tb.appendChild(tr);
+    });
+    (a.competencies||[]).forEach((c,i)=>this.paintMeter(i,c));
+  },
+
+  paintMeter(i,c){
+    const el=document.getElementById('m'+i); if(!el) return;
+    const req=+c.req||0, alc=+c.alc||0;
+    const pct=req>0?Math.min(100,Math.round(alc/req*100)):0;
+    const gap=req-alc;
+    const col=gap<=0?'var(--ok)':gap===1?'var(--gold)':'var(--bad)';
+    el.style.width=pct+'%'; el.style.background=col;
+  },
+
+  updateComp(i,f,v){
+    const a=this.active(); if(!a||!a.competencies[i]) return;
+    if(f==='req'||f==='alc'){ v=Math.max(0,Math.min(5,+v||0)); a.competencies[i][f]=v; this.paintMeter(i,a.competencies[i]); this.refreshAdherence(a); }
+    else a.competencies[i][f]=v;
+  },
+  addComp(){ const a=this.active(); if(!a) return; a.competencies.push({name:"Nova competência",concept:"",req:5,alc:0}); this.renderComps(a); this.refreshAdherence(a); },
+  removeComp(i){ const a=this.active(); if(!a) return; a.competencies.splice(i,1); this.renderComps(a); this.refreshAdherence(a); },
+
+  refreshAdherence(a){
+    const comps=a.competencies||[];
+    let req=0,alc=0; comps.forEach(c=>{ req+=(+c.req||0); alc+=Math.min(+c.alc||0,+c.req||0); });
+    const pct=req>0?Math.round(alc/req*100):0;
+    const C=150.8, ring=document.getElementById('adhRing');
+    ring.style.strokeDashoffset=C-(C*pct/100);
+    ring.setAttribute('stroke', pct>=85?'#8ee3b4':pct>=60?'#e7d2a6':'#e6a3aa');
+    document.getElementById('adhPct').textContent=pct+'%';
+    document.getElementById('adhLabel').textContent = pct>=85?'Aderência alta':pct>=60?'Aderência moderada':'Aderência baixa';
+  },
+
+  /* ---------- DRIVE / CV ---------- */
+  refreshConn(){
+    const c=document.getElementById('conn'), t=document.getElementById('connText');
+    if(this.data.config.webappUrl){ c.className='conn on'; t.textContent='Drive conectado'; }
+    else { c.className='conn off'; t.textContent='Drive não conectado'; }
+  },
+
+  async api(action,payload){
+    const url=this.data.config.webappUrl;
+    if(!url) throw new Error('Conexão com o Drive não configurada.');
+    const res=await fetch(url,{method:'POST',body:JSON.stringify(Object.assign({action,rootFolder:this.data.config.rootFolder},payload))});
+    let json; try{ json=await res.json(); }catch(e){ throw new Error('Resposta inválida do servidor. Verifique a URL /exec e a implantação.'); }
+    if(!json.ok) throw new Error(json.error||'Erro no servidor.');
+    return json;
+  },
+
+  setupDrop(){
+    const dz=document.getElementById('dropZone');
+    ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag');}));
+    ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag');}));
+    dz.addEventListener('drop',e=>{ if(e.dataTransfer.files.length) this.handleFiles(e.dataTransfer.files); });
+  },
+
+  async handleFiles(files){
+    const a=this.active(); if(!a) return;
+    if(!this.data.config.webappUrl){ this.toast('err','Drive não conectado','Configure a conexão na engrenagem (rodapé) antes de enviar.'); this.openSettings(); return; }
+    if(!(a.name||'').trim() || a.name==='Novo Candidato'){ if(!confirm('Preencha o nome do candidato para nomear a pasta corretamente.\nEnviar mesmo assim?')) return; }
+    for(const file of Array.from(files)){
+      if(file.size>20*1024*1024){ this.toast('err','Arquivo muito grande',file.name+' excede 20 MB.'); continue; }
+      const ph={name:file.name,uploading:true,id:'tmp'+Date.now()+Math.random()};
+      a.attachments.push(ph); this.renderAttachments(a);
+      try{
+        const dataBase64=await this.toB64(file);
+        const r=await this.api('uploadCV',{candidate:a.name,filename:file.name,mimeType:file.type||'application/octet-stream',dataBase64});
+        a.attachments=a.attachments.filter(x=>x.id!==ph.id);
+        a.attachments.push({name:r.name,url:r.url,fileId:r.fileId,mime:file.type,size:file.size,uploadedAt:new Date().toISOString()});
+        a.folderId=r.folderId; a.folderName=r.folderName; a.folderUrl=r.folderUrl;
+        this.renderAttachments(a);
+        this.toast('ok','Currículo enviado',r.name+' salvo na pasta de '+a.name+'.');
+      }catch(err){
+        a.attachments=a.attachments.filter(x=>x.id!==ph.id); this.renderAttachments(a);
+        this.toast('err','Falha no envio',err.message);
+      }
+    }
+  },
+
+  toB64(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(String(r.result).split(',')[1]); r.onerror=rej; r.readAsDataURL(file); }); },
+
+  renderAttachments(a){
+    const ul=document.getElementById('attachmentList'); ul.innerHTML='';
+    const fl=document.getElementById('folderLink');
+    if(a.folderUrl){ fl.style.display='inline-flex'; fl.href=a.folderUrl; } else fl.style.display='none';
+    (a.attachments||[]).forEach((f,i)=>{
+      const li=document.createElement('li'); li.className='fitem'+(f.uploading?' up':'');
+      const k=this.fkind(f.name);
+      const clk=f.uploading?'':`onclick="app.preview(${i})" style="cursor:pointer"`;
+      const right=f.uploading
+        ? `<div class="spin"></div>`
+        : `<div class="fa"><button title="Visualizar" onclick="app.preview(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          <a href="${f.url}" target="_blank" rel="noopener" title="Abrir no Drive"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6M10 14L21 3"/></svg></a>
+          <button title="Remover do Drive" onclick="app.removeAttachment(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button></div>`;
+      li.innerHTML=`<div class="fic ${k.cls}" ${clk} title="${f.uploading?'':'Visualizar'}">${k.icon}</div>
+        <div class="fi"><div class="fn" ${clk} title="${f.uploading?'':'Visualizar'}">${this.esc(f.name)}</div><div class="fm">${f.uploading?'Enviando para o Drive…':this.fsize(f.size)+(f.uploadedAt?' · '+new Date(f.uploadedAt).toLocaleDateString('pt-BR'):'')}</div></div>${right}`;
+      ul.appendChild(li);
+    });
+  },
+
+  async removeAttachment(i){
+    const a=this.active(); if(!a||!a.attachments[i]) return;
+    const f=a.attachments[i];
+    if(!confirm('Mover "'+f.name+'" para a lixeira do Google Drive?')) return;
+    try{ if(f.fileId) await this.api('deleteCV',{fileId:f.fileId}); a.attachments.splice(i,1); this.renderAttachments(a); this.toast('ok','Anexo removido',f.name+' foi para a lixeira do Drive.'); }
+    catch(err){ this.toast('err','Não foi possível remover',err.message); }
+  },
+
+  removeAttachment(i){
+    const a=this.active(); if(!a||!a.attachments[i]) return;
+    const f=a.attachments[i];
+    if(!confirm('Mover "'+f.name+'" para a lixeira do Google Drive?')) return; // anexo: sem senha
+    this.doDeleteAttachment(i);
+  },
+
+  async doDeleteAttachment(i){
+    const a=this.active(); if(!a||!a.attachments[i]) return;
+    const f=a.attachments[i];
+    try{
+      let r={}; if(f.fileId) r=await this.api('deleteCV',{fileId:f.fileId});
+      a.attachments.splice(i,1);
+      if(r.folderDeleted || a.attachments.length===0){ a.folderId=''; a.folderName=''; a.folderUrl=''; }
+      this.renderAttachments(a);
+      this.toast('ok','Anexo removido', r.folderDeleted?(f.name+' — pasta esvaziada e removida.'):(f.name+' foi para a lixeira do Drive.'));
+    }catch(err){ this.toast('err','Não foi possível remover',err.message); }
+  },
+
+  // Exclusão de CANDIDATO (sidebar): remove a avaliação e a pasta no Drive → exige listagem + senha.
+  openDanger(id){
+    const c=this.data.candidates.find(x=>x.id===id); if(!c) return;
+    this._delCand=id;
+    const ul=document.getElementById('dangerList'); ul.innerHTML='';
+    const files=c.attachments||[];
+    if(files.length) files.forEach(f=>{ const li=document.createElement('li'); li.textContent=f.name; ul.appendChild(li); });
+    else { const li=document.createElement('li'); li.className='none'; li.textContent='Sem arquivos no Drive — apenas a avaliação será removida.'; ul.appendChild(li); }
+    document.getElementById('dangerCand').textContent=c.name||'Sem nome';
+    const fw=document.getElementById('dangerFolderWrap');
+    if(c.folderId||c.folderUrl){ fw.style.display='inline'; document.getElementById('dangerFolder').textContent=c.folderName||this.sanitize(c.name); }
+    else fw.style.display='none';
+    const p=document.getElementById('dangerPass'); p.value='';
+    document.getElementById('dangerErr').classList.remove('show');
+    document.getElementById('dangerModal').classList.add('show');
+    setTimeout(()=>p.focus(),60);
+  },
+  closeDanger(){ document.getElementById('dangerModal').classList.remove('show'); this._delCand=null; },
+  confirmDanger(){
+    const pass=document.getElementById('dangerPass').value;
+    const err=document.getElementById('dangerErr');
+    if(pass!=='adm@2907'){ err.textContent='Senha incorreta.'; err.classList.add('show'); document.getElementById('dangerPass').focus(); return; }
+    const id=this._delCand; this.closeDanger();
+    if(id!=null) this.doDeleteCandidate(id);
+  },
+  async doDeleteCandidate(id){
+    const c=this.data.candidates.find(x=>x.id===id); if(!c) return;
+    const hadFolder=!!(c.folderId||c.folderUrl); let folderOk=true;
+    if(hadFolder){
+      try{ await this.api('deleteFolder', c.folderId?{folderId:c.folderId}:{candidate:c.name}); }
+      catch(err){ folderOk=false; }
+    }
+    this.data.candidates=this.data.candidates.filter(x=>x.id!==id);
+    if(this.data.activeId===id) this.data.activeId=this.data.candidates.length?this.data.candidates[0].id:null;
+    this.renderSidebar(); this.loadActive();
+    if(hadFolder&&!folderOk) this.toast('err','Candidato removido','A avaliação saiu, mas a pasta no Drive não pôde ser apagada — verifique manualmente.');
+    else if(hadFolder) this.toast('ok','Candidato excluído','“'+(c.name||'')+'” e a pasta no Drive foram para a lixeira.');
+    else this.toast('ok','Candidato excluído','“'+(c.name||'')+'” foi removido.');
+  },
+
+  sanitize(s){ return String(s==null?'':s).replace(/[\\\/:*?"<>|]/g,'-').replace(/\s+/g,' ').trim().slice(0,120)||'Sem Nome'; },
+  async syncFolderName(){
+    const a=this.active(); if(!a||!a.folderId) return;
+    const novo=this.sanitize(a.name);
+    if(!novo||novo===a.folderName) return;
+    try{
+      const r=await this.api('renameFolder',{folderId:a.folderId,newName:a.name});
+      a.folderName=r.folderName; a.folderUrl=r.folderUrl;
+      this.toast('ok','Pasta renomeada','Agora: “'+r.folderName+'”.');
+    }catch(err){ this.toast('err','Não foi possível renomear a pasta',err.message); }
+  },
+
+  preview(i){
+    const a=this.active(); if(!a||!a.attachments[i]) return;
+    const f=a.attachments[i];
+    if(f.uploading||!f.fileId){ this.toast('err','Indisponível','Aguarde o envio terminar.'); return; }
+    document.getElementById('vName').textContent=f.name;
+    document.getElementById('vMeta').textContent=this.fsize(f.size)+' · pré-visualização do Google Drive';
+    document.getElementById('vOpen').href=f.url||('https://drive.google.com/file/d/'+f.fileId+'/view');
+    const load=document.getElementById('vLoad'); load.style.display='grid';
+    const fr=document.getElementById('vFrame');
+    fr.onload=()=>{ load.style.display='none'; };
+    fr.src='https://drive.google.com/file/d/'+f.fileId+'/preview';
+    document.getElementById('viewerModal').classList.add('show');
+  },
+  closeViewer(){
+    document.getElementById('viewerModal').classList.remove('show');
+    document.getElementById('vFrame').src='about:blank';
+  },
+
+  fkind(name){
+    const e=(name||'').split('.').pop().toLowerCase();
+    const file=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>`;
+    const img=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`;
+    if(['pdf'].includes(e)) return {cls:'',icon:file};
+    if(['doc','docx','txt','rtf','odt'].includes(e)) return {cls:'doc',icon:file};
+    if(['png','jpg','jpeg','gif','webp','heic'].includes(e)) return {cls:'img',icon:img};
+    return {cls:'gen',icon:file};
+  },
+  fsize(b){ if(!b&&b!==0) return ''; if(b<1024) return b+' B'; if(b<1048576) return (b/1024).toFixed(0)+' KB'; return (b/1048576).toFixed(1)+' MB'; },
+
+  /* ---------- SETTINGS ---------- */
+  openSettings(){
+    document.getElementById('cfgUrl').value=this.data.config.webappUrl||'';
+    document.getElementById('cfgFolder').value=this.data.config.rootFolder||'Recrutamento — Currículos';
+    document.getElementById('cfgStatus').className='cfg-status';
+    document.getElementById('settingsModal').classList.add('show');
+  },
+  closeSettings(){ document.getElementById('settingsModal').classList.remove('show'); },
+  saveSettings(){
+    this.data.config.webappUrl=document.getElementById('cfgUrl').value.trim();
+    this.data.config.rootFolder=document.getElementById('cfgFolder').value.trim()||'Recrutamento — Currículos';
+    this.refreshConn(); this.closeSettings();
+    this.toast('ok','Conexão salva','Lembre-se de clicar em “Salvar App” para guardar essa configuração.');
+  },
+  async testConn(){
+    const url=document.getElementById('cfgUrl').value.trim();
+    const folder=document.getElementById('cfgFolder').value.trim()||'Recrutamento — Currículos';
+    const s=document.getElementById('cfgStatus');
+    if(!url){ s.className='cfg-status err show'; s.innerHTML=this.svgX()+' Informe a URL do Web App.'; return; }
+    s.className='cfg-status load show'; s.innerHTML='<div class="spin" style="width:15px;height:15px"></div> Testando conexão…';
+    try{
+      const res=await fetch(url,{method:'POST',body:JSON.stringify({action:'ping',rootFolder:folder})});
+      const j=await res.json();
+      if(j.ok){ s.className='cfg-status ok show'; s.innerHTML=this.svgChk()+' Conectado · pasta “'+(j.rootName||folder)+'” pronta.'; }
+      else { s.className='cfg-status err show'; s.innerHTML=this.svgX()+' '+(j.error||'Erro no servidor.'); }
+    }catch(e){ s.className='cfg-status err show'; s.innerHTML=this.svgX()+' Não foi possível conectar. Verifique a URL /exec e o acesso “Qualquer pessoa”.'; }
+  },
+  svgChk(){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>'; },
+  svgX(){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>'; },
+
+  /* ---------- SAVE / IMPORT ---------- */
+  saveHTML(){
+    document.getElementById('app-data').textContent=JSON.stringify(this.data);
+    const html='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+    const blob=new Blob([html],{type:'text/html'});
+    const u=URL.createObjectURL(blob), a=document.createElement('a');
+    a.href=u; a.download='Recrutamento_'+new Date().toISOString().split('T')[0]+'.html';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u);
+    this.toast('ok','App salvo','Arquivo HTML baixado com todos os dados.');
+  },
+  importJSON(input){
+    const file=input.files[0]; if(!file) return;
+    const r=new FileReader();
+    r.onload=e=>{ try{ const j=JSON.parse(e.target.result);
+      if(Array.isArray(j.candidates)){ const cfg=this.data.config; this.data=j; if(!this.data.config) this.data.config=cfg;
+        this.data.candidates.forEach(c=>{ if(!c.attachments)c.attachments=[]; if(!c.competencies)c.competencies=JSON.parse(JSON.stringify(DEF_COMPS)); });
+        if(!this.data.activeId&&this.data.candidates.length) this.data.activeId=this.data.candidates[0].id;
+        this.renderSidebar(); this.loadActive(); this.refreshConn();
+        this.toast('ok','Backup restaurado',this.data.candidates.length+' avaliação(ões) carregada(s).'); }
+      else this.toast('err','Arquivo inválido','Não contém uma lista de candidatos.');
+    }catch(err){ this.toast('err','Arquivo inválido','Não foi possível ler o JSON.'); } input.value=''; };
+    r.readAsText(file);
+  },
+
+  /* ---------- UTIL ---------- */
+  esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); },
+  toast(type,title,msg){
+    const w=document.getElementById('toasts'); const t=document.createElement('div'); t.className='toast '+(type||'');
+    const ic=type==='ok'?this.svgChk():type==='err'?this.svgX():'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>';
+    t.innerHTML=`<span class="ti">${ic}</span><div><b>${this.esc(title)}</b><span>${this.esc(msg||'')}</span></div>`;
+    w.appendChild(t); setTimeout(()=>{ t.classList.add('out'); setTimeout(()=>t.remove(),300); },4200);
+  }
+};
+
+document.getElementById('settingsModal').addEventListener('click',e=>{ if(e.target.id==='settingsModal') app.closeSettings(); });
+document.getElementById('viewerModal').addEventListener('click',e=>{ if(e.target.id==='viewerModal') app.closeViewer(); });
+document.getElementById('dangerModal').addEventListener('click',e=>{ if(e.target.id==='dangerModal') app.closeDanger(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ app.closeSettings(); app.closeViewer(); app.closeDanger(); } });
+window.addEventListener('DOMContentLoaded',()=>app.init());
+</script>
+</body>
+</html>
