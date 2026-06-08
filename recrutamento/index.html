@@ -700,7 +700,7 @@ body{
 <div class="toasts" id="toasts"></div>
 
 <!-- ============ DATA ============ -->
-<script id="app-data" type="application/json">{"candidates":[{"id":1,"name":"Modelo (Priscilla)","client":"Cliente Teste","vacancy":"Analista de Controladoria","status":"Finalista","dateSent":"2025-03-08","age":"27 anos","education":"MBA em Controladoria","location":"Barueri/SP","pretension":"R$ 4.200,00","start":"Imediato","techHighlights":"Experiência em controladoria, DRE, Balanço e Forecast.","attentionPoints":"Afastamento temporário do mercado.","techScope":"Domínio de escrituração contábil e indicadores financeiros.","tools":"Excel Avançado, Datasul.","careerContext":"Retorno após período dedicado à família.","behavioralSynthesis":"Perfil analítico, organizado e comunicativo.","behavioralEvidence":"Histórico de liderança de pequenas equipes.","behavioralMatch":"Alta aderência à cultura da empresa.","conclusion":"Candidata com forte base técnica e fit cultural. Recomendamos avançar.","recommendation":"Avançar para avaliação técnica","nextSteps":"Agendar teste técnico.","competencies":[{"name":"Atenção aos Detalhes","concept":"Foco e precisão","req":5,"alc":4},{"name":"Comunicação","concept":"Clareza verbal","req":5,"alc":4},{"name":"Organização","concept":"Gestão de tempo","req":5,"alc":5},{"name":"Proatividade","concept":"Antecipação","req":5,"alc":3},{"name":"Comportamento","concept":"Atitudes do profissional","req":5,"alc":4},{"name":"Liderança","concept":"Capacidade de liderar","req":5,"alc":3}],"attachments":[],"folderUrl":""}],"activeId":1,"config":{"webappUrl":"https://script.google.com/macros/s/AKfycbyqym5_GAuBmN6OhsObHH7uveE2N2whfW5fbyfuVK8he5RJuyZ1lDVR_rHTYDYHvDyS/exec","rootFolder":"Recrutamento — Currículos"}}</script>
+<script id="app-data" type="application/json">{"candidates":[{"id":1,"name":"Modelo (Priscilla)","client":"Cliente Teste","vacancy":"Analista de Controladoria","status":"Finalista","dateSent":"2025-03-08","age":"27 anos","education":"MBA em Controladoria","location":"Barueri/SP","pretension":"R$ 4.200,00","start":"Imediato","techHighlights":"Experiência em controladoria, DRE, Balanço e Forecast.","attentionPoints":"Afastamento temporário do mercado.","techScope":"Domínio de escrituração contábil e indicadores financeiros.","tools":"Excel Avançado, Datasul.","careerContext":"Retorno após período dedicado à família.","behavioralSynthesis":"Perfil analítico, organizado e comunicativo.","behavioralEvidence":"Histórico de liderança de pequenas equipes.","behavioralMatch":"Alta aderência à cultura da empresa.","conclusion":"Candidata com forte base técnica e fit cultural. Recomendamos avançar.","recommendation":"Avançar para avaliação técnica","nextSteps":"Agendar teste técnico.","competencies":[{"name":"Atenção aos Detalhes","concept":"Foco e precisão","req":5,"alc":4},{"name":"Comunicação","concept":"Clareza verbal","req":5,"alc":4},{"name":"Organização","concept":"Gestão de tempo","req":5,"alc":5},{"name":"Proatividade","concept":"Antecipação","req":5,"alc":3},{"name":"Comportamento","concept":"Atitudes do profissional","req":5,"alc":4},{"name":"Liderança","concept":"Capacidade de liderar","req":5,"alc":3}],"attachments":[],"folderUrl":""}],"activeId":1,"config":{"webappUrl":"https://script.google.com/macros/s/AKfycbwa7TjAjYvu7sxz2fTMhTix25VubjlDqMJCJEAW4aDdmjHdL3PPr5VeWK_0re0Bn4VN/exec","rootFolder":"Recrutamento — Currículos"}}</script>
 
 <!-- ============ LOGIC ============ -->
 <script>
@@ -716,7 +716,8 @@ const STMAP = {"Em Análise":"analise","Finalista":"finalista","Reprovado":"repr
 const STCOLOR = {"Em Análise":"#e2561c","Finalista":"#26221f","Reprovado":"#b23a48","Contratado":"#2f7d57"};
 
 // Link fixo do Web App (Apps Script). Pré-configurado — pode ser alterado nas Configurações se necessário.
-const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyqym5_GAuBmN6OhsObHH7uveE2N2whfW5fbyfuVK8he5RJuyZ1lDVR_rHTYDYHvDyS/exec";
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwa7TjAjYvu7sxz2fTMhTix25VubjlDqMJCJEAW4aDdmjHdL3PPr5VeWK_0re0Bn4VN/exec";
+const LS_URL = 'recrutamento_webapp_url';   // cache local da URL aprendida via Drive
 
 const app = {
   data:{candidates:[],activeId:null,config:{webappUrl:WEBAPP_URL,rootFolder:"Recrutamento — Currículos"}},
@@ -725,7 +726,9 @@ const app = {
     try{ this.data = JSON.parse(document.getElementById('app-data').textContent); }
     catch(e){ this.data = {candidates:[],activeId:null,config:{webappUrl:WEBAPP_URL,rootFolder:"Recrutamento — Currículos"}}; }
     if(!this.data.config) this.data.config = {webappUrl:WEBAPP_URL,rootFolder:"Recrutamento — Currículos"};
-    if(!this.data.config.webappUrl) this.data.config.webappUrl = WEBAPP_URL; // link fixo
+    const _cached=this.lsGet(LS_URL);
+    if(_cached) this.data.config.webappUrl=_cached;                       // URL aprendida (propagada pelo Drive)
+    else if(!this.data.config.webappUrl) this.data.config.webappUrl=WEBAPP_URL;
     this.normalize();
     if(!this.data.activeId && this.data.candidates.length) this.data.activeId = this.data.candidates[0].id;
     this.bindFields();
@@ -920,6 +923,9 @@ const app = {
     }
   },
 
+  lsGet(k){ try{ return localStorage.getItem(k)||''; }catch(e){ return ''; } },
+  lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} },
+
   setSync(state,msg){
     const c=document.getElementById('conn'), t=document.getElementById('connText');
     const map={ load:['load','Carregando dados…'], save:['load','Salvando na nuvem…'],
@@ -932,7 +938,8 @@ const app = {
     if(state==='ok' && msg){ clearTimeout(this._okT); this._okT=setTimeout(()=>{ t.textContent='Sincronizado'; },2600); }
   },
 
-  async loadFromDrive(){
+  async loadFromDrive(adopt){
+    if(adopt===undefined) adopt=true;
     this.setSync('load');
     try{
       const r=await this.api('loadState',{});
@@ -942,6 +949,11 @@ const app = {
           this.data.candidates=st.candidates;
           this.data.activeId=st.activeId || (st.candidates[0] && st.candidates[0].id) || null;
           this.normalize();
+        }
+        // A URL guardada no Drive é a fonte de verdade: adota e memoriza, propagando p/ todos.
+        if(adopt && st.webappUrl && /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(st.webappUrl) && st.webappUrl!==this.data.config.webappUrl){
+          this.data.config.webappUrl=st.webappUrl;
+          this.lsSet(LS_URL, st.webappUrl);
         }
         this.loadFailed=false;
         this.setSync('ok','Dados carregados do Drive');
@@ -964,7 +976,7 @@ const app = {
     if(this.loadFailed && !silent){ this.setSync('err','Offline — reconecte para salvar'); return; }
     this.setSync('save');
     try{
-      const state={candidates:this.data.candidates, activeId:this.data.activeId, savedAt:new Date().toISOString()};
+      const state={candidates:this.data.candidates, activeId:this.data.activeId, webappUrl:this.data.config.webappUrl, rootFolder:this.data.config.rootFolder, savedAt:new Date().toISOString()};
       await this.api('saveState',{stateJson:JSON.stringify(state)});
       this.loadFailed=false;
       this.setSync('ok');
@@ -1217,13 +1229,17 @@ const app = {
     document.getElementById('settingsModal').classList.add('show');
   },
   closeSettings(){ document.getElementById('settingsModal').classList.remove('show'); },
-  saveSettings(){
-    this.data.config.webappUrl=document.getElementById('cfgUrl').value.trim()||WEBAPP_URL;
-    this.data.config.rootFolder=document.getElementById('cfgFolder').value.trim()||'Recrutamento — Currículos';
+  async saveSettings(){
+    const url=document.getElementById('cfgUrl').value.trim()||WEBAPP_URL;
+    const folder=document.getElementById('cfgFolder').value.trim()||'Recrutamento — Currículos';
+    this.data.config.webappUrl=url;
+    this.data.config.rootFolder=folder;
+    this.lsSet(LS_URL, url);                 // lembra neste computador
     this.closeSettings();
-    this.toast('ok','Conexão salva','Recarregando os dados do Drive…');
+    this.toast('ok','Conexão salva','Atualizando os dados e publicando o link no Drive…');
     this.showLoading(true);
-    this.loadFromDrive();
+    await this.loadFromDrive(false);         // puxa o mais recente, mantendo a URL que você acabou de definir
+    await this.saveToDrive(true);            // grava a URL no Drive para os demais usuários receberem
   },
   async testConn(){
     const url=document.getElementById('cfgUrl').value.trim();
