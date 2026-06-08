@@ -1155,7 +1155,12 @@ const app = {
       window.print();
     }catch(err){
       host.innerHTML='';
-      this.toast('err','Imprimindo só o parecer','Não consegui anexar o currículo: '+err.message);
+      const msg=String((err&&err.message)||err);
+      if(/desconhecida|getFile/i.test(msg)){
+        this.toast('err','Falta publicar a nova versão do servidor','O Apps Script ainda não tem a leitura do currículo. No editor: Implantar → Gerenciar implantações → ✎ (editar) → Versão: Nova versão → Implantar. Depois clique no PDF de novo.',12000);
+        return; // não imprime só o parecer: deixa claro o que resolver
+      }
+      this.toast('err','Imprimindo só o parecer','Não consegui anexar o currículo: '+msg);
       window.print();
     }
   },
@@ -1262,11 +1267,11 @@ const app = {
 
   /* ---------- UTIL ---------- */
   esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); },
-  toast(type,title,msg){
+  toast(type,title,msg,ms){
     const w=document.getElementById('toasts'); const t=document.createElement('div'); t.className='toast '+(type||'');
     const ic=type==='ok'?this.svgChk():type==='err'?this.svgX():'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>';
     t.innerHTML=`<span class="ti">${ic}</span><div><b>${this.esc(title)}</b><span>${this.esc(msg||'')}</span></div>`;
-    w.appendChild(t); setTimeout(()=>{ t.classList.add('out'); setTimeout(()=>t.remove(),300); },4200);
+    w.appendChild(t); setTimeout(()=>{ t.classList.add('out'); setTimeout(()=>t.remove(),300); }, ms||4200);
   }
 };
 
