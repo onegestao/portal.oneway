@@ -311,6 +311,12 @@ input[type=checkbox].cb{
 .pdf-close-btn{background:none;border:1px solid #444;color:#aaa;font-size:16px;padding:5px 10px;border-radius:7px;cursor:pointer;transition:.15s;flex-shrink:0}
 .pdf-close-btn:hover{border-color:var(--ow-orange);color:var(--ow-orange)}
 .pdf-frame{flex:1;border:none;width:100%;background:#2a2a2a}
+
+/* MODAL SENHA NOTA FISCAL */
+.nf-lock-hero{width:54px;height:54px;border-radius:13px;background:var(--ow-orange-light);color:var(--ow-orange);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px}
+.nf-desc{font-size:13px;color:var(--ct-text-2);line-height:1.55;text-align:center;margin-bottom:18px}
+.nf-err{display:none;align-items:center;gap:5px;color:var(--s-vencido);font-size:11.5px;font-weight:600;margin-top:8px}
+.nf-err.show{display:flex}
 </style>
 </head>
 <body>
@@ -371,7 +377,7 @@ input[type=checkbox].cb{
       <div class="sb-div"></div>
       <div class="sb-lbl">Outros</div>
       <div class="fi" onclick="selFolder('odonto',this)"><i class="ph-fill ph-tooth fi-ic"></i><span class="fi-nm">Plano Odontológico</span><span class="fi-ct" id="cnt-odonto">0</span></div>
-      <div class="fi" onclick="selFolder('nf',this)"><i class="ph-fill ph-file-text fi-ic"></i><span class="fi-nm">Notas Fiscais</span><span class="fi-ct" id="cnt-nf">0</span></div>
+      <div class="fi" onclick="selFolder('nf',this)"><i class="ph-fill ph-file-text fi-ic"></i><span class="fi-nm">Notas Fiscais</span><i class="ph-fill ph-lock" id="nfLock" style="font-size:12px;margin-right:3px;color:var(--ct-text-3)" title="Protegido por senha"></i><span class="fi-ct" id="cnt-nf">0</span></div>
       <div class="fi" onclick="selFolder('outros',this)"><i class="ph-fill ph-folder-open fi-ic"></i><span class="fi-nm">Outros</span><span class="fi-ct" id="cnt-outros">0</span></div>
     </div>
     <div class="sb-stor">
@@ -394,7 +400,7 @@ input[type=checkbox].cb{
       </div>
       <div class="tb">
         <div class="srch"><i class="ph-bold ph-magnifying-glass"></i><input type="text" id="srchIn" placeholder="Nome..." oninput="renderDocs()"></div>
-        <select class="fslt" id="catFilter" onchange="renderDocs()">
+        <select class="fslt" id="catFilter" onchange="onCatFilterChange()">
           <option value="">Categoria</option>
           <option value="das">DAS — Simples Nacional</option>
           <option value="fgts">FGTS</option>
@@ -478,6 +484,26 @@ input[type=checkbox].cb{
       <textarea class="fi-in" id="mNota" rows="3" placeholder="Ex: NF aguardando aprovação dos gestores X, Y e Z..." style="resize:vertical;min-height:72px;line-height:1.5"></textarea>
     </div>
     <button class="bsv" id="btnSave" onclick="saveUpload()"><i class="ph-bold ph-upload-simple"></i> Salvar no Sistema</button>
+  </div>
+</div>
+
+<!-- MODAL SENHA — NOTAS FISCAIS -->
+<div class="ov" id="nfOv" onclick="handleNfOvClick(event)">
+  <div class="modal" style="max-width:400px">
+    <div class="mhd">
+      <span class="mt">Notas Fiscais</span>
+      <button class="mc" onclick="closeNfModal()"><i class="ph-bold ph-x"></i></button>
+    </div>
+    <div class="nf-lock-hero"><i class="ph-fill ph-lock-key"></i></div>
+    <p class="nf-desc">Esta categoria é protegida. Informe a senha de acesso para visualizar os arquivos. O acesso permanece liberado até você fechar a aba ou o navegador.</p>
+    <div class="fr">
+      <label class="fl">Senha de Acesso</label>
+      <input type="password" class="fi-in" id="nfPass" placeholder="••••••••" autocomplete="off"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();submitNfPass();}"
+        style="letter-spacing:2px">
+      <div class="nf-err" id="nfErr"><i class="ph-fill ph-warning-circle"></i> Senha incorreta. Tente novamente.</div>
+    </div>
+    <button class="bsv" onclick="submitNfPass()"><i class="ph-bold ph-lock-key-open"></i> Desbloquear</button>
   </div>
 </div>
 
@@ -639,6 +665,65 @@ function fmtMonthInput(el) {
 let docs=[], activeFolder='all', viewMode='grid', pendFiles=[], activeId=null, panelSt=null;
 let selectedIds = new Set();
 
+// ══════════════════════════════════════════════════
+//  🔒 Proteção por senha — Notas Fiscais
+//  Usa sessionStorage: sobrevive ao refresh (F5),
+//  mas é zerado ao fechar a aba/navegador.
+// ══════════════════════════════════════════════════
+const NF_PASSWORD    = 'One@2i2';
+const NF_SESSION_KEY = 'ow_nf_unlocked';
+let nfUnlocked = false;   // espelho em memória (fallback se sessionStorage falhar)
+let nfPending  = null;    // ação pendente após desbloquear
+
+// Lê o estado da sessão atual
+try { nfUnlocked = sessionStorage.getItem(NF_SESSION_KEY) === '1'; } catch(e){}
+
+function isNfLocked(){ return !nfUnlocked; }
+
+function openNfModal(){
+  document.getElementById('nfErr').classList.remove('show');
+  document.getElementById('nfPass').value='';
+  document.getElementById('nfOv').classList.add('open');
+  setTimeout(()=>document.getElementById('nfPass').focus(),120);
+}
+function closeNfModal(){
+  document.getElementById('nfOv').classList.remove('open');
+  nfPending=null;
+}
+function handleNfOvClick(ev){ if(ev.target===document.getElementById('nfOv')) closeNfModal(); }
+
+function submitNfPass(){
+  const v=document.getElementById('nfPass').value;
+  if(v===NF_PASSWORD){
+    nfUnlocked=true;
+    try{ sessionStorage.setItem(NF_SESSION_KEY,'1'); }catch(e){}
+    document.getElementById('nfOv').classList.remove('open');
+    updNfLockIcon();
+    showToast('Notas Fiscais desbloqueadas nesta sessão.');
+    const p=nfPending; nfPending=null;
+    if(p && p.type==='folder')          doSelFolder('nf', p.el);
+    else if(p && p.type==='catfilter'){ document.getElementById('catFilter').value='nf'; renderDocs(); }
+    else                                renderDocs();
+  }else{
+    document.getElementById('nfErr').classList.add('show');
+    document.getElementById('nfPass').value='';
+    document.getElementById('nfPass').focus();
+  }
+}
+
+function updNfLockIcon(){
+  const el=document.getElementById('nfLock'); if(!el) return;
+  if(nfUnlocked){
+    el.className='ph-fill ph-lock-key-open';
+    el.style.color='var(--s-pago)';
+    el.title='Desbloqueado nesta sessão';
+  }else{
+    el.className='ph-fill ph-lock';
+    el.style.color='var(--ct-text-3)';
+    el.title='Protegido por senha';
+  }
+}
+
 // ── Loading ───────────────────────────────────────
 function showLoading(on, txt='Aguarde...') {
   const el = document.getElementById('loadingOv');
@@ -788,7 +873,8 @@ function getFiltered() {
   const cat  = document.getElementById('catFilter').value;
   const nota = document.getElementById('notaFilter').value.toLowerCase();
   return docs.filter(d =>
-    (activeFolder==='all' || d.category===activeFolder)
+    (nfUnlocked || d.category !== 'nf')                       // 🔒 oculta Notas Fiscais enquanto travado
+    && (activeFolder==='all' || d.category===activeFolder)
     && (!q    || (d.name||'').toLowerCase().includes(q))
     && (!mo   || rawMonth(d.month) === mo)
     && (!st   || d.status===st)
@@ -975,6 +1061,15 @@ function toBase64(file){return new Promise((res,rej)=>{const r=new FileReader();
 
 // ── Folder select ─────────────────────────────────
 function selFolder(f,el){
+  // 🔒 Notas Fiscais exige senha antes de abrir
+  if(f==='nf' && isNfLocked()){
+    nfPending={type:'folder', el};
+    openNfModal();
+    return;
+  }
+  doSelFolder(f,el);
+}
+function doSelFolder(f,el){
   activeFolder=f;
   document.querySelectorAll('.fi').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
@@ -984,6 +1079,17 @@ function selFolder(f,el){
     document.getElementById('catFilter').value=f;
   } else {
     document.getElementById('catFilter').value='';
+  }
+  renderDocs();
+}
+// 🔒 Intercepta a seleção de "Notas Fiscais" no filtro de categoria
+function onCatFilterChange(){
+  const sel=document.getElementById('catFilter');
+  if(sel.value==='nf' && isNfLocked()){
+    nfPending={type:'catfilter'};
+    sel.value='';
+    openNfModal();
+    return;
   }
   renderDocs();
 }
@@ -1254,6 +1360,7 @@ function initMonthSelects() {
 
 // ── Init ──────────────────────────────────────────
 initMonthSelects();
+updNfLockIcon();
 loadDocs();
 </script>
 </body>
