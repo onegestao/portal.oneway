@@ -520,7 +520,7 @@ const S = {
 };
 
 // ═══════════════ APPS SCRIPT ═══════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxboR5Vh7avNHhrM4HJdqq_9gWU34ezOWOk-_z_Wu28r3Ere4cMnO825SubkZc7be48Ow/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbweya_MJaBXbsNy9-9YXhNMCBrjDfNk6CrdFVsyX_JDkIBe1vjm0WLrn9idMRYVYSyAyQ/exec';
 
 function carregarDrive() {
   setLoadingState(true);
@@ -1446,7 +1446,7 @@ function setTab(tab) {
 }
 
 // ═══════════════ CONCILIADOR OFX ═══════════════
-const CONC = { props: [], naoLoc: [], txTotal: 0 };
+const CONC = { props: [], naoLoc: [], txTotal: 0, forcar: false };
 
 document.getElementById('ofx-in').addEventListener('change', e => {
   const f = e.target.files[0];
@@ -1491,22 +1491,44 @@ function parseOFX(txt) {
 function normTok(s) { return normM(cleanText(s)).toUpperCase(); }
 
 // Matching: valor exato obrigatório; desempate por tokens do nome no memo
-function iniciarConciliacao(txs) {
+function iniciarConciliacao(txs, forcar) {
   if (!txs.length) {
-    alert('Nenhum débito encontrado no arquivo OFX.');
+    alert('Nenhum débito (pagamento) encontrado no arquivo OFX.');
     return;
   }
-  const pend = S.all.filter(r => r.status === 'PENDENTE' && r.linha > 0);
-  if (!pend.length) {
-    alert('Não há lançamentos PENDENTES para conciliar.');
+
+  // Por padrão concilia só PENDENTES. Em modo "forçar", inclui também
+  // os já marcados como PAGO (para reconciliar após apagar/corrigir).
+  const alvos = S.all.filter(r => r.linha > 0 &&
+    (forcar ? true : r.status === 'PENDENTE'));
+
+  const pendentes = S.all.filter(r => r.status === 'PENDENTE' && r.linha > 0).length;
+  const pagos     = S.all.filter(r => r.linha > 0 && r.status && r.status !== 'PENDENTE').length;
+
+  if (!alvos.length) {
+    alert('Não há lançamentos para conciliar.');
+    return;
+  }
+
+  if (!forcar && !pendentes) {
+    if (confirm('Não há lançamentos PENDENTES.\n\n' +
+                pagos + ' lançamento(s) já têm status preenchido.\n\n' +
+                'Deseja RECONCILIAR mesmo assim? (vai recalcular os matches ' +
+                'e regravar PAGO + data para os que baterem com o extrato)')) {
+      iniciarConciliacao(txs, true);
+    }
     return;
   }
 
   CONC.props = [];
   CONC.naoLoc = [];
   CONC.txTotal = txs.length;
+  CONC.forcar = !!forcar;
 
-  for (const r of pend) {
+  // reseta o flag "usado" (cada importação recomeça do zero)
+  txs.forEach(t => t.usado = false);
+
+  for (const r of alvos) {
     const cands = txs.filter(t => !t.usado && Math.abs(t.valor - r.valor) < 0.005);
     if (!cands.length) { CONC.naoLoc.push(r); continue; }
 
@@ -1531,10 +1553,16 @@ function iniciarConciliacao(txs) {
 
 function renderModalConc() {
   const b = document.getElementById('conc-body');
+  document.getElementById('conc-ttl').innerHTML = CONC.forcar
+    ? '&#8644; Reconciliação OFX <span style="font-size:10px;color:#D97706;font-weight:600">(modo reprocessar — inclui já pagos)</span>'
+    : '&#8644; Conciliação OFX';
   let html = '';
 
   if (CONC.props.length) {
-    html += `<div class="conc-sec">✓ Localizados no extrato — revise e desmarque o que não quiser gravar</div>`;
+    const lbl = CONC.forcar
+      ? '✓ Localizados no extrato — vão regravar PAGO + data (revise e desmarque o que não quiser)'
+      : '✓ Localizados no extrato — revise e desmarque o que não quiser gravar';
+    html += `<div class="conc-sec">${lbl}</div>`;
     html += CONC.props.map((p, i) => `
       <div class="conc-row ${p.sel ? '' : 'off'}" id="cr-${i}">
         <input type="checkbox" ${p.sel ? 'checked' : ''} onchange="toggleConc(${i}, this.checked)">
