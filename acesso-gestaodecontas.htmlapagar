@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso Restrito | Folha de Pagamento</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at top, #2a1638, #0f1117 60%);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 420px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 18px;
+            padding: 32px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(12px);
+        }
+
+        .login-box h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .login-box p {
+            font-size: 14px;
+            color: #c9c9d1;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 8px;
+            color: #e5e7eb;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(0, 0, 0, 0.35);
+            color: white;
+            font-size: 15px;
+            outline: none;
+            margin-bottom: 16px;
+        }
+
+        input:focus {
+            border-color: #ff6e00;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #ff6e00, #8b5cf6);
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.92;
+        }
+
+        .erro {
+            display: none;
+            margin-top: 14px;
+            color: #ffb4b4;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .voltar {
+            display: block;
+            text-align: center;
+            margin-top: 18px;
+            color: #c9c9d1;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .voltar:hover {
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-box">
+        <h1>Acesso Restrito</h1>
+        <p>Digite a senha para acessar o módulo de Folha de Pagamento.</p>
+
+        <form onsubmit="validarSenha(event)">
+            <label for="senha">Senha de acesso</label>
+            <input type="password" id="senha" placeholder="Digite a senha" autocomplete="off">
+
+            <button type="submit">Entrar</button>
+
+            <div id="erro" class="erro">Senha incorreta. Acesso negado.</div>
+        </form>
+
+        <a href="./index.html" class="voltar">Voltar para o portal</a>
+    </div>
+
+    <script>
+        function validarSenha(event) {
+            event.preventDefault();
+
+            const senhaCorreta = "admin@2907#";
+            const senhaDigitada = document.getElementById("senha").value;
+            const erro = document.getElementById("erro");
+
+            if (senhaDigitada === senhaCorreta) {
+                window.location.href = "./gestaodefolha/";
+            } else {
+                erro.style.display = "block";
+                document.getElementById("senha").value = "";
+                document.getElementById("senha").focus();
+            }
+        }
+    </script>
+
+</body>
+</html>
