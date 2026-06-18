@@ -128,6 +128,7 @@ tr:last-child td{border-bottom:none}
 .td-val{font-family:'SF Mono','Fira Code',monospace;font-size:11px;font-weight:700;color:var(--orange)}
 .td-banco{font-size:11px;color:var(--text2)}
 .td-cpf{font-family:'SF Mono','Fira Code',monospace;font-size:10px;color:var(--text2)}
+.td-bank{font-family:'SF Mono','Fira Code',monospace;font-size:10px;color:var(--text2)}
 .td-st{}
 
 /* BADGES */
@@ -419,6 +420,10 @@ tr:last-child td{border-bottom:none}
                   <th><button class="fr-btn" id="cf-r-valor" onclick="openColFilter(event,'valor')">&#9662; valores</button></th>
                   <th><button class="fr-btn" id="cf-r-venc" onclick="openColFilter(event,'venc')">&#9662; D/M/A</button></th>
                   <th><input class="fr-in" data-cfkey="cpf" placeholder="filtrar chave…" oninput="cfTxtSync('cpf',this.value,this)"></th>
+                  <th><button class="fr-btn" id="cf-r-banco" onclick="openColFilter(event,'banco')">&#9662; banco</button></th>
+                  <th><input class="fr-in" data-cfkey="nbco" placeholder="nº…" oninput="cfTxtSync('nbco',this.value,this)"></th>
+                  <th><input class="fr-in" data-cfkey="agencia" placeholder="agência…" oninput="cfTxtSync('agencia',this.value,this)"></th>
+                  <th><input class="fr-in" data-cfkey="conta" placeholder="conta…" oninput="cfTxtSync('conta',this.value,this)"></th>
                   <th><button class="fr-btn" id="cf-r-status" onclick="openColFilter(event,'status')">&#9662; status</button></th>
                 </tr>
                 <tr>
@@ -428,6 +433,10 @@ tr:last-child td{border-bottom:none}
                   <th class="td-val" id="sh-valor"><span class="th-w"><span class="th-lab" onclick="doSort('valor')">Valor</span><button class="th-f" id="cf-i-valor" onclick="openColFilter(event,'valor')">&#9662;</button></span></th>
                   <th class="td-date" id="sh-venc"><span class="th-w"><span class="th-lab" onclick="doSort('venc')">Vencimento</span><button class="th-f" id="cf-i-venc" onclick="openColFilter(event,'venc')">&#9662;</button></span></th>
                   <th class="td-cpf"><span class="th-w"><span class="th-lab">CPF/CNPJ</span><button class="th-f" id="cf-i-cpf" onclick="openColFilter(event,'cpf')">&#9662;</button></span></th>
+                  <th class="td-bank" id="sh-banco"><span class="th-w"><span class="th-lab" onclick="doSort('banco')">Banco</span><button class="th-f" id="cf-i-banco" onclick="openColFilter(event,'banco')">&#9662;</button></span></th>
+                  <th class="td-bank"><span class="th-w"><span class="th-lab">Nº Bco</span><button class="th-f" id="cf-i-nbco" onclick="openColFilter(event,'nbco')">&#9662;</button></span></th>
+                  <th class="td-bank"><span class="th-w"><span class="th-lab">Agência</span><button class="th-f" id="cf-i-agencia" onclick="openColFilter(event,'agencia')">&#9662;</button></span></th>
+                  <th class="td-bank"><span class="th-w"><span class="th-lab">Conta</span><button class="th-f" id="cf-i-conta" onclick="openColFilter(event,'conta')">&#9662;</button></span></th>
                   <th class="td-st" id="sh-status"><span class="th-w"><span class="th-lab" onclick="doSort('status')">Status</span><button class="th-f" id="cf-i-status" onclick="openColFilter(event,'status')">&#9662;</button></span></th>
                 </tr>
               </thead>
@@ -520,7 +529,7 @@ const S = {
 };
 
 // ═══════════════ APPS SCRIPT ═══════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzNunqtFT57TKx0GiPgn_-nSet5KhYLoS4Nv0F-ySu0uI2JajCFTRac8Nl5H_Drn0XcdQ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzFoRALpSfZTUO5yhhrgcoVXAVGlzbxi3iF_OW4nSo44blrl0cNpGnx5-z5HuAjz26nAw/exec';
 
 function carregarDrive() {
   setLoadingState(true);
@@ -623,6 +632,16 @@ function cleanDoc(s) {
   return raw; // formato não reconhecido: devolve apenas limpo
 }
 
+// Padroniza códigos numéricos com zero à esquerda (banco=3, agência=4)
+// Remove espaços, pontos, traços — fica só dígito. Vazio → vazio.
+// Se tiver mais dígitos que o padrão, mantém como está (não corta).
+function padNum(s, larg) {
+  if (s == null) return '';
+  let dig = s.toString().replace(/\D/g, '');
+  if (!dig) return '';
+  return dig.length < larg ? dig.padStart(larg, '0') : dig;
+}
+
 // Resolve competência: usa a da planilha se válida (contém nome de mês);
 // senão deriva do mês da Data (ou Vencimento como fallback)
 const MESES_LBL = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO',
@@ -655,6 +674,9 @@ function parseApiData(dados) {
       venc:        dVen,
       cpf:         cleanDoc(r.cpf),
       banco:       cleanText(r.banco).toUpperCase(),
+      nbco:        padNum(r.nbco, 3),
+      agencia:     padNum(r.agencia, 4),
+      conta:       cleanText(r.conta),
       estado:      cleanText(r.estado),
       competencia: resolveCompetencia(r.competencia, dRef, dVen),
       status:      cleanText(r.status).toUpperCase(),
@@ -676,8 +698,8 @@ function parseApiData(dados) {
 S.cf = {
   dataD: new Set(), dataM: new Set(), dataA: new Set(),
   vencD: new Set(), vencM: new Set(), vencA: new Set(),
-  nome: '', desc: '', cpf: '',
-  valor: new Set(), status: new Set()
+  nome: '', desc: '', cpf: '', nbco: '', agencia: '', conta: '',
+  valor: new Set(), status: new Set(), banco: new Set()
 };
 
 const MES_ABREV = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
@@ -688,6 +710,10 @@ const COLF_DEFS = {
   nome:   { tipo:'text', lbl:'Nome',            key:'nome',  ph:'Digite parte do nome…' },
   desc:   { tipo:'text', lbl:'Descrição',       key:'desc',  ph:'Digite parte da descrição…' },
   cpf:    { tipo:'text', lbl:'CPF/CNPJ (chave)',key:'cpf',   ph:'Digite a chave…' },
+  nbco:   { tipo:'text', lbl:'Nº Banco',        key:'nbco',  ph:'Digite o nº do banco…' },
+  agencia:{ tipo:'text', lbl:'Agência',         key:'agencia', ph:'Digite a agência…' },
+  conta:  { tipo:'text', lbl:'Conta',           key:'conta', ph:'Digite a conta…' },
+  banco:  { tipo:'set',  lbl:'Banco',  key:'banco',  get:r => r.banco || '—',     fmt:v => v,        sort:(a,b)=>a.localeCompare(b) },
   valor:  { tipo:'set',  lbl:'Valor',  key:'valor',  get:r => r.valor.toFixed(2), fmt:v => fmtR(+v), sort:(a,b)=>(+a)-(+b) },
   status: { tipo:'set',  lbl:'Status', key:'status', get:r => r.status || '—',    fmt:v => v,        sort:(a,b)=>a.localeCompare(b) }
 };
@@ -803,8 +829,8 @@ function cfClear(id) {
 function cfClearAll() {
   S.cf.dataD.clear(); S.cf.dataM.clear(); S.cf.dataA.clear();
   S.cf.vencD.clear(); S.cf.vencM.clear(); S.cf.vencA.clear();
-  S.cf.nome = ''; S.cf.desc = ''; S.cf.cpf = '';
-  S.cf.valor.clear(); S.cf.status.clear();
+  S.cf.nome = ''; S.cf.desc = ''; S.cf.cpf = ''; S.cf.nbco = ''; S.cf.agencia = ''; S.cf.conta = '';
+  S.cf.valor.clear(); S.cf.status.clear(); S.cf.banco.clear();
   document.querySelectorAll('[data-cfkey]').forEach(i => i.value = '');
   document.getElementById('colf').classList.remove('open');
 }
@@ -823,7 +849,8 @@ function updateColfIcons() {
     data:   S.cf.dataD.size || S.cf.dataM.size || S.cf.dataA.size,
     venc:   S.cf.vencD.size || S.cf.vencM.size || S.cf.vencA.size,
     nome:   !!S.cf.nome, desc: !!S.cf.desc, cpf: !!S.cf.cpf,
-    valor:  S.cf.valor.size, status: S.cf.status.size
+    nbco: !!S.cf.nbco, agencia: !!S.cf.agencia, conta: !!S.cf.conta,
+    valor:  S.cf.valor.size, status: S.cf.status.size, banco: S.cf.banco.size
   };
   for (const id in on) {
     ['cf-i-', 'cf-r-', 'cf-s-'].forEach(pfx => {
@@ -943,6 +970,9 @@ function parse(wb) {
     if (hn === 'VENCIMENTO') ci.VENC = i;
     if (hn === 'CPF') ci.CPF = i;
     if (hn === 'BANCO') ci.BANCO = i;
+    if (hn.indexOf('BCO') >= 0) ci.NBCO = i;
+    if (hn.startsWith('AGENCIA')) ci.AGEN = i;
+    if (hn.startsWith('CONTA')) ci.CONTA = i;
     if (hn === 'ESTADO') ci.EST = i;
     if (hn.startsWith('COMPET')) ci.COMP = i;
     if (hn === 'FINANCEIRO') ci.FIN = i;
@@ -985,6 +1015,9 @@ function parse(wb) {
       venc:     dVen,
       cpf:      cleanDoc(r[ci.CPF]),
       banco:    cleanText(r[ci.BANCO]).toUpperCase(),
+      nbco:     padNum(r[ci.NBCO], 3),
+      agencia:  padNum(r[ci.AGEN], 4),
+      conta:    cleanText(r[ci.CONTA]),
       estado:   cleanText(r[ci.EST]),
       competencia: resolveCompetencia(r[ci.COMP], dRef, dVen),
       status:   statusFinal,
@@ -1156,6 +1189,10 @@ function applyFilters() {
       else if (!normTok(r.cpf).includes(normTok(cf.cpf))) return false;
     }
     if (cf.valor.size  && !cf.valor.has(r.valor.toFixed(2)))  return false;
+    if (cf.banco.size  && !cf.banco.has(r.banco || '—'))      return false;
+    if (cf.nbco    && !normTok(r.nbco).includes(normTok(cf.nbco)))       return false;
+    if (cf.agencia && !normTok(r.agencia).includes(normTok(cf.agencia))) return false;
+    if (cf.conta   && !normTok(r.conta).includes(normTok(cf.conta)))     return false;
     if (cf.status.size && !cf.status.has(r.status || '—'))    return false;
 
     return true;
@@ -1314,7 +1351,7 @@ function renderTable() {
 
   const tb = document.getElementById('tbody');
   if (!rows.length) {
-    tb.innerHTML = `<tr><td colspan="7"><div class="empty"><div class="empty-ico">🔍</div><span>Nenhum registro com esses filtros</span></div></td></tr>`;
+    tb.innerHTML = `<tr><td colspan="11"><div class="empty"><div class="empty-ico">🔍</div><span>Nenhum registro com esses filtros</span></div></td></tr>`;
     document.getElementById('pg-info').textContent = '';
     document.getElementById('pg-btns').innerHTML = '';
     return;
@@ -1328,6 +1365,10 @@ function renderTable() {
       <td class="td-val">${fmtR(r.valor)}</td>
       <td class="td-date">${fmtD(r.venc)}</td>
       <td class="td-cpf">${r.cpf || '—'}</td>
+      <td class="td-bank" title="${r.banco}">${r.banco || '—'}</td>
+      <td class="td-bank">${r.nbco || '—'}</td>
+      <td class="td-bank">${r.agencia || '—'}</td>
+      <td class="td-bank">${r.conta || '—'}</td>
       <td class="td-st">${badge(r.status)}</td>
     </tr>`).join('');
 
@@ -1663,13 +1704,13 @@ async function aplicarConciliacao() {
 
 // ═══════════════ EXPORT ═══════════════
 function exportCSV() {
-  const hdrs = ['Data','Nome','Descrição','Valor','Vencimento','CPF/CNPJ','Status'];
+  const hdrs = ['Data','Nome','Descrição','Valor','Vencimento','CPF/CNPJ','Banco','Nº Bco','Agência','Conta','Status'];
   const lines = [hdrs.join(';')];
   S.filtered.forEach(r => {
     lines.push([
       fmtD(r.dataRef), r.nome, r.descricao,
       r.valor.toFixed(2).replace('.',','),
-      fmtD(r.venc), r.cpf || '', r.status
+      fmtD(r.venc), r.cpf || '', r.banco || '', r.nbco || '', r.agencia || '', r.conta || '', r.status
     ].map(v => `"${(v||'').toString().replace(/"/g,'""')}"`).join(';'));
   });
   const blob = new Blob(['\ufeff' + lines.join('\n')], {type:'text/csv;charset=utf-8;'});
