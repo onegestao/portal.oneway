@@ -47,6 +47,8 @@ header{height:var(--hh);background:#0d0d0d;border-bottom:1px solid var(--sb-line
 .hdr-ct{flex:1;display:flex;align-items:center;padding:0 24px;gap:10px}
 .hdr-back{display:flex;align-items:center;gap:6px;color:#555;font-size:12px;font-weight:600;text-decoration:none;padding:5px 9px;border-radius:6px;transition:.2s;border:1px solid transparent;flex-shrink:0}
 .hdr-back:hover{color:#fff;border-color:var(--sb-line)}
+.hdr-organize{display:flex;align-items:center;justify-content:center;background:none;border:1px solid transparent;color:#555;font-size:14px;padding:5px 8px;border-radius:6px;cursor:pointer;transition:.2s;flex-shrink:0}
+.hdr-organize:hover{color:var(--ow-orange);border-color:var(--sb-line)}
 .hdr-divider{width:1px;height:18px;background:var(--ct-border);flex-shrink:0}
 .hdr-fname{font-family:var(--font-d);font-size:14px;font-weight:700;color:var(--ct-text-1)}
 .hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px}
@@ -337,6 +339,7 @@ input[type=checkbox].cb{
   </div>
   <div class="hdr-ct">
     <a href="../" class="hdr-back"><i class="ph-bold ph-arrow-left"></i> HUB</a>
+    <button class="hdr-organize" onclick="organizeFiles()" title="Organizar arquivos em subpastas no Drive (uso pontual)"><i class="ph-bold ph-folders"></i></button>
     <div class="hdr-divider"></div>
     <span class="hdr-fname" id="hFname">Todos os Arquivos</span>
     <div class="hdr-right">
@@ -373,11 +376,13 @@ input[type=checkbox].cb{
       <div class="fi" onclick="selFolder('vt',this)"><i class="ph-fill ph-bus fi-ic"></i><span class="fi-nm">Vale Transporte</span><span class="fi-ct" id="cnt-vt">0</span></div>
       <div class="fi" onclick="selFolder('seguro',this)"><i class="ph-fill ph-heart fi-ic"></i><span class="fi-nm">Seguro de Vida</span><span class="fi-ct" id="cnt-seguro">0</span></div>
       <div class="fi" onclick="selFolder('convenio',this)"><i class="ph-fill ph-first-aid-kit fi-ic"></i><span class="fi-nm">Convênios Médicos</span><span class="fi-ct" id="cnt-convenio">0</span></div>
-      <div class="fi" onclick="selFolder('gym',this)"><i class="ph-fill ph-barbell fi-ic"></i><span class="fi-nm">OneWay | Comercial</span><span class="fi-ct" id="cnt-gym">0</span></div>
-      <div class="sb-div"></div>
-      <div class="sb-lbl">Outros Serviços</div>
       <div class="fi" onclick="selFolder('odonto',this)"><i class="ph-fill ph-tooth fi-ic"></i><span class="fi-nm">Plano Odontológico</span><span class="fi-ct" id="cnt-odonto">0</span></div>
+      <div class="fi" onclick="selFolder('gym',this)"><i class="ph-fill ph-barbell fi-ic"></i><span class="fi-nm">Outros Benefícios</span><span class="fi-ct" id="cnt-gym">0</span></div>
+      <div class="sb-div"></div>
+      <div class="sb-lbl">Outros</div>
       <div class="fi" onclick="selFolder('nf',this)"><i class="ph-fill ph-file-text fi-ic"></i><span class="fi-nm">Notas Fiscais</span><i class="ph-fill ph-lock" id="nfLock" style="font-size:12px;margin-right:3px;color:var(--ct-text-3)" title="Protegido por senha"></i><span class="fi-ct" id="cnt-nf">0</span></div>
+      <div class="fi" onclick="selFolder('reembolso',this)"><i class="ph-fill ph-arrow-u-up-left fi-ic"></i><span class="fi-nm">Reembolso</span><span class="fi-ct" id="cnt-reembolso">0</span></div>
+      <div class="fi" onclick="selFolder('comercial',this)"><i class="ph-fill ph-handshake fi-ic"></i><span class="fi-nm">OneWay / Comercial</span><span class="fi-ct" id="cnt-comercial">0</span></div>
       <div class="fi" onclick="selFolder('outros',this)"><i class="ph-fill ph-folder-open fi-ic"></i><span class="fi-nm">Outros Serviços</span><span class="fi-ct" id="cnt-outros">0</span></div>
     </div>
     <div class="sb-stor">
@@ -415,9 +420,11 @@ input[type=checkbox].cb{
           <option value="vt">Vale Transporte</option>
           <option value="seguro">Seguro de Vida</option>
           <option value="convenio">Convênios Médicos</option>
-          <option value="gym">OneWay | Comercial</option>
+          <option value="gym">Outros Benefícios</option>
           <option value="odonto">Plano Odontológico</option>
           <option value="nf">Notas Fiscais</option>
+          <option value="reembolso">Reembolso</option>
+          <option value="comercial">OneWay / Comercial</option>
           <option value="outros">Outros Serviços</option>
         </select>
         <select class="fslt" id="compFilter" onchange="renderDocs()"></select>
@@ -460,8 +467,9 @@ input[type=checkbox].cb{
         <option value="rescisao">Rescisões</option><option value="ferias">Férias</option>
         <option value="decimo">13º Salário</option><option value="vr">Vale Refeição / Alimentação</option>
         <option value="vt">Vale Transporte</option><option value="seguro">Seguro de Vida</option>
-        <option value="convenio">Convênios Médicos</option><option value="gym">OneWay | Comercial</option>
+        <option value="convenio">Convênios Médicos</option><option value="gym">Outros Benefícios</option>
         <option value="odonto">Plano Odontológico</option><option value="nf">Notas Fiscais</option>
+        <option value="reembolso">Reembolso</option><option value="comercial">OneWay / Comercial</option>
         <option value="outros">Outros Serviços</option>
       </select>
     </div>
@@ -559,7 +567,7 @@ input[type=checkbox].cb{
 // ══════════════════════════════════════════════════
 //  ⚠️  CONFIGURE AQUI — cole a URL do seu Apps Script
 // ══════════════════════════════════════════════════
-const API = 'https://script.google.com/macros/s/AKfycbytITfGL-Y3hdoUtHasskCjrABTwOEncnaAWbWYJMXZamcV9mwyifrHiIrjVDm2SBCdVA/exec';
+const API = 'https://script.google.com/macros/s/AKfycbxMj0GOaKQbuz1GoUW_Z3p_uEtKXY7LbeFhngC4_-B0jl2ApVV2xpfsL6iUpBXfA0bXyw/exec';
 
 // ── Constantes ────────────────────────────────────
 const FL={
@@ -568,13 +576,15 @@ const FL={
   adiantamento:'Adiantamento',rescisao:'Rescisões',ferias:'Férias',
   decimo:'13º Salário',vr:'Vale Refeição / Alimentação',vt:'Vale Transporte',
   seguro:'Seguro de Vida',convenio:'Convênios Médicos',
-  gym:'TotalPass / Gympass / Wellhub',odonto:'Plano Odontológico',
-  nf:'Notas Fiscais',outros:'Outros'
+  gym:'Outros Benefícios',odonto:'Plano Odontológico',
+  nf:'Notas Fiscais',reembolso:'Reembolso',comercial:'OneWay / Comercial',
+  outros:'Outros Serviços'
 };
 const CI={
   das:'🏦',fgts:'🏢',darf:'🧾',inss:'🛡️',folha:'💰',adiantamento:'🤲',
   rescisao:'📝',ferias:'☂️',decimo:'🎁',vr:'🍽️',vt:'🚌',
-  seguro:'❤️',convenio:'🩺',gym:'🏋️',odonto:'🦷',nf:'📃',outros:'📁'
+  seguro:'❤️',convenio:'🩺',gym:'🎁',odonto:'🦷',nf:'📃',
+  reembolso:'↩️',comercial:'🤝',outros:'📁'
 };
 const MN=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
@@ -670,12 +680,11 @@ let selectedIds = new Set();
 //  Usa sessionStorage: sobrevive ao refresh (F5),
 //  mas é zerado ao fechar a aba/navegador.
 // ══════════════════════════════════════════════════
-const NF_PASSWORD    = 'One@2i2';
+const NF_PASSWORD    = 'adm@2907one';
 const NF_SESSION_KEY = 'ow_nf_unlocked';
-let nfUnlocked = false;   // espelho em memória (fallback se sessionStorage falhar)
+let nfUnlocked = false;   // espelho em memória
 let nfPending  = null;    // ação pendente após desbloquear
 
-// Lê o estado da sessão atual
 try { nfUnlocked = sessionStorage.getItem(NF_SESSION_KEY) === '1'; } catch(e){}
 
 function isNfLocked(){ return !nfUnlocked; }
@@ -747,6 +756,24 @@ async function loadDocs() {
     else showToast('Erro ao carregar: ' + (data.error||''), 'err');
   } catch(e) {
     showToast('Falha de conexão com o servidor.', 'err');
+  }
+  showLoading(false);
+}
+
+// ── Organizar arquivos em subpastas ───────────────
+async function organizeFiles() {
+  if(!confirm('Organizar todos os arquivos em subpastas por categoria no Drive?\n\nArquivos que não puderem ser movidos permanecem na raiz, sem perda de dados.')) return;
+  showLoading(true, 'Organizando arquivos no Drive...');
+  try {
+    const r = await api({action:'organizeFiles'});
+    if(r.ok) {
+      showToast(r.message || 'Arquivos organizados!');
+      if(r.errors && r.errors.length) console.warn('Não movidos (mantidos na raiz):', r.errors);
+    } else {
+      showToast('Erro: '+(r.error||'falha ao organizar'),'err');
+    }
+  } catch(e) {
+    showToast('Erro de conexão ao organizar.','err');
   }
   showLoading(false);
 }
@@ -872,15 +899,17 @@ function getFiltered() {
   const st   = document.getElementById('stFilter').value;
   const cat  = document.getElementById('catFilter').value;
   const nota = document.getElementById('notaFilter').value.toLowerCase();
-  return docs.filter(d =>
-    (nfUnlocked || d.category !== 'nf')                       // 🔒 oculta Notas Fiscais enquanto travado
-    && (activeFolder==='all' || d.category===activeFolder)
-    && (!q    || (d.name||'').toLowerCase().includes(q))
-    && (!mo   || rawMonth(d.month) === mo)
-    && (!st   || d.status===st)
-    && (!cat  || d.category===cat)
-    && (!nota || (d.nota||'').toLowerCase().includes(nota))
-  );
+  const nfLocked = isNfLocked();
+  return docs.filter(d => {
+    // Notas Fiscais só aparecem se a pasta estiver desbloqueada
+    if(d.category === 'nf' && nfLocked && activeFolder !== 'nf') return false;
+    return (activeFolder==='all' || d.category===activeFolder)
+      && (!q    || (d.name||'').toLowerCase().includes(q))
+      && (!mo   || rawMonth(d.month) === mo)
+      && (!st   || d.status===st)
+      && (!cat  || d.category===cat)
+      && (!nota || (d.nota||'').toLowerCase().includes(nota));
+  });
 }
 
 function renderDocs() {
@@ -1028,7 +1057,8 @@ function updStats() {
 }
 function updCounts() {
   const cats=['all','das','fgts','darf','inss','folha','adiantamento','rescisao',
-              'ferias','decimo','vr','vt','seguro','convenio','gym','odonto','nf','outros'];
+              'ferias','decimo','vr','vt','seguro','convenio','gym','odonto','nf',
+              'reembolso','comercial','outros'];
   cats.forEach(c=>{
     const el=document.getElementById('cnt-'+c);
     if(el) el.textContent = c==='all' ? docs.length : docs.filter(d=>d.category===c).length;
@@ -1095,8 +1125,7 @@ function onCatFilterChange(){
 }
 function setView(m){
   viewMode=m;
-  document.getElementById('gbtn').classList.toggle('active',m==='grid');
-  document.getElementById('lbtn').classList.toggle('active',m==='list');
+  document.getElementById('gbtn').classList.toggle('active',m==='grid');  document.getElementById('lbtn').classList.toggle('active',m==='list');
   renderDocs();
 }
 
