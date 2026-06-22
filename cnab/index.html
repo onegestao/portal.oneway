@@ -92,7 +92,8 @@
         <h3 class="text-lg font-bold text-gray-800 mb-1">Cole os dados</h3>
         <p class="text-sm text-gray-500 mb-4">
           Cole direto da planilha (Excel, Google Sheets). Formato esperado, separado por TAB:<br>
-          <span class="font-mono text-xs bg-gray-100 px-2 py-0.5 rounded">Data Lançamento &nbsp;⇥&nbsp; Nome &nbsp;⇥&nbsp; Motivo &nbsp;⇥&nbsp; Valor &nbsp;⇥&nbsp; Vencimento &nbsp;⇥&nbsp; CPF ou CNPJ</span>
+          <span class="font-mono text-xs bg-gray-100 px-2 py-0.5 rounded">Data &nbsp;⇥&nbsp; Nome &nbsp;⇥&nbsp; Motivo &nbsp;⇥&nbsp; Valor &nbsp;⇥&nbsp; Vencimento &nbsp;⇥&nbsp; CPF/CNPJ &nbsp;⇥&nbsp; <span class="text-blue-700">Banco &nbsp;⇥&nbsp; Cód. &nbsp;⇥&nbsp; Agência &nbsp;⇥&nbsp; Conta</span></span>
+          <span class="text-xs text-blue-600 block mt-1"><i class="fas fa-info-circle mr-1"></i> Colunas bancárias são opcionais — se presentes, substituem os dados padrão do Pix por chave.</span>
         </p>
 
         <textarea id="pasteInput" rows="14" placeholder="EMISSAO XX/XX/XXXX	Novo Favorecido Completo	REEMBOLSO CHIP 	 R$ XX,XX 	VENCIMENTO XX/XX/XXXX	CPF ou CNPJ
@@ -240,6 +241,19 @@
               </div>
 
               <div class="pt-4 border-t border-gray-100">
+                <div class="bg-blue-50 p-3 rounded-lg border border-blue-100" id="pixModeBox">
+                  <label class="block text-xs font-bold text-blue-800 uppercase mb-1">Modalidade Pix</label>
+                  <select id="cnabPixMode" onchange="updatePixModeHint()" class="w-full border border-gray-300 rounded-lg p-2 text-sm bg-white">
+                    <option value="05">Pix por Dados Bancários (padrão)</option>
+                    <option value="03">Pix por Chave CPF/CNPJ (fallback)</option>
+                  </select>
+                  <p id="pixModeHint" class="text-[11px] text-blue-700 mt-2 leading-snug">
+                    Usa banco / agência / conta colados. Mais controlado, ideal para o lote principal.
+                  </p>
+                </div>
+              </div>
+
+              <div class="pt-4 border-t border-gray-100">
                 <h4 class="text-sm font-bold text-gray-700 mb-3">Identificação para Conciliação</h4>
                 <p class="text-xs text-gray-500 mb-2">
                   Prefixo gravado em cada lançamento (campo "Nº Documento") para facilitar conciliação no extrato.
@@ -262,8 +276,7 @@
           <div class="glass-panel p-5 rounded-xl border border-yellow-200 bg-yellow-50">
             <h4 class="text-sm font-bold text-yellow-900 mb-2"><i class="fas fa-triangle-exclamation mr-1"></i> Antes do primeiro envio</h4>
             <p class="text-xs text-yellow-800 leading-relaxed">
-              Arquivo gerado conforme <strong>Manual CNAB 240 Pagamentos Inter v1.21</strong> (10/02/2026), modalidade <strong>Pix por chave CPF/CNPJ</strong> — forma de iniciação "03", tipo de serviço "98" (Diversos), forma de lançamento "45" (Pix). O tipo de documento (1=CPF, 2=CNPJ) é detectado automaticamente pelo tamanho.
-              Cada favorecido precisa ter o CPF/CNPJ cadastrado como chave Pix no banco dele.
+              Arquivo gerado conforme <strong>Manual CNAB 240 Pagamentos Inter v1.21</strong> (10/02/2026). Modalidade padrão: <strong>Pix por Dados Bancários</strong> (forma "05") — usa banco / agência / conta colados na tela. Se o favorecido não tiver dados bancários preenchidos, cai automaticamente em <strong>Pix por Chave CPF/CNPJ</strong> (forma "03"). Use o seletor acima para forçar a chave CPF em todo o lote quando necessário.
               <br><br>
               Recomendo importar em <strong>homologação Inter</strong> uma vez para confirmar antes do primeiro envio em produção.
             </p>
@@ -273,31 +286,51 @@
         <!-- Preview Lote -->
         <div class="w-full lg:w-2/3">
           <div class="glass-panel p-6 rounded-xl h-full flex flex-col">
-            <div class="flex justify-between items-start mb-4">
+            <div class="flex flex-wrap justify-between items-start mb-4 gap-3">
               <div>
                 <h3 class="font-bold text-gray-800">Lote a Pagar</h3>
-                <p class="text-xs text-gray-500">Lançamentos consolidados por favorecido + categoria</p>
+                <p class="text-xs text-gray-500">Selecione quem deve entrar no arquivo CNAB</p>
               </div>
               <div class="text-right">
-                <p class="text-xs text-gray-400 uppercase">Total</p>
+                <p class="text-xs text-gray-400 uppercase">Total selecionado</p>
                 <span id="cnabTotal" class="text-xl font-bold text-green-600">R$ 0,00</span>
               </div>
             </div>
+
+            <!-- Filtro por banco -->
+            <div class="flex flex-wrap items-center gap-2 mb-3">
+              <span class="text-xs font-semibold text-gray-500 uppercase">Banco:</span>
+              <div id="bancoBtns" class="flex flex-wrap gap-1.5"></div>
+              <div class="ml-auto flex gap-2">
+                <button onclick="cnabSelectAll(true)"  class="text-xs text-blue-700 bg-blue-50 border border-blue-200 px-2 py-1 rounded hover:bg-blue-100 transition">
+                  <i class="fas fa-check-square mr-1"></i>Marcar todos
+                </button>
+                <button onclick="cnabSelectAll(false)" class="text-xs text-gray-600 bg-gray-100 border border-gray-200 px-2 py-1 rounded hover:bg-gray-200 transition">
+                  <i class="fas fa-square mr-1"></i>Desmarcar todos
+                </button>
+              </div>
+            </div>
+
+            <!-- Resumo por banco -->
+            <div id="bancoBadges" class="flex flex-wrap gap-2 mb-3"></div>
 
             <div class="flex-1 overflow-auto bg-gray-50 rounded-lg border border-gray-200">
               <table class="w-full text-left">
                 <thead class="text-xs text-gray-500 uppercase bg-gray-100 border-b border-gray-200 sticky top-0">
                   <tr>
-                    <th class="p-3 w-20">Categoria</th>
-                    <th class="p-3">Favorecido</th>
-                    <th class="p-3">CPF / CNPJ</th>
-                    <th class="p-3 w-32">Nº Documento</th>
-                    <th class="p-3 text-right w-32">Valor</th>
+                    <th class="p-2 w-8 text-center"><input type="checkbox" id="cnabCheckAll" title="Selecionar todos visíveis" onchange="cnabToggleAllVisible(this.checked)" class="accent-orange-500"></th>
+                    <th class="p-2 w-20">Categoria</th>
+                    <th class="p-2">Favorecido</th>
+                    <th class="p-2 w-28 text-xs">Banco</th>
+                    <th class="p-2 text-right w-28">Valor</th>
+                    <th class="p-2 w-8 text-center"></th>
                   </tr>
                 </thead>
                 <tbody id="cnabBody" class="text-sm text-gray-600 divide-y divide-gray-200"></tbody>
               </table>
             </div>
+
+            <div id="cnabSummaryBar" class="mt-3 flex flex-wrap gap-4 text-xs text-gray-500 border-t border-gray-100 pt-3"></div>
           </div>
         </div>
       </div>
@@ -315,7 +348,9 @@ const State = {
   filter: 'ALL',
   company: { cnpj:'63.004.633/0001-98', name:'', ag:'0001', cc:'49659022-7' },
   prefixes: { VR:'VR', VT:'VT', RMB:'REEMB', OUT:'DIV' },
-  cnabSeq: 1
+  cnabSeq: 1,
+  cnabExcluded: [],   // IDs excluídos manualmente do lote CNAB
+  cnabBancoFiltro: 'ALL' // filtro de banco ativo na tela CNAB
 };
 
 const STORAGE_KEY = 'oneway_pagamentos_v1';
@@ -349,6 +384,8 @@ function loadFromStorage() {
     if (!raw) return;
     const data = JSON.parse(raw);
     Object.assign(State, data);
+    if (!State.cnabExcluded) State.cnabExcluded = [];
+    if (!State.cnabBancoFiltro) State.cnabBancoFiltro = 'ALL';
     document.getElementById('compCnpj').value = State.company.cnpj || '';
     document.getElementById('compName').value = State.company.name || '';
     document.getElementById('compAg').value   = State.company.ag   || '';
@@ -397,6 +434,11 @@ function processPaste() {
   rows.forEach(r => {
     if (r.length < 6) { errs++; return; }
     const [dataLanc, nome, motivo, valorStr, vencimento, cpfStr] = r.map(s => s.trim());
+    // Colunas bancárias opcionais: Banco | CódBanco | Agência | Conta (cols 7-10)
+    const bancNome  = (r[6] || '').trim();
+    const bancCod   = (r[7] || '').trim().replace(/\D/g,'');
+    const bancAg    = (r[8] || '').trim().replace(/\D/g,'');
+    const bancConta = (r[9] || '').trim();
     const valor = parseValor(valorStr);
     const cpf = (cpfStr || '').replace(/\D/g,'');
     const valid = (cpf.length === 11 || cpf.length === 14) && valor > 0;
@@ -407,7 +449,8 @@ function processPaste() {
       id: crypto.randomUUID ? crypto.randomUUID() : (Date.now()+'-'+Math.random()),
       dataLanc, nome: nome.replace(/\s+/g,' ').trim(),
       motivo: motivo.replace(/\s+/g,' ').trim(),
-      valor, vencimento, cpf, categoria, valid, warn
+      valor, vencimento, cpf, categoria, valid, warn,
+      bancNome, bancCod, bancAg, bancConta
     });
     added++;
   });
@@ -562,30 +605,167 @@ function renderSummary() {
 
 function renderCnabPreview() {
   const body = document.getElementById('cnabBody');
+  if (!body) return;
   body.innerHTML = '';
-  let total = 0;
+  let totalSel = 0, totalGeral = 0;
   const validos = State.lancamentos.filter(l => l.valid);
   const counters = { VR:0, VT:0, RMB:0, OUT:0 };
 
+  // ---- monta lista de bancos únicos ----
+  const bancosMap = {};   // bancNome -> { cod, count, total }
   validos.forEach(l => {
+    const key = bancoKey(l);
+    if (!bancosMap[key]) bancosMap[key] = { label: bancoLabel(l), cod: l.bancCod||'', count:0, total:0 };
+    bancosMap[key].count++;
+    bancosMap[key].total += l.valor;
+  });
+
+  // ---- botões de filtro de banco ----
+  const btnContainer = document.getElementById('bancoBtns');
+  if (btnContainer) {
+    btnContainer.innerHTML = '';
+    const allBtn = document.createElement('button');
+    allBtn.className = `banco-btn px-2.5 py-1 rounded text-xs font-medium transition ${State.cnabBancoFiltro==='ALL'?'bg-gray-900 text-white':'bg-gray-100 text-gray-700 hover:bg-gray-200'}`;
+    allBtn.innerText = 'Todos';
+    allBtn.onclick = () => { State.cnabBancoFiltro = 'ALL'; renderCnabPreview(); };
+    btnContainer.appendChild(allBtn);
+    Object.entries(bancosMap).forEach(([key, info]) => {
+      const b = document.createElement('button');
+      const ativo = State.cnabBancoFiltro === key;
+      b.className = `banco-btn px-2.5 py-1 rounded text-xs font-medium transition ${ativo?'bg-blue-600 text-white':'bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100'}`;
+      b.innerText = info.label;
+      b.onclick = () => { State.cnabBancoFiltro = key; renderCnabPreview(); };
+      btnContainer.appendChild(b);
+    });
+  }
+
+  // ---- badges resumo por banco ----
+  const badgesEl = document.getElementById('bancoBadges');
+  if (badgesEl) {
+    badgesEl.innerHTML = Object.entries(bancosMap).map(([key, info]) => {
+      const excl = validos.filter(l => bancoKey(l)===key && State.cnabExcluded.includes(l.id)).length;
+      const inc  = info.count - excl;
+      return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 border border-blue-200 text-blue-800">
+        <i class="fas fa-university text-[9px]"></i> ${info.label}
+        <span class="text-blue-600">${inc}/${info.count}</span>
+        <span class="text-green-700">${money(validos.filter(l=>bancoKey(l)===key&&!State.cnabExcluded.includes(l.id)).reduce((a,b)=>a+b.valor,0))}</span>
+      </span>`;
+    }).join('');
+  }
+
+  // ---- filtra por banco selecionado ----
+  let lista = validos;
+  if (State.cnabBancoFiltro !== 'ALL') {
+    lista = validos.filter(l => bancoKey(l) === State.cnabBancoFiltro);
+  }
+
+  if (!lista.length) {
+    body.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-400">Nenhum lançamento válido para gerar CNAB.</td></tr>';
+    document.getElementById('cnabTotal').innerText = money(0);
+    return;
+  }
+
+  lista.forEach(l => {
     counters[l.categoria]++;
-    const docNum = buildDocNumber(l, counters[l.categoria]);
-    total += l.valor;
+    const excluido = State.cnabExcluded.includes(l.id);
+    if (!excluido) totalSel += l.valor;
+    totalGeral += l.valor;
+
     const tr = document.createElement('tr');
+    tr.className = `hover:bg-gray-50 transition ${excluido ? 'opacity-40' : ''}`;
+    tr.id = 'cnab-row-' + l.id;
+
+    const bancInfo = bancoLabel(l) ? `<span class="inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded bg-blue-50 border border-blue-200 text-blue-800 font-medium">
+      <i class="fas fa-university text-[9px]"></i>${bancoLabel(l)}</span>
+      <br><span class="text-[10px] text-gray-400 font-mono">${l.bancAg ? 'Ag '+l.bancAg : ''} ${l.bancConta ? '| Cta '+l.bancConta : ''}</span>` :
+      `<span class="text-[11px] text-gray-400 italic">Pix chave CPF/CNPJ</span>`;
+
     tr.innerHTML = `
-      <td class="p-3"><span class="text-xs px-2 py-0.5 rounded ${badgeClass(l.categoria)}">${labelCat(l.categoria)}</span></td>
-      <td class="p-3 text-sm">${escapeHtml(l.nome)}</td>
-      <td class="p-3 text-xs font-mono">${formatCpf(l.cpf)} <span class="text-[10px] px-1 rounded ml-1 ${l.cpf.length===14?'bg-purple-100 text-purple-700':'bg-gray-100 text-gray-600'}">${docType(l.cpf)}</span></td>
-      <td class="p-3 text-xs font-mono text-gray-500">${docNum}</td>
-      <td class="p-3 text-right text-sm font-semibold text-green-700">${money(l.valor)}</td>
+      <td class="p-2 text-center">
+        <input type="checkbox" class="cnab-item-check accent-orange-500" data-id="${l.id}" ${excluido?'':'checked'}
+          onchange="cnabToggleItem('${l.id}', this.checked)">
+      </td>
+      <td class="p-2"><span class="text-xs px-2 py-0.5 rounded ${badgeClass(l.categoria)}">${labelCat(l.categoria)}</span></td>
+      <td class="p-2">
+        <div class="text-sm font-medium leading-tight">${escapeHtml(l.nome)}</div>
+        <div class="text-[11px] text-gray-400 font-mono">${formatCpf(l.cpf)}</div>
+      </td>
+      <td class="p-2">${bancInfo}</td>
+      <td class="p-2 text-right text-sm font-semibold ${excluido?'text-gray-400 line-through':'text-green-700'}">${money(l.valor)}</td>
+      <td class="p-2 text-center">
+        <button onclick="cnabRemoveItem('${l.id}')" title="Remover permanentemente" class="text-red-400 hover:text-red-600 transition">
+          <i class="fas fa-trash-can text-xs"></i>
+        </button>
+      </td>
     `;
     body.appendChild(tr);
   });
 
-  if (!validos.length) {
-    body.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-gray-400">Nenhum lançamento válido para gerar CNAB.</td></tr>';
+  document.getElementById('cnabTotal').innerText = money(totalSel);
+
+  // ---- barra de resumo ----
+  const nSel = lista.filter(l => !State.cnabExcluded.includes(l.id)).length;
+  const nTot = lista.length;
+  const summaryEl = document.getElementById('cnabSummaryBar');
+  if (summaryEl) {
+    summaryEl.innerHTML = `
+      <span><i class="fas fa-check-circle text-green-500 mr-1"></i><strong>${nSel}</strong> de <strong>${nTot}</strong> incluídos no CNAB</span>
+      <span class="text-gray-300">|</span>
+      <span>${State.cnabExcluded.filter(id => lista.some(l=>l.id===id)).length} excluídos (desmarcados)</span>
+      <span class="text-gray-300">|</span>
+      <span class="text-green-700 font-semibold">Total: ${money(totalSel)}</span>
+    `;
   }
-  document.getElementById('cnabTotal').innerText = money(total);
+
+  // Sync checkbox "marcar todos"
+  const chkAll = document.getElementById('cnabCheckAll');
+  if (chkAll) chkAll.checked = lista.every(l => !State.cnabExcluded.includes(l.id));
+}
+
+/* ============================================================
+   CONTROLE CNAB - SELEÇÃO POR BANCO / CHECKBOX / REMOÇÃO
+============================================================ */
+function bancoKey(l) {
+  if (l.bancCod && l.bancCod.length >= 3) return l.bancCod;
+  if (l.bancNome) return l.bancNome.toUpperCase().replace(/\s+/g,'_');
+  return 'PIX';
+}
+function bancoLabel(l) {
+  if (l.bancNome) return l.bancNome.toUpperCase();
+  return '';
+}
+
+function cnabToggleItem(id, checked) {
+  if (checked) {
+    State.cnabExcluded = State.cnabExcluded.filter(x => x !== id);
+  } else {
+    if (!State.cnabExcluded.includes(id)) State.cnabExcluded.push(id);
+  }
+  saveToStorage();
+  renderCnabPreview();
+}
+
+function cnabToggleAllVisible(checked) {
+  const validos = State.lancamentos.filter(l => l.valid);
+  const lista = State.cnabBancoFiltro === 'ALL' ? validos : validos.filter(l => bancoKey(l) === State.cnabBancoFiltro);
+  lista.forEach(l => {
+    if (checked) {
+      State.cnabExcluded = State.cnabExcluded.filter(x => x !== l.id);
+    } else {
+      if (!State.cnabExcluded.includes(l.id)) State.cnabExcluded.push(l.id);
+    }
+  });
+  saveToStorage();
+  renderCnabPreview();
+}
+
+function cnabSelectAll(checked) { cnabToggleAllVisible(checked); }
+
+function cnabRemoveItem(id) {
+  State.lancamentos = State.lancamentos.filter(x => x.id !== id);
+  State.cnabExcluded = State.cnabExcluded.filter(x => x !== id);
+  saveToStorage();
+  renderAll();
 }
 
 function updateField(id, field, val) {
@@ -638,200 +818,273 @@ function notify(msg, color='green') {
   setTimeout(() => el.classList.add('hidden'), 4000);
 }
 
+function updatePixModeHint() {
+  const sel  = document.getElementById('cnabPixMode');
+  const hint = document.getElementById('pixModeHint');
+  const box  = document.getElementById('pixModeBox');
+  if (!sel || !hint || !box) return;
+  if (sel.value === '03') {
+    hint.innerText = 'Usa apenas o CPF/CNPJ como chave Pix. Útil quando o favorecido não tem conta bancária cadastrada ou ocorre erro PIXUI02. Os dados de banco/agência/conta são ignorados.';
+    box.className = box.className.replace('bg-blue-50 border-blue-100','bg-yellow-50 border-yellow-200');
+    box.classList.remove('bg-blue-50','border-blue-100');
+    box.classList.add('bg-yellow-50','border-yellow-200');
+    hint.classList.remove('text-blue-700');
+    hint.classList.add('text-yellow-800');
+    box.querySelector('label').classList.remove('text-blue-800');
+    box.querySelector('label').classList.add('text-yellow-800');
+  } else {
+    hint.innerText = 'Usa banco / agência / conta colados. Mais controlado, ideal para o lote principal.';
+    box.classList.remove('bg-yellow-50','border-yellow-200');
+    box.classList.add('bg-blue-50','border-blue-100');
+    hint.classList.remove('text-yellow-800');
+    hint.classList.add('text-blue-700');
+    box.querySelector('label').classList.remove('text-yellow-800');
+    box.querySelector('label').classList.add('text-blue-800');
+  }
+}
+
 /* ============================================================
-   CNAB 240 - BANCO INTER - PIX POR CHAVE CPF
+   CNAB 240 - BANCO INTER - PIX (DADOS BANCÁRIOS OU CHAVE CPF)
+   Modelo baseado no que funciona em produção (Manual Inter v1.21).
 ============================================================ */
 function generateCNAB() {
   const fb = document.getElementById('cnabFeedback');
   fb.innerHTML = '';
 
-  const validos = State.lancamentos.filter(l => l.valid);
-  if (!validos.length) { fb.innerHTML = '<span class="text-red-600">Nenhum lançamento válido.</span>'; return; }
+  const validos = State.lancamentos.filter(l => l.valid && !State.cnabExcluded.includes(l.id));
+  if (!validos.length) {
+    fb.innerHTML = '<span class="text-red-600">Nenhum lançamento selecionado. Marque ao menos um na tela do Lote.</span>';
+    return;
+  }
 
-  // Dados do pagador. Manual Inter v1.21: agência da empresa é FIXA "00001" com DV "9".
-  const cnpj = (document.getElementById('compCnpj').value || '').replace(/\D/g,'').padStart(14,'0');
-  const name = (document.getElementById('compName').value || 'EMPRESA').toUpperCase().padEnd(30,' ').substring(0,30);
-  const ccRaw = document.getElementById('compCc').value.replace(/[^0-9]/g,'');
-  const compAg   = '00001';   // FIXO conforme Manual CNAB 240 Inter (pos 53-57)
-  const compAgDv = '9';       // FIXO conforme Manual CNAB 240 Inter (pos 58)
-  const compCc = ccRaw.slice(0,-1).padStart(12,'0');
-  const compCcDv = ccRaw.slice(-1) || '0';
+  // --- Dados do pagador ---
+  const cnpj    = (document.getElementById('compCnpj').value || '').replace(/\D/g,'').padStart(14,'0');
+  const name    = (document.getElementById('compName').value || 'EMPRESA').toUpperCase().padEnd(30,' ').substring(0,30);
+  const ccRaw   = document.getElementById('compCc').value.replace(/[^0-9]/g,'');
+  // Manual Inter v1.21: agência FIXA "00001" + DV "9" para Inter Empresas
+  const compAg    = '00001';
+  const compAgDv  = '9';
+  const compCc    = ccRaw.slice(0,-1).padStart(12,'0');
+  const compCcDv  = ccRaw.slice(-1) || '0';
 
   if (cnpj.replace(/0/g,'').length === 0) { fb.innerHTML = '<span class="text-red-600">Preencha o CNPJ.</span>'; return; }
   if (!ccRaw || ccRaw.length < 2)          { fb.innerHTML = '<span class="text-red-600">Preencha a conta com dígito.</span>'; return; }
 
-  const now = new Date();
+  const now     = new Date();
   const dataGer = ddmmaaaa(now);
   const horaGer = hhmmss(now);
   const payDate = document.getElementById('cnabDate').value
     ? document.getElementById('cnabDate').value.split('-').reverse().join('')
     : dataGer;
 
-  const nsa = (State.cnabSeq || 1);
-  const nsaStr = nsa.toString().padStart(6,'0');  // 6 dígitos para o header
-  const nsaFile = nsa.toString().padStart(7,'0'); // 7 dígitos para o nome do arquivo
+  const nsa     = (State.cnabSeq || 1);
+  const nsaStr  = nsa.toString().padStart(6,'0');   // 6 dígitos no header
+  const nsaFile = nsa.toString().padStart(7,'0');   // 7 dígitos no nome do arquivo
 
   // === HEADER ARQUIVO (240) ===
   let header = '';
-  header += '077';                              // 1-3   código do banco
-  header += '0000';                             // 4-7   lote
-  header += '0';                                // 8     tipo registro
-  header += ' '.repeat(9);                      // 9-17  CNAB FEBRABAN
-  header += '2';                                // 18    tipo inscrição (CNPJ)
-  header += cnpj;                               // 19-32 CNPJ
-  header += ' '.repeat(20);                     // 33-52 convênio
-  header += compAg;                             // 53-57 agência
-  header += compAgDv;                           // 58    DV agência
-  header += compCc;                             // 59-70 conta
-  header += compCcDv;                           // 71    DV conta
-  header += ' ';                                // 72    DV ag/conta
-  header += name;                               // 73-102 nome empresa
-  header += 'BANCO INTER'.padEnd(30,' ');       // 103-132 nome banco
-  header += ' '.repeat(10);                     // 133-142 CNAB
-  header += '1';                                // 143    código remessa
-  header += dataGer + horaGer + nsaStr;         // 144-163 (8+6+6)
-  header += '107';                              // 164-166 versão layout
-  header += '01600';                            // 167-171 densidade
-  header += ' '.repeat(20);                     // 172-191 reservado banco
-  header += ' '.repeat(20);                     // 192-211 reservado empresa
-  header += ' '.repeat(29);                     // 212-240 CNAB
+  header += '077';                           // 1-3   banco
+  header += '0000';                          // 4-7   lote
+  header += '0';                             // 8     tipo registro
+  header += ' '.repeat(9);                   // 9-17  CNAB FEBRABAN
+  header += '2';                             // 18    tipo inscrição (CNPJ)
+  header += cnpj;                            // 19-32
+  header += ' '.repeat(20);                  // 33-52 convênio
+  header += compAg;                          // 53-57
+  header += compAgDv;                        // 58
+  header += compCc;                          // 59-70
+  header += compCcDv;                        // 71
+  header += ' ';                             // 72
+  header += name;                            // 73-102
+  header += 'BANCO INTER'.padEnd(30,' ');    // 103-132
+  header += ' '.repeat(10);                  // 133-142
+  header += '1';                             // 143   remessa
+  header += dataGer + horaGer + nsaStr;      // 144-163
+  header += '107';                           // 164-166 versão layout
+  header += '01600';                         // 167-171 densidade
+  header += ' '.repeat(20);                  // 172-191 reservado banco
+  header += ' '.repeat(20);                  // 192-211 reservado empresa
+  header += ' '.repeat(29);                  // 212-240 CNAB
 
   // === HEADER LOTE (240) ===
   let lotHeader = '';
-  lotHeader += '077';                           // 1-3
-  lotHeader += '0001';                          // 4-7 número do lote
-  lotHeader += '1';                             // 8 tipo registro
-  lotHeader += 'C';                             // 9 operação (crédito)
-  lotHeader += '98';                            // 10-11 tipo serviço (98 = Diversos)
-  lotHeader += '45';                            // 12-13 forma lançamento (45 = Pix)
-  lotHeader += '046';                           // 14-16 versão layout lote
-  lotHeader += ' ';                             // 17
-  lotHeader += '2';                             // 18 tipo inscrição empresa (CNPJ)
-  lotHeader += cnpj;                            // 19-32
-  lotHeader += ' '.repeat(20);                  // 33-52 convênio
-  lotHeader += compAg;                          // 53-57
-  lotHeader += compAgDv;                        // 58
-  lotHeader += compCc;                          // 59-70
-  lotHeader += compCcDv;                        // 71
-  lotHeader += ' ';                             // 72
-  lotHeader += name;                            // 73-102
-  lotHeader += 'PAGTOS DIVERSOS - PIX'.padEnd(40,' ').substring(0,40); // 103-142 mensagem
-  lotHeader += ' '.repeat(30);                  // 143-172 rua
-  lotHeader += '00000';                         // 173-177 número
-  lotHeader += ' '.repeat(15);                  // 178-192 complemento
-  lotHeader += ' '.repeat(20);                  // 193-212 cidade
-  lotHeader += '00000000';                      // 213-220 CEP
-  lotHeader += 'SP';                            // 221-222 UF
-  lotHeader += ' '.repeat(8);                   // 223-230 uso FEBRABAN
-  lotHeader += ' '.repeat(10);                  // 231-240 códigos ocorrências
+  lotHeader += '077';
+  lotHeader += '0001';                       // número do lote
+  lotHeader += '1';                          // tipo registro
+  lotHeader += 'C';                          // operação crédito
+  lotHeader += '98';                         // tipo serviço (98 = Diversos / Pix)
+  lotHeader += '45';                         // forma lançamento (45 = Pix)
+  lotHeader += '046';                        // versão layout lote
+  lotHeader += ' ';
+  lotHeader += '2';                          // tipo inscrição empresa (CNPJ)
+  lotHeader += cnpj;
+  lotHeader += ' '.repeat(20);              // convênio
+  lotHeader += compAg;
+  lotHeader += compAgDv;
+  lotHeader += compCc;
+  lotHeader += compCcDv;
+  lotHeader += ' ';
+  lotHeader += name;
+  lotHeader += 'PAGTOS DIVERSOS - PIX'.padEnd(40,' ').substring(0,40);
+  lotHeader += ' '.repeat(30);              // rua
+  lotHeader += '00000';                     // número
+  lotHeader += ' '.repeat(15);              // complemento
+  lotHeader += ' '.repeat(20);              // cidade
+  lotHeader += '00000000';                  // CEP
+  lotHeader += 'SP';                        // UF
+  lotHeader += ' '.repeat(8);              // uso FEBRABAN
+  lotHeader += ' '.repeat(10);             // ocorrências
 
-  // === SEGMENTOS A + B (240 cada) ===
+  // === SEGMENTOS A + B ===
   const segments = [];
   const counters = { VR:0, VT:0, RMB:0, OUT:0 };
   let seq = 0;
   let totalCents = 0;
+  let semBanco = 0;
+
+  // Modalidade Pix: lê o seletor da tela.
+  // "05" = Pix por Dados Bancários (usa banco/ag/conta colados)
+  // "03" = Pix por Chave CPF/CNPJ (ignora dados bancários em todo o lote)
+  const pixModeSel  = document.getElementById('cnabPixMode');
+  const pixModeGlobal = pixModeSel ? pixModeSel.value : '05';
+  const forcarChave   = pixModeGlobal === '03';  // true = força chave CPF em todos
 
   validos.forEach(l => {
     counters[l.categoria]++;
-    const docNum = buildDocNumber(l, counters[l.categoria]).padEnd(20,' ').substring(0,20);
-
+    const docNum      = buildDocNumber(l, counters[l.categoria]).padEnd(20,' ').substring(0,20);
     const amountCents = Math.round(l.valor * 100);
-    totalCents += amountCents;
-    const amountStr = amountCents.toString().padStart(15,'0');
+    totalCents       += amountCents;
+    const amountStr   = amountCents.toString().padStart(15,'0');
+    const favName     = (l.nome || '').toUpperCase().padEnd(30,' ').substring(0,30);
+    const favCpf      = l.cpf.padStart(14,'0');
+    const isCnpj      = l.cpf.length === 14;
+    const docTypeCode = isCnpj ? '2' : '1';
 
-    const favName = (l.nome || '').toUpperCase().padEnd(30,' ').substring(0,30);
-    const favCpf  = l.cpf.padStart(14,'0');  // pos 14 = 11 com zeros à esquerda (formato CNPJ-compat)
+    // --- Resolve dados bancários do favorecido ---
+    // Se o seletor estiver em "03" (forçar chave), ignora dados bancários mesmo que existam.
+    // Se estiver em "05" e o lançamento trouxer banco + conta, usa dados bancários.
+    // Caso contrário, cai em Pix por chave CPF/CNPJ (forma 03).
+    const temBanco = !forcarChave && !!(l.bancCod && l.bancCod.length >= 3 && l.bancConta);
 
-    // === SEGMENTO A Pix === (Manual Inter v1.21 seção 6.2)
+    // Código do banco favorecido (3 dígitos)
+    const favBancCod = temBanco ? String(l.bancCod).replace(/\D/g,'').padStart(3,'0').substring(0,3) : '000';
+
+    // Agência e DV — separa pelo hífen se existir, ou pelo tamanho (>4 dígitos = último é DV)
+    let favAg = '00000', favAgDV = '0';
+    if (temBanco) {
+      const agInput = String(l.bancAg || '');
+      if (/[^0-9]/.test(agInput)) {               // tem separador (hífen, espaço etc.)
+        const parts = agInput.split(/[^0-9]+/);
+        favAg   = (parts[0]||'').replace(/\D/g,'');
+        favAgDV = (parts[1]||'').replace(/\D/g,'').charAt(0) || '0';
+      } else {
+        const agDigits = agInput.replace(/\D/g,'');
+        if (agDigits.length > 4) { favAg = agDigits.slice(0,-1); favAgDV = agDigits.slice(-1); }
+        else                     { favAg = agDigits; favAgDV = '0'; }
+      }
+    }
+    favAg = favAg.padStart(5,'0').substring(0,5);
+
+    // Conta e DV — dígitos exceto o último; último é DV
+    let favCc = '000000000000', favCcDV = '0';
+    if (temBanco) {
+      const accRaw = String(l.bancConta || '').replace(/[^0-9]/g,'');
+      if (accRaw.length > 1) { favCc = accRaw.slice(0,-1).padStart(12,'0'); favCcDV = accRaw.slice(-1); }
+      else                   { favCc = accRaw.padStart(12,'0'); }
+    }
+    favCc = favCc.substring(0,12);
+
+    // Tipo de conta (01=Corrente 02=Pagamento 03=Poupança) — apenas quando temBanco
+    // Inter: contas digitais geralmente são "01" Corrente ou "02" Pagamento
+    const accType = temBanco ? '01' : '00';
+
+    // ISPB — zeros (banco não exige ISPB para Pix por conta, o Inter resolve internamente)
+    const ispb = '00000000';
+
+    if (!temBanco) semBanco++;
+
+    // === SEGMENTO A ===
     seq++;
     let segA = '';
-    segA += '077';                              // 1-3
-    segA += '0001';                             // 4-7 lote
-    segA += '3';                                // 8 tipo registro
-    segA += seq.toString().padStart(5,'0');     // 9-13 sequencial
-    segA += 'A';                                // 14 segmento
-    segA += '0';                                // 15 tipo movimento (inclusão)
-    segA += '00';                               // 16-17 cód instrução
-    segA += '000';                              // 18-20 câmara
-    // Pos 21-42: Para Pix por chave (forma iniciação ≠ 05), TODOS estes campos vão zerados
-    segA += '000';                              // 21-23 banco favorecido — zeros
-    segA += '00000';                            // 24-28 agência favorecido — zeros
-    segA += '0';                                // 29 DV agência — zero
-    segA += '000000000000';                     // 30-41 conta favorecido — zeros
-    segA += '0';                                // 42 DV conta — zero
-    segA += ' ';                                // 43 branco
-    // Pos 44-73: Nome do favorecido.
-    // ATENÇÃO: O Manual Inter v1.21 (item 15 seção 6.2) diz "preencher com zeros" quando
-    // a forma de iniciação != 05. Porém, na prática o portal Inter LÊ este campo como
-    // o "Beneficiário final" exibido na importação. Preencher com zeros faz aparecer
-    // "00000...000" no portal. Preenchemos com o nome real para a exibição funcionar.
-    segA += favName;                            // 44-73 nome favorecido (30 chars)
-    segA += docNum;                             // 74-93 Nº DOCUMENTO empresa — CONCILIAÇÃO
-    segA += payDate;                            // 94-101 data pagamento DDMMAAAA
-    segA += 'BRL';                              // 102-104 moeda
-    segA += '0'.repeat(15);                     // 105-119 quantidade moeda
-    segA += amountStr;                          // 120-134 valor pagamento (com 2 casas decimais)
-    segA += ' '.repeat(20);                     // 135-154 nº doc atribuído pelo banco (vem no retorno)
-    segA += '0'.repeat(8);                      // 155-162 data efetivação (vem no retorno)
-    segA += '0'.repeat(15);                     // 163-177 valor efetivação (vem no retorno)
-    // Pos 178-201: Identificação do Pagamento Pix (manual seção 6.2 itens 24-26)
-    segA += favCpf;                             // 178-191 CPF/CNPJ favorecido (14, zeros à esquerda)
-    segA += '0'.repeat(8);                      // 192-199 ISPB — zeros para Pix por chave
-    segA += '00';                               // 200-201 Tipo conta — zeros para Pix por chave
-    segA += ' '.repeat(29);                     // 202-230 branco
-    segA += ' '.repeat(10);                     // 231-240 ocorrências (vem no retorno)
+    segA += '077';
+    segA += '0001';
+    segA += '3';
+    segA += seq.toString().padStart(5,'0');
+    segA += 'A';
+    segA += '0';                             // tipo movimento: inclusão
+    segA += '00';                            // código instrução
+    segA += '000';                           // câmara
+    segA += favBancCod;                      // 21-23  banco favorecido
+    segA += favAg;                           // 24-28  agência (5)
+    segA += favAgDV;                         // 29     DV agência
+    segA += favCc;                           // 30-41  conta (12)
+    segA += favCcDV;                         // 42     DV conta
+    segA += ' ';                             // 43     branco
+    // Pos 44-73: nome do favorecido — Inter exibe este campo no portal mesmo em modo chave
+    segA += favName;                         // 44-73  (30)
+    segA += docNum;                          // 74-93  Nº documento empresa (conciliação)
+    segA += payDate;                         // 94-101 data pagamento DDMMAAAA
+    segA += 'BRL';                           // 102-104 moeda
+    segA += '0'.repeat(15);                  // 105-119 quantidade moeda
+    segA += amountStr;                       // 120-134 valor (15)
+    segA += ' '.repeat(20);                  // 135-154 nº doc banco (retorno)
+    segA += '0'.repeat(8);                   // 155-162 data efetivação (retorno)
+    segA += '0'.repeat(15);                  // 163-177 valor efetivação (retorno)
+    segA += favCpf;                          // 178-191 CPF/CNPJ favorecido (14)
+    segA += ispb;                            // 192-199 ISPB
+    segA += accType;                         // 200-201 tipo conta
+    segA += ' '.repeat(29);                  // 202-230 branco
+    segA += ' '.repeat(10);                  // 231-240 ocorrências (retorno)
     segments.push(padOrCut(segA, 240));
 
-    // === SEGMENTO B Pix === (Manual Inter v1.21 seção 6.3)
-    // Para Pix por chave CPF/CNPJ: forma iniciação "03 ", documento no campo dedicado, chave Pix branca
-    const isCnpj = l.cpf.length === 14;
-    const docTypeCode = isCnpj ? '2' : '1';   // Manual: "1"=CPF, "2"=CNPJ
+    // === SEGMENTO B ===
+    // Forma de iniciação: "05 " = dados bancários  |  "03 " = chave CPF/CNPJ
+    const formaIniciacao = temBanco ? '05 ' : '03 ';
     seq++;
     let segB = '';
-    segB += '077';                              // 1-3
-    segB += '0001';                             // 4-7
-    segB += '3';                                // 8
-    segB += seq.toString().padStart(5,'0');     // 9-13
-    segB += 'B';                                // 14
-    segB += '03 ';                              // 15-17 forma iniciação "03" + 1 branco = 3 chars Alfa
-    segB += docTypeCode;                        // 18 tipo doc favorecido (1=CPF, 2=CNPJ)
-    segB += favCpf;                             // 19-32 CPF/CNPJ favorecido (14, zeros à esquerda se CPF)
-    // Pos 33-67: TX ID Pix (opcional, 35 chars Alfa) — reforça conciliação no extrato
-    segB += docNum.padEnd(35,' ').substring(0,35); // 33-67 TX ID = mesmo nº documento do Seg A
-    segB += ' '.repeat(60);                     // 68-127 branco
-    segB += ' '.repeat(99);                     // 128-226 chave Pix — branco (CPF já está na pos 19-32)
-    segB += ' '.repeat(6);                      // 227-232 branco
-    segB += '0'.repeat(8);                      // 233-240 ISPB favorecido — zeros para Pix por chave
+    segB += '077';
+    segB += '0001';
+    segB += '3';
+    segB += seq.toString().padStart(5,'0');
+    segB += 'B';
+    segB += formaIniciacao;                  // 15-17 forma iniciação (3 chars)
+    segB += docTypeCode;                     // 18    tipo doc (1=CPF 2=CNPJ)
+    segB += favCpf;                          // 19-32 CPF/CNPJ (14)
+    segB += docNum.padEnd(35,' ').substring(0,35); // 33-67 TX ID (conciliação)
+    segB += ' '.repeat(60);                  // 68-127 branco
+    segB += ' '.repeat(99);                  // 128-226 chave Pix (branco — CPF já está em 19-32)
+    segB += ' '.repeat(6);                   // 227-232 branco
+    segB += ispb;                            // 233-240 ISPB favorecido
     segments.push(padOrCut(segB, 240));
   });
 
   // === TRAILER LOTE ===
   const totalAmountStr = totalCents.toString().padStart(18,'0');
-  const qtyRegLote = (segments.length + 2).toString().padStart(6,'0'); // header lote + segmentos + trailer
+  const qtyRegLote     = (segments.length + 2).toString().padStart(6,'0');
   let trailerLote = '';
-  trailerLote += '077';                         // 1-3
-  trailerLote += '0001';                        // 4-7
-  trailerLote += '5';                           // 8
-  trailerLote += ' '.repeat(9);                 // 9-17
-  trailerLote += qtyRegLote;                    // 18-23 qtd registros do lote
-  trailerLote += totalAmountStr;                // 24-41 valor total
-  trailerLote += '0'.repeat(18);                // 42-59 qtd moedas
-  trailerLote += '0'.repeat(6);                 // 60-65 nº aviso débito
-  trailerLote += ' '.repeat(165);               // 66-230 CNAB
-  trailerLote += ' '.repeat(10);                // 231-240 ocorrências
+  trailerLote += '077';
+  trailerLote += '0001';
+  trailerLote += '5';
+  trailerLote += ' '.repeat(9);
+  trailerLote += qtyRegLote;                // 18-23 qtd registros lote
+  trailerLote += totalAmountStr;            // 24-41 valor total
+  trailerLote += '0'.repeat(18);            // 42-59 qtd moedas
+  trailerLote += '0'.repeat(6);             // 60-65 nº aviso débito
+  trailerLote += ' '.repeat(165);           // 66-230
+  trailerLote += ' '.repeat(10);            // 231-240 ocorrências
 
-  // === TRAILER ARQUIVO === (Manual Inter v1.21 seção 4.3)
+  // === TRAILER ARQUIVO ===
   const totalLinhas = 2 + segments.length + 2; // header arq + header lote + segs + trailer lote + trailer arq
   let trailerArq = '';
-  trailerArq += '077';                          // 1-3
-  trailerArq += '9999';                         // 4-7
-  trailerArq += '9';                            // 8
-  trailerArq += ' '.repeat(9);                  // 9-17 branco
-  trailerArq += '000001';                       // 18-23 qtd lotes do arquivo
-  trailerArq += totalLinhas.toString().padStart(6,'0'); // 24-29 qtd registros do arquivo
-  trailerArq += ' '.repeat(211);                // 30-240 branco
+  trailerArq += '077';
+  trailerArq += '9999';
+  trailerArq += '9';
+  trailerArq += ' '.repeat(9);
+  trailerArq += '000001';
+  trailerArq += totalLinhas.toString().padStart(6,'0');
+  trailerArq += ' '.repeat(211);
 
-  // === MONTA ===
+  // === MONTA E BAIXA ===
   const lines = [
     padOrCut(header, 240),
     padOrCut(lotHeader, 240),
@@ -841,14 +1094,17 @@ function generateCNAB() {
   ];
   const content = lines.join('\r\n');
 
-  // Incrementa NSA
   State.cnabSeq = nsa + 1;
   saveToStorage();
 
   const fileName = `CI240_001_${nsaFile}.REM`;
   downloadFile(content, fileName, 'text/plain');
 
-  fb.innerHTML = `<span class="text-green-700"><i class="fas fa-check-circle"></i> Arquivo <strong>${fileName}</strong> gerado com ${validos.length} lançamento(s) • Total ${money(totalCents/100)}</span>`;
+  const numLanc = validos.length;
+  const totalFmt = money(totalCents / 100);
+  let msg = `<i class="fas fa-check-circle"></i> Arquivo <strong>${fileName}</strong> gerado com ${numLanc} lançamento(s) • ${totalFmt}`;
+  if (semBanco > 0) msg += ` <span class="text-yellow-700 ml-2">⚠ ${semBanco} sem dados bancários → Pix por chave CPF</span>`;
+  fb.innerHTML = `<span class="text-green-700">${msg}</span>`;
 }
 
 function padOrCut(s, n) {
@@ -952,6 +1208,8 @@ function loadProjectFromFile(input) {
 function clearAll() {
   if (!confirm('Apagar TODOS os lançamentos? Esta ação não pode ser desfeita.')) return;
   State.lancamentos = [];
+  State.cnabExcluded = [];
+  State.cnabBancoFiltro = 'ALL';
   saveToStorage();
   renderAll();
   notify('Lançamentos limpos.', 'green');
