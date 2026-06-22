@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conciliador · Pagamentos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#0a0a0a; --ink:#161616; --paper:#ffffff; --paper-2:#fafafa;
+  --line:#e8e8e8; --line-2:#d4d4d4; --muted:#8a8a8a; --muted-2:#b5b5b5;
+  --orange:#ff5400; --orange-soft:#fff1ea; --orange-line:#ffd4bf;
+  --green:#0f9d58; --green-soft:#e9f7ef;
+  --red:#d92020; --red-soft:#fdeaea;
+  --amber:#b97400; --amber-soft:#fff6e6;
+  --blue:#1d4ed8;
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.06);
+  --shadow-lg:0 12px 40px rgba(0,0,0,.12);
+  --r:14px; --r-sm:9px;
+  --sans:'Archivo',system-ui,sans-serif; --mono:'Space Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);font-size:14px;-webkit-font-smoothing:antialiased;overflow:hidden}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:20px;border:3px solid var(--paper)}
+::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+
+.app{display:grid;grid-template-columns:248px 1fr;height:100vh}
+
+/* ---------- SIDEBAR ---------- */
+.side{background:var(--black);color:#fff;display:flex;flex-direction:column;padding:22px 14px;position:relative}
+.brand{display:flex;align-items:center;gap:11px;padding:6px 10px 22px}
+.brand .mark{width:34px;height:34px;border-radius:9px;background:var(--orange);display:grid;place-items:center;flex:none;box-shadow:0 0 0 1px rgba(255,255,255,.06),0 6px 16px rgba(255,84,0,.4)}
+.brand .mark svg{width:19px;height:19px}
+.brand h1{font-size:15px;font-weight:800;letter-spacing:-.3px;line-height:1}
+.brand h1 span{display:block;font-size:10px;font-weight:500;color:var(--muted-2);letter-spacing:.5px;margin-top:3px;text-transform:uppercase}
+.nav{display:flex;flex-direction:column;gap:2px;margin-top:8px}
+.nav .lbl{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#5f5f5f;padding:14px 12px 6px;font-weight:600}
+.nav a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:9px;color:#c9c9c9;cursor:pointer;font-weight:500;font-size:13.5px;transition:.15s;position:relative;user-select:none}
+.nav a svg{width:17px;height:17px;flex:none;opacity:.85}
+.nav a:hover{background:#1c1c1c;color:#fff}
+.nav a.on{background:#1c1c1c;color:#fff}
+.nav a.on::before{content:"";position:absolute;left:-14px;top:50%;transform:translateY(-50%);width:3px;height:20px;background:var(--orange);border-radius:0 3px 3px 0}
+.nav a .badge{margin-left:auto;font-family:var(--mono);font-size:11px;background:#2a2a2a;padding:1px 7px;border-radius:20px;color:#fff;font-weight:700}
+.nav a.on .badge{background:var(--orange)}
+.nav a .badge.warn{background:var(--orange)}
+.side-foot{margin-top:auto;padding:14px 12px 4px;border-top:1px solid #1f1f1f;font-size:11px;color:#5f5f5f;line-height:1.5}
+.side-foot b{color:#9a9a9a;font-weight:600}
+
+/* ---------- MAIN ---------- */
+.main{overflow-y:auto;background:var(--paper);position:relative}
+.topbar{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:18px 34px;display:flex;align-items:center;gap:16px}
+.topbar h2{font-size:19px;font-weight:800;letter-spacing:-.4px}
+.topbar .sub{color:var(--muted);font-size:12.5px;margin-top:2px;font-weight:500}
+.topbar .right{margin-left:auto;display:flex;gap:10px;align-items:center}
+.page{padding:28px 34px 60px;max-width:1280px}
+.view{display:none;animation:fade .35s ease}
+.view.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;border:none;cursor:pointer;font-family:var(--sans);font-weight:600;font-size:13px;padding:10px 16px;border-radius:9px;transition:.15s;background:var(--paper-2);color:var(--ink);border:1px solid var(--line-2)}
+.btn:hover{border-color:var(--ink);background:#fff}
+.btn svg{width:15px;height:15px}
+.btn.primary{background:var(--orange);color:#fff;border-color:var(--orange)}
+.btn.primary:hover{background:#e64c00;box-shadow:0 6px 18px rgba(255,84,0,.35)}
+.btn.dark{background:var(--black);color:#fff;border-color:var(--black)}
+.btn.dark:hover{background:#222}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--ink);background:var(--paper-2)}
+.btn.sm{padding:7px 12px;font-size:12px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* KPI cards */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:26px}
+.kpi{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.kpi .k-top{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.kpi .k-top .dot{width:7px;height:7px;border-radius:50%}
+.kpi .k-val{font-size:27px;font-weight:800;letter-spacing:-1px;margin-top:10px;font-variant-numeric:tabular-nums}
+.kpi .k-sub{font-size:12px;color:var(--muted);margin-top:3px;font-weight:500}
+.kpi.accent{background:var(--black);color:#fff;border-color:var(--black)}
+.kpi.accent .k-top{color:#9a9a9a}
+.kpi.accent .k-sub{color:#9a9a9a}
+.kpi.accent::after{content:"";position:absolute;right:-30px;bottom:-30px;width:120px;height:120px;background:radial-gradient(circle,var(--orange) 0%,transparent 70%);opacity:.45}
+
+/* cards / panels */
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-bottom:22px}
+.panel-h{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}
+.panel-h h3{font-size:15px;font-weight:700;letter-spacing:-.2px}
+.panel-h .tag{font-size:11px;font-weight:600;color:var(--muted);background:var(--paper-2);border:1px solid var(--line);padding:3px 9px;border-radius:20px}
+.panel-h .right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.panel-b{padding:20px}
+
+/* dropzone */
+.drop{border:2px dashed var(--line-2);border-radius:var(--r);padding:40px 24px;text-align:center;transition:.2s;cursor:pointer;background:var(--paper-2)}
+.drop:hover,.drop.hot{border-color:var(--orange);background:var(--orange-soft)}
+.drop .ico{width:50px;height:50px;border-radius:13px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;margin:0 auto 14px;box-shadow:var(--shadow)}
+.drop.hot .ico{border-color:var(--orange-line)}
+.drop .ico svg{width:24px;height:24px;color:var(--orange)}
+.drop h4{font-size:15px;font-weight:700}
+.drop p{color:var(--muted);font-size:12.5px;margin-top:5px}
+.drop .formats{margin-top:14px;display:flex;gap:7px;justify-content:center;flex-wrap:wrap}
+.chip{font-family:var(--mono);font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:6px;background:#fff;border:1px solid var(--line-2);color:var(--ink)}
+
+/* file list */
+.files{display:flex;flex-direction:column;gap:9px;margin-top:18px}
+.frow{display:flex;align-items:center;gap:13px;padding:13px 15px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--paper);transition:.15s}
+.frow:hover{border-color:var(--line-2)}
+.frow .ft{width:38px;height:38px;border-radius:9px;display:grid;place-items:center;flex:none;font-family:var(--mono);font-size:10px;font-weight:700;color:#fff}
+.frow .ft.ofx{background:var(--black)}
+.frow .ft.cnab{background:var(--orange)}
+.frow .fi{flex:1;min-width:0}
+.frow .fi .fn{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.frow .fi .fm{color:var(--muted);font-size:11.5px;margin-top:2px;font-family:var(--mono)}
+.frow .fstat{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px}
+.fstat.src{background:var(--green-soft);color:var(--green)}
+.fstat.ref{background:var(--orange-soft);color:var(--orange)}
+.frow .del{background:none;border:none;cursor:pointer;color:var(--muted-2);padding:6px;border-radius:7px;display:grid;place-items:center}
+.frow .del:hover{color:var(--red);background:var(--red-soft)}
+.frow .del svg{width:16px;height:16px}
+
+/* tables */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{text-align:left;padding:11px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:1px solid var(--line);white-space:nowrap;background:var(--paper-2);position:sticky;top:0;z-index:2}
+thead th.num{text-align:right}
+tbody td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--paper-2)}
+td.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+td .nm{font-weight:600}
+td .id{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%}
+.pill.pix{background:var(--orange-soft);color:var(--orange)}.pill.pix::before{background:var(--orange)}
+.pill.ted{background:#eef2ff;color:var(--blue)}.pill.ted::before{background:var(--blue)}
+.pill.ok{background:var(--green-soft);color:var(--green)}.pill.ok::before{background:var(--green)}
+.pill.dup{background:var(--red-soft);color:var(--red)}.pill.dup::before{background:var(--red)}
+.pill.miss{background:var(--amber-soft);color:var(--amber)}.pill.miss::before{background:var(--amber)}
+.pill.reproc{background:#eef2ff;color:var(--blue)}.pill.reproc::before{background:var(--blue)}
+.src-tag{font-family:var(--mono);font-size:10.5px;color:var(--muted);background:var(--paper-2);border:1px solid var(--line);padding:2px 7px;border-radius:5px;white-space:nowrap}
+
+/* empty state */
+.empty{text-align:center;padding:70px 20px;color:var(--muted)}
+.empty .ico{width:64px;height:64px;border-radius:16px;background:var(--paper-2);border:1px solid var(--line);display:grid;place-items:center;margin:0 auto 18px}
+.empty .ico svg{width:30px;height:30px;color:var(--muted-2)}
+.empty h3{font-size:17px;font-weight:700;color:var(--ink)}
+.empty p{margin-top:7px;font-size:13.5px;max-width:380px;margin-left:auto;margin-right:auto;line-height:1.55}
+
+/* toolbar */
+.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.search{flex:1;min-width:200px;position:relative}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted-2)}
+.search input{width:100%;padding:10px 12px 10px 36px;border:1px solid var(--line-2);border-radius:9px;font-family:var(--sans);font-size:13px;background:var(--paper)}
+.search input:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px var(--orange-soft)}
+.seg{display:flex;background:var(--paper-2);border:1px solid var(--line-2);border-radius:9px;padding:3px;gap:2px}
+.seg button{border:none;background:none;cursor:pointer;font-family:var(--sans);font-weight:600;font-size:12px;padding:6px 13px;border-radius:7px;color:var(--muted);transition:.12s}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+.seg button .n{font-family:var(--mono);opacity:.6;margin-left:4px}
+
+/* alert banner */
+.banner{display:flex;gap:13px;padding:15px 18px;border-radius:var(--r);margin-bottom:22px;align-items:flex-start}
+.banner.warn{background:var(--red-soft);border:1px solid #f3c0c0}
+.banner.info{background:var(--orange-soft);border:1px solid var(--orange-line)}
+.banner.good{background:var(--green-soft);border:1px solid #bfe6cd}
+.banner .bi{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;flex:none}
+.banner.warn .bi{background:var(--red);color:#fff}
+.banner.info .bi{background:var(--orange);color:#fff}
+.banner.good .bi{background:var(--green);color:#fff}
+.banner .bi svg{width:18px;height:18px}
+.banner .bc h4{font-size:14px;font-weight:700}
+.banner .bc p{font-size:12.5px;color:var(--ink);opacity:.8;margin-top:3px;line-height:1.5}
+
+/* notes / apontamentos */
+.note-form{display:flex;gap:10px;margin-bottom:18px}
+.note-form input{flex:1;padding:11px 14px;border:1px solid var(--line-2);border-radius:9px;font-family:var(--sans);font-size:13px}
+.note-form input:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px var(--orange-soft)}
+.note-form select{padding:11px 12px;border:1px solid var(--line-2);border-radius:9px;font-family:var(--sans);font-size:13px;background:#fff;cursor:pointer}
+.note{display:flex;gap:13px;padding:15px 17px;border:1px solid var(--line);border-radius:var(--r-sm);margin-bottom:10px;background:var(--paper);align-items:flex-start}
+.note .nt-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:3px 9px;border-radius:20px;flex:none;margin-top:1px}
+.nt-tag.t-aviso{background:var(--amber-soft);color:var(--amber)}
+.nt-tag.t-erro{background:var(--red-soft);color:var(--red)}
+.nt-tag.t-ok{background:var(--green-soft);color:var(--green)}
+.nt-tag.t-info{background:var(--orange-soft);color:var(--orange)}
+.note .nc{flex:1}
+.note .nc p{font-size:13.5px;line-height:1.5}
+.note .nc .meta{font-size:11px;color:var(--muted);margin-top:5px;font-family:var(--mono)}
+.note .ndel{background:none;border:none;cursor:pointer;color:var(--muted-2);padding:5px;border-radius:6px}
+.note .ndel:hover{color:var(--red);background:var(--red-soft)}
+.note .ndel svg{width:15px;height:15px}
+.note.auto{border-left:3px solid var(--orange)}
+
+/* modality breakdown bars */
+.bars{display:flex;flex-direction:column;gap:14px}
+.bar-row{display:flex;align-items:center;gap:14px}
+.bar-row .bl{width:130px;font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:8px}
+.bar-row .bl .sw{width:9px;height:9px;border-radius:3px;flex:none}
+.bar-track{flex:1;height:30px;background:var(--paper-2);border-radius:7px;overflow:hidden;position:relative;border:1px solid var(--line)}
+.bar-fill{height:100%;border-radius:6px;display:flex;align-items:center;padding:0 11px;color:#fff;font-family:var(--mono);font-size:11.5px;font-weight:700;min-width:fit-content;transition:width .6s cubic-bezier(.2,.7,.3,1)}
+.bar-row .bv{width:130px;text-align:right;font-family:var(--mono);font-weight:700;font-size:13px}
+
+.split{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media(max-width:1100px){.split{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}
+
+.hint{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-top:10px}
+.hint svg{width:13px;height:13px;color:var(--orange)}
+.expand-row td{background:var(--orange-soft)!important;padding:0!important}
+.expand-inner{padding:14px 18px;font-size:12.5px}
+.expand-inner .er{display:flex;gap:10px;padding:7px 0;border-bottom:1px dashed var(--orange-line);align-items:center}
+.expand-inner .er:last-child{border:none}
+.dup-link{cursor:pointer;color:var(--orange);font-weight:700;text-decoration:underline;text-underline-offset:2px}
+.row-clickable{cursor:pointer}
+.flash{animation:flash 1.4s ease}
+@keyframes flash{0%,40%{background:var(--orange-soft)}100%{background:transparent}}
+.foot-note{font-size:11.5px;color:var(--muted);margin-top:14px;line-height:1.6;padding:14px 16px;background:var(--paper-2);border-radius:9px;border:1px solid var(--line)}
+.foot-note b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="side">
+    <div class="brand">
+      <div class="mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
+      </div>
+      <h1>Conciliador<span>Folha · Pix &amp; CNAB</span></h1>
+    </div>
+    <nav class="nav">
+      <div class="lbl">Análise</div>
+      <a data-view="dash" class="on">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        Painel
+      </a>
+      <a data-view="conc">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M21 3l-7 7"/><path d="M8 21H3v-5"/><path d="M3 21l7-7"/></svg>
+        Conciliação <span class="badge" id="b-conc">0</span>
+      </a>
+      <a data-view="dup">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Duplicidades <span class="badge warn" id="b-dup">0</span>
+      </a>
+      <div class="lbl">Dados</div>
+      <a data-view="imp">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        Importar <span class="badge" id="b-files">0</span>
+      </a>
+      <a data-view="notes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Apontamentos <span class="badge" id="b-notes">0</span>
+      </a>
+    </nav>
+    <div class="side-foot">
+      <b>Regra de duplicidade</b><br>
+      mesmo beneficiário + valor + data + modalidade. Reenvios em arquivos distintos não contam.
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h2 id="t-title">Painel</h2>
+        <div class="sub" id="t-sub">Visão geral da conciliação</div>
+      </div>
+      <div class="right">
+        <button class="btn sm" id="exportBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+          Exportar CSV
+        </button>
+        <button class="btn primary sm" id="quickImport">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          Importar arquivos
+        </button>
+      </div>
+    </div>
+    <div class="page">
+
+    <!-- DASH -->
+    <section class="view on" id="view-dash">
+      <div id="dash-empty" class="empty">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg></div>
+        <h3>Nenhum dado ainda</h3>
+        <p>Importe seus arquivos de <b>retorno (OFX)</b> e <b>remessa (CNAB)</b> para começar a conciliação. O retorno é a fonte da verdade — é o que efetivamente saiu da conta.</p>
+        <button class="btn primary" style="margin-top:18px" onclick="go('imp')">Importar agora</button>
+      </div>
+      <div id="dash-content" style="display:none">
+        <div id="dash-banner"></div>
+        <div class="kpis">
+          <div class="kpi accent">
+            <div class="k-top"><span class="dot" style="background:var(--orange)"></span>Pago (retorno)</div>
+            <div class="k-val" id="k-paid">R$ 0</div>
+            <div class="k-sub" id="k-paid-n">0 lançamentos · saiu da conta</div>
+          </div>
+          <div class="kpi">
+            <div class="k-top"><span class="dot" style="background:var(--blue)"></span>Enviado (CNAB)</div>
+            <div class="k-val" id="k-sent">R$ 0</div>
+            <div class="k-sub" id="k-sent-n">0 registros em remessa</div>
+          </div>
+          <div class="kpi">
+            <div class="k-top"><span class="dot" style="background:var(--amber)"></span>Não pago</div>
+            <div class="k-val" id="k-miss">R$ 0</div>
+            <div class="k-sub" id="k-miss-n">0 beneficiários sem retorno</div>
+          </div>
+          <div class="kpi">
+            <div class="k-top"><span class="dot" style="background:var(--red)"></span>Duplicidades</div>
+            <div class="k-val" id="k-dup">0</div>
+            <div class="k-sub" id="k-dup-n">pagamentos repetidos reais</div>
+          </div>
+        </div>
+        <div class="split">
+          <div class="panel">
+            <div class="panel-h"><h3>Saídas por modalidade</h3><span class="tag">base: retorno</span></div>
+            <div class="panel-b"><div class="bars" id="modBars"></div></div>
+          </div>
+          <div class="panel">
+            <div class="panel-h"><h3>Não pagos</h3><span class="tag" id="miss-tag">0 itens</span></div>
+            <div class="panel-b" style="padding:0">
+              <div class="tbl-wrap"><table id="missTbl"><thead><tr><th>Beneficiário</th><th>Modalidade</th><th class="num">Valor</th></tr></thead><tbody></tbody></table></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-h"><h3>Processamentos importados</h3><span class="tag" id="proc-tag">0 arquivos</span></div>
+          <div class="panel-b" style="padding:0">
+            <div class="tbl-wrap"><table id="procTbl"><thead><tr><th>Arquivo</th><th>Tipo</th><th>Papel</th><th class="num">Registros</th><th class="num">Valor</th></tr></thead><tbody></tbody></table></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONCILIACAO -->
+    <section class="view" id="view-conc">
+      <div class="toolbar">
+        <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input id="searchConc" placeholder="Buscar beneficiário, valor ou identificação…"></div>
+        <div class="seg" id="segConc">
+          <button class="on" data-f="all">Todos <span class="n" id="sg-all">0</span></button>
+          <button data-f="paid">Pagos <span class="n" id="sg-paid">0</span></button>
+          <button data-f="miss">Não pagos <span class="n" id="sg-miss">0</span></button>
+          <button data-f="dup">Duplicados <span class="n" id="sg-dup">0</span></button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-b" style="padding:0">
+          <div class="tbl-wrap"><table id="concTbl">
+            <thead><tr><th>Beneficiário</th><th>Identificação</th><th>Modalidade</th><th>Data</th><th>Status</th><th>Origem</th><th class="num">Valor</th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+        </div>
+      </div>
+      <div class="foot-note" id="conc-foot"></div>
+    </section>
+
+    <!-- DUPLICIDADES -->
+    <section class="view" id="view-dup">
+      <div class="banner info" style="margin-bottom:20px">
+        <div class="bi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>
+        <div class="bc"><h4>Como a duplicidade é detectada</h4><p>Só é duplicidade real quando o <b>mesmo beneficiário</b> recebeu o <b>mesmo valor</b>, na <b>mesma data</b> e na <b>mesma modalidade</b> — pago de fato (retorno). Reenvios em arquivos diferentes (ex.: erro no dado bancário → reenvio por Pix) <b>não</b> são duplicidade, desde que apenas um tenha saído da conta.</p></div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><h3>Duplicidades reais</h3><span class="tag" id="dup-tag">0 grupos</span></div>
+        <div class="panel-b" id="dupBody"></div>
+      </div>
+    </section>
+
+    <!-- IMPORTAR -->
+    <section class="view" id="view-imp">
+      <div class="panel" style="margin-bottom:22px">
+        <div class="panel-h">
+          <h3>Destino dos arquivos</h3>
+          <div class="right">
+            <div class="seg" id="segMode">
+              <button data-m="local" class="on">No navegador</button>
+              <button data-m="cloud">Google Drive (nuvem)</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel-b" id="cloudCfg" style="display:none">
+          <div class="banner info" style="margin-bottom:16px">
+            <div class="bi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg></div>
+            <div class="bc"><h4>Modo nuvem</h4><p>Os arquivos serão enviados ao seu Web App do Google Apps Script, salvos nas pastas do Drive (retorno/remessa) e a conciliação será gravada na planilha. O resultado abaixo reflete o que voltou da nuvem.</p></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 200px;gap:12px">
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Endpoint /exec</label>
+              <input id="cloudUrl" placeholder="https://script.google.com/macros/s/…/exec" style="width:100%;margin-top:6px;padding:10px 12px;border:1px solid var(--line-2);border-radius:9px;font-family:var(--mono);font-size:12px">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Token</label>
+              <input id="cloudToken" placeholder="conc-2026" style="width:100%;margin-top:6px;padding:10px 12px;border:1px solid var(--line-2);border-radius:9px;font-family:var(--mono);font-size:12px">
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:14px;align-items:center">
+            <button class="btn sm" id="cloudTest">Testar conexão</button>
+            <button class="btn primary sm" id="cloudReproc">Reprocessar na nuvem</button>
+            <span id="cloudStatus" style="font-size:12px;color:var(--muted)"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="split" style="grid-template-columns:1fr 1fr;align-items:start">
+        <div class="panel">
+          <div class="panel-h"><h3>Retorno bancário</h3><span class="tag" style="background:var(--green-soft);color:var(--green);border-color:#bfe6cd">fonte da verdade</span></div>
+          <div class="panel-b">
+            <div class="drop" id="dropOfx">
+              <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m9 15 2 2 4-4"/></svg></div>
+              <h4>Solte arquivos OFX aqui</h4>
+              <p>Extrato/retorno da conta — o que efetivamente saiu</p>
+              <div class="formats"><span class="chip">.OFX</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-h"><h3>Remessa enviada</h3><span class="tag" style="background:var(--orange-soft);color:var(--orange);border-color:var(--orange-line)">referência</span></div>
+          <div class="panel-b">
+            <div class="drop" id="dropCnab">
+              <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h8M8 9h2"/></svg></div>
+              <h4>Solte arquivos CNAB 240 aqui</h4>
+              <p>Remessa que você gerou (Pix ou dados bancários)</p>
+              <div class="formats"><span class="chip">.REM</span><span class="chip">.TXT</span><span class="chip">.CNAB</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Pode importar quantos processamentos quiser. Detecto o tipo automaticamente — se o auto não acertar, use o seletor manual abaixo.</div>
+      <input type="file" id="fileInput" multiple accept=".ofx,.rem,.txt,.cnab,.ret" style="display:none">
+      <div class="panel" style="margin-top:22px">
+        <div class="panel-h"><h3>Arquivos importados</h3><div class="right"><button class="btn ghost sm" id="clearAll">Limpar tudo</button></div></div>
+        <div class="panel-b">
+          <div id="files-empty" class="empty" style="padding:40px 20px"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div><h3 style="font-size:15px">Nenhum arquivo</h3><p style="font-size:12.5px">Arraste arquivos acima ou clique nas zonas.</p></div>
+          <div class="files" id="fileList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- APONTAMENTOS -->
+    <section class="view" id="view-notes">
+      <div class="note-form">
+        <select id="noteType"><option value="aviso">Aviso</option><option value="erro">Erro</option><option value="ok">Resolvido</option><option value="info">Info</option></select>
+        <input id="noteInput" placeholder="Ex.: Gislayne teve erro de conta no CNAB inicial, reprocessada via Pix em 05/06.">
+        <button class="btn dark" id="addNote">Adicionar</button>
+      </div>
+      <div id="notesList"></div>
+      <div id="notes-empty" class="empty" style="padding:50px 20px"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div><h3>Sem apontamentos</h3><p>Registre observações da conciliação. Apontamentos automáticos sobre não pagos e duplicidades aparecem aqui também.</p></div>
+    </section>
+
+    </div>
+  </main>
+</div>
+
+<script>
+/* ============ STATE ============ */
+const S = { files:[], paid:[], sent:[], notes:[], manualNotes:[], filter:'all', search:'' };
+const fmt = n => 'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtShort = n => 'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0});
+const uid = () => Math.random().toString(36).slice(2,9);
+const norm = s => (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+const nameKey = s => { const t = norm(s).split(' ').filter(w=>w.length>2); return t.join(' '); };
+
+/* ============ PARSERS ============ */
+function parseOFX(text, fileId, fileName){
+  const out=[]; const blocks = text.split(/<STMTTRN>/i).slice(1);
+  blocks.forEach(b=>{
+    const amt = (b.match(/<TRNAMT>\s*(-?[\d.]+)/i)||[])[1];
+    if(amt===undefined) return;
+    const val = Math.abs(parseFloat(amt));
+    const memo = ((b.match(/<MEMO>([^<\r\n]*)/i)||[])[1]||'').trim();
+    const nameTag = ((b.match(/<NAME>([^<\r\n]*)/i)||[])[1]||'').trim();
+    let dt = ((b.match(/<DTPOSTED>\s*(\d{8})/i)||[])[1]||'');
+    const date = dt ? `${dt.slice(6,8)}/${dt.slice(4,6)}/${dt.slice(0,4)}` : '';
+    // modality + identification from memo
+    let modality='Pix', ident='', name=nameTag;
+    const q = (memo.match(/"(.*)"/)||[])[1] || memo;
+    if(/^Cp\s*:/i.test(q)){ // Pix por chave/CPF
+      const m = q.replace(/^Cp\s*:/i,'').split('-'); ident=(m[0]||'').trim(); if(!name) name=(m.slice(1).join('-')||'').trim(); modality='Pix';
+    } else { // Pix por telefone/agência: "00019 <id> NOME"
+      const p = q.trim().split(/\s+/); if(p.length>=3){ ident=p[1]; if(!name) name=p.slice(2).join(' '); } modality='Pix';
+    }
+    if(/\bTED\b/i.test(memo)) modality='TED';
+    if(parseFloat(amt) > 0) return; // só saídas
+    out.push({id:uid(), fileId, fileName, name:name||nameTag||'(sem nome)', ident, modality, date, value:val, raw:memo});
+  });
+  return out;
+}
+
+function parseCNAB(text, fileId, fileName){
+  const out=[]; const lines = text.split(/\r?\n/);
+  let pend=null;
+  lines.forEach(l=>{
+    if(l.length < 200) return;
+    const tipo = l[7]; const seg = l[13];
+    if(tipo==='3' && seg==='A'){
+      const bi = l.indexOf('BRL');
+      let valStr, dt, name;
+      if(bi>=0){
+        // Após 'BRL' há 30 dígitos: 15 da moeda (zerados) + 15 do valor do pagamento.
+        const block = l.slice(bi+3, bi+33).replace(/\D/g,'');
+        valStr = block.slice(-15); // valor do pagamento = últimos 15 dígitos
+        dt = l.slice(bi-8, bi); // DDMMAAAA imediatamente antes de BRL
+        name = l.slice(43, bi-8).trim(); // nome até a data
+      } else {
+        valStr = l.slice(119,134); dt = l.slice(93,101); name = l.slice(43,73).trim();
+      }
+      const val = parseInt(valStr||'0',10)/100;
+      const date = /^\d{8}$/.test(dt) ? `${dt.slice(0,2)}/${dt.slice(2,4)}/${dt.slice(4,8)}` : '';
+      const banco = l.slice(20,23), ag=l.slice(23,28), conta=l.slice(28,40);
+      const isPix = (banco==='000'||banco==='   ') || /^0+$/.test((banco+ag+conta).replace(/\s/g,''));
+      pend={id:uid(), fileId, fileName, name, ident:'', modality:isPix?'Pix':'Dados bancários', date, value:val,
+            bank:{banco:banco.trim(),ag:ag.trim(),conta:conta.trim()}};
+      out.push(pend);
+    } else if(tipo==='3' && seg==='B' && pend){
+      const chave = l.slice(18,32).trim().replace(/^0+/,'');
+      pend.ident = chave || pend.ident; pend=null;
+    }
+  });
+  return out;
+}
+
+function detectType(name, text){
+  const n=name.toLowerCase();
+  if(n.endsWith('.ofx')) return 'ofx';
+  if(/<ofx>/i.test(text) || /<STMTTRN>/i.test(text)) return 'ofx';
+  return 'cnab';
+}
+
+/* ============ INGEST ============ */
+function ingestFile(name, text, forceType){
+  const type = forceType || detectType(name, text);
+  const fileId = uid();
+  let recs=[];
+  if(type==='ofx'){ recs=parseOFX(text, fileId, name); S.paid.push(...recs); }
+  else { recs=parseCNAB(text, fileId, name); S.sent.push(...recs); }
+  S.files.push({id:fileId, name, type, count:recs.length, total:recs.reduce((a,b)=>a+b.value,0)});
+  recompute(); renderAll();
+}
+
+/* ============ CONCILIATION ENGINE ============ */
+function recompute(){
+  // duplicidade real entre PAGOS (retorno): mesmo nome+valor+data+modalidade
+  const seen={};
+  S.paid.forEach(p=>{
+    const k = nameKey(p.name)+'|'+p.value.toFixed(2)+'|'+p.date+'|'+p.modality;
+    (seen[k]=seen[k]||[]).push(p);
+  });
+  S.paid.forEach(p=>{p.dup=false;p.dupKey=null;});
+  S.dupGroups=[];
+  Object.entries(seen).forEach(([k,arr])=>{
+    if(arr.length>1){ arr.forEach(p=>{p.dup=true;p.dupKey=k;}); S.dupGroups.push({key:k,items:arr}); }
+  });
+
+  // não pagos: registro em CNAB sem PAGO correspondente (match por nome+valor, qualquer data)
+  const paidByNameVal = {};
+  S.paid.forEach(p=>{ const k=nameKey(p.name); (paidByNameVal[k]=paidByNameVal[k]||[]).push(p); });
+  const paidKeys = Object.keys(paidByNameVal);
+  // casa nome do CNAB (pode vir truncado em 30 chars) com nome do retorno por prefixo
+  const findPaid = sk => {
+    if(paidByNameVal[sk]) return paidByNameVal[sk];
+    let hit = paidKeys.find(pk=> pk.startsWith(sk) || sk.startsWith(pk));
+    if(hit) return paidByNameVal[hit];
+    // fallback: casa pelos 2 primeiros nomes (lida com truncamento/encoding sujo)
+    const pre = sk.split(' ').slice(0,2).join(' ');
+    if(pre.length>=6){ hit = paidKeys.find(pk=> pk.split(' ').slice(0,2).join(' ')===pre); }
+    return hit ? paidByNameVal[hit] : [];
+  };
+  // pessoas unicas enviadas
+  const sentByName={};
+  S.sent.forEach(s=>{ const k=nameKey(s.name); (sentByName[k]=sentByName[k]||[]).push(s); });
+  S.missing=[]; S.diverg=[];
+  Object.entries(sentByName).forEach(([k,arr])=>{
+    const paidArr = findPaid(k);
+    if(paidArr.length===0){
+      S.missing.push(arr[arr.length-1]);
+    } else {
+      const exact = arr.some(s=> paidArr.some(p=>Math.abs(p.value-s.value)<0.01));
+      if(!exact){
+        const s=arr[arr.length-1], p=paidArr[paidArr.length-1];
+        S.diverg.push({name:p.name, sent:s.value, paid:p.value, fileSent:s.fileName, filePaid:p.fileName});
+      }
+    }
+  });
+}
+
+/* ============ RENDER ============ */
+function renderAll(){ renderBadges(); renderDash(); renderConc(); renderDup(); renderFiles(); renderNotes(); }
+
+function renderBadges(){
+  document.getElementById('b-files').textContent=S.files.length;
+  document.getElementById('b-conc').textContent=S.paid.length+S.missing.length;
+  document.getElementById('b-dup').textContent=(S.dupGroups||[]).length;
+  document.getElementById('b-notes').textContent=allNotes().length;
+}
+
+function dashStats(){
+  const paidTotal=S.paid.reduce((a,b)=>a+b.value,0);
+  const sentTotal=S.sent.reduce((a,b)=>a+b.value,0);
+  const missTotal=(S.missing||[]).reduce((a,b)=>a+b.value,0);
+  return {paidTotal,sentTotal,missTotal};
+}
+
+function renderDash(){
+  const has = S.files.length>0;
+  document.getElementById('dash-empty').style.display=has?'none':'block';
+  document.getElementById('dash-content').style.display=has?'block':'none';
+  if(!has) return;
+  const {paidTotal,sentTotal,missTotal}=dashStats();
+  document.getElementById('k-paid').textContent=fmtShort(paidTotal);
+  document.getElementById('k-paid-n').textContent=`${S.paid.length} lançamentos · saiu da conta`;
+  document.getElementById('k-sent').textContent=fmtShort(sentTotal);
+  document.getElementById('k-sent-n').textContent=`${S.sent.length} registros em remessa`;
+  document.getElementById('k-miss').textContent=fmtShort(missTotal);
+  document.getElementById('k-miss-n').textContent=`${(S.missing||[]).length} beneficiários sem retorno`;
+  document.getElementById('k-dup').textContent=(S.dupGroups||[]).length;
+
+  // banner
+  const bd=document.getElementById('dash-banner');
+  if((S.dupGroups||[]).length){
+    bd.innerHTML=`<div class="banner warn"><div class="bi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div><div class="bc"><h4>${S.dupGroups.length} duplicidade(s) real(is) detectada(s)</h4><p>Mesmo beneficiário pago duas vezes com valor, data e modalidade idênticos. Revise na aba Duplicidades.</p></div></div>`;
+  } else if((S.missing||[]).length){
+    bd.innerHTML=`<div class="banner info"><div class="bi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg></div><div class="bc"><h4>${S.missing.length} beneficiário(s) sem retorno</h4><p>Constam na remessa mas não há saída correspondente na conta — provável erro de dados bancários. Reprocesse via Pix.</p></div></div>`;
+  } else {
+    bd.innerHTML=`<div class="banner good"><div class="bi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div><div class="bc"><h4>Conciliação limpa</h4><p>Todos os enviados têm retorno correspondente e não há duplicidade real.</p></div></div>`;
+  }
+
+  // modality bars
+  const mods={};
+  S.paid.forEach(p=>{ mods[p.modality]=(mods[p.modality]||0)+p.value; });
+  const max=Math.max(...Object.values(mods),1);
+  const colors={'Pix':'var(--orange)','TED':'var(--blue)','Dados bancários':'var(--black)'};
+  document.getElementById('modBars').innerHTML = Object.entries(mods).sort((a,b)=>b[1]-a[1]).map(([m,v])=>`
+    <div class="bar-row"><div class="bl"><span class="sw" style="background:${colors[m]||'var(--muted)'}"></span>${m}</div>
+    <div class="bar-track"><div class="bar-fill" style="width:${Math.max(v/max*100,18)}%;background:${colors[m]||'var(--muted)'}">${fmtShort(v)}</div></div>
+    <div class="bv">${fmt(v)}</div></div>`).join('') || '<p style="color:var(--muted)">Sem pagamentos.</p>';
+
+  // missing table
+  const mt=document.querySelector('#missTbl tbody');
+  document.getElementById('miss-tag').textContent=`${(S.missing||[]).length} itens`;
+  mt.innerHTML=(S.missing||[]).length? S.missing.map(m=>`<tr><td><span class="nm">${m.name}</span></td><td><span class="pill ${m.modality==='Pix'?'pix':'ted'}">${m.modality}</span></td><td class="num">${fmt(m.value)}</td></tr>`).join('') : `<tr><td colspan="3" style="text-align:center;color:var(--green);padding:24px;font-weight:600">✓ Todos receberam</td></tr>`;
+
+  // processamentos
+  const pt=document.querySelector('#procTbl tbody');
+  document.getElementById('proc-tag').textContent=`${S.files.length} arquivos`;
+  pt.innerHTML=S.files.map(f=>`<tr><td><span class="nm">${f.name}</span></td><td><span class="pill ${f.type==='ofx'?'ok':'pix'}">${f.type.toUpperCase()}</span></td><td><span class="src-tag">${f.type==='ofx'?'fonte da verdade':'referência'}</span></td><td class="num">${f.count}</td><td class="num">${fmt(f.total)}</td></tr>`).join('');
+}
+
+function renderConc(){
+  const tb=document.querySelector('#concTbl tbody');
+  let rows=[];
+  S.paid.forEach(p=> rows.push({...p, _status:p.dup?'dup':'paid'}));
+  (S.missing||[]).forEach(m=> rows.push({...m, _status:'miss'}));
+  // counts
+  document.getElementById('sg-all').textContent=rows.length;
+  document.getElementById('sg-paid').textContent=rows.filter(r=>r._status==='paid').length;
+  document.getElementById('sg-miss').textContent=rows.filter(r=>r._status==='miss').length;
+  document.getElementById('sg-dup').textContent=rows.filter(r=>r._status==='dup').length;
+  // filter
+  if(S.filter!=='all') rows=rows.filter(r=>r._status===S.filter);
+  const q=S.search.toLowerCase();
+  if(q) rows=rows.filter(r=>(r.name+' '+r.ident+' '+r.value).toLowerCase().includes(q));
+  rows.sort((a,b)=>a.name.localeCompare(b.name,'pt'));
+  if(!rows.length){ tb.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px">Nenhum lançamento para este filtro.</td></tr>`; }
+  else tb.innerHTML=rows.map(r=>{
+    const stat = r._status==='dup'?`<span class="pill dup">Duplicado</span>`
+      : r._status==='miss'?`<span class="pill miss">Não pago</span>`
+      : `<span class="pill ok">Pago</span>`;
+    const mod = `<span class="pill ${r.modality==='Pix'?'pix':r.modality==='TED'?'ted':'reproc'}">${r.modality}</span>`;
+    return `<tr class="${r._status==='dup'?'row-clickable':''}" ${r._status==='dup'?`onclick="go('dup')"`:''}>
+      <td><span class="nm">${r.name}</span></td>
+      <td><span class="id">${r.ident||'—'}</span></td>
+      <td>${mod}</td><td>${r.date||'—'}</td><td>${stat}</td>
+      <td><span class="src-tag">${r.fileName||'—'}</span></td>
+      <td class="num">${fmt(r.value)}</td></tr>`;
+  }).join('');
+
+  // footnote summary
+  const {paidTotal,missTotal}=dashStats();
+  document.getElementById('conc-foot').innerHTML=`<b>Base de cálculo:</b> o total pago vem do retorno (o que saiu da conta) = <b>${fmt(paidTotal)}</b> em ${S.paid.length} lançamentos. Não pagos somam <b>${fmt(missTotal)}</b> (${(S.missing||[]).length} pessoas). Reenvios do mesmo beneficiário em arquivos diferentes são esperados e não contam como duplicidade — só quando há duas saídas idênticas reais.`;
+}
+
+function renderDup(){
+  const g=S.dupGroups||[];
+  document.getElementById('dup-tag').textContent=`${g.length} grupos`;
+  const body=document.getElementById('dupBody');
+  if(!g.length){ body.innerHTML=`<div class="empty" style="padding:30px 20px"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div><h3 style="color:var(--green)">Sem duplicidade real</h3><p>Nenhum beneficiário foi pago duas vezes com mesmo valor, data e modalidade.</p></div>`; return; }
+  body.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Beneficiário</th><th>Modalidade</th><th>Data</th><th class="num">Valor</th><th>Ocorrências</th><th>Arquivos</th><th class="num">Excesso</th></tr></thead><tbody>${
+    g.map(grp=>{const it=grp.items[0]; const files=[...new Set(grp.items.map(x=>x.fileName))];
+      return `<tr><td><span class="nm">${it.name}</span></td><td><span class="pill ${it.modality==='Pix'?'pix':'ted'}">${it.modality}</span></td><td>${it.date}</td><td class="num">${fmt(it.value)}</td><td><span class="pill dup">${grp.items.length}x</span></td><td>${files.map(f=>`<div class="src-tag" style="display:inline-block;margin:1px">${f}</div>`).join('')}</td><td class="num" style="color:var(--red)">${fmt(it.value*(grp.items.length-1))}</td></tr>`;
+    }).join('')
+  }</tbody></table></div>`;
+}
+
+function renderFiles(){
+  const empty=document.getElementById('files-empty'), list=document.getElementById('fileList');
+  empty.style.display=S.files.length?'none':'block';
+  list.innerHTML=S.files.map(f=>`<div class="frow"><div class="ft ${f.type}">${f.type.toUpperCase()}</div><div class="fi"><div class="fn">${f.name}</div><div class="fm">${f.count} registros · ${fmt(f.total)}</div></div><span class="fstat ${f.type==='ofx'?'src':'ref'}">${f.type==='ofx'?'Retorno':'Remessa'}</span><button class="del" onclick="removeFile('${f.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div>`).join('');
+}
+
+/* auto notes from analysis */
+function allNotes(){
+  const auto=[];
+  (S.missing||[]).forEach(m=>auto.push({id:'a-'+m.id,type:'aviso',auto:true,text:`${m.name} consta na remessa (${fmt(m.value)}, ${m.modality}) mas não há saída correspondente na conta. Provável erro de dados bancários — reprocessar via Pix.`,meta:m.fileName}));
+  (S.dupGroups||[]).forEach(g=>{const it=g.items[0];auto.push({id:'d-'+it.id,type:'erro',auto:true,text:`Duplicidade real: ${it.name} pago ${g.items.length}x (${fmt(it.value)}, ${it.date}, ${it.modality}). Excesso de ${fmt(it.value*(g.items.length-1))}.`,meta:[...new Set(g.items.map(x=>x.fileName))].join(' + ')});});
+  (S.diverg||[]).forEach(d=>auto.push({id:'v-'+uid(),type:'info',auto:true,text:`Divergência de valor: ${d.name} foi enviado por ${fmt(d.sent)} no CNAB mas a saída na conta foi de ${fmt(d.paid)}. Conferir possível erro de digitação na remessa.`,meta:`${d.fileSent} → ${d.filePaid}`}));
+  return [...S.manualNotes, ...auto];
+}
+function renderNotes(){
+  const all=allNotes();
+  document.getElementById('notes-empty').style.display=all.length?'none':'block';
+  document.getElementById('notesList').innerHTML=all.map(n=>`<div class="note ${n.auto?'auto':''}"><span class="nt-tag t-${n.type}">${({aviso:'Aviso',erro:'Erro',ok:'Resolvido',info:'Info'})[n.type]}</span><div class="nc"><p>${n.text}</p><div class="meta">${n.auto?'⚙ automático':'✎ manual'}${n.meta?' · '+n.meta:''}${n.when?' · '+n.when:''}</div></div>${n.auto?'':`<button class="ndel" onclick="delNote('${n.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>`}</div>`).join('');
+  renderBadges();
+}
+
+/* ============ ACTIONS ============ */
+function removeFile(id){
+  S.files=S.files.filter(f=>f.id!==id);
+  S.paid=S.paid.filter(p=>p.fileId!==id);
+  S.sent=S.sent.filter(p=>p.fileId!==id);
+  recompute(); renderAll();
+}
+function delNote(id){ S.manualNotes=S.manualNotes.filter(n=>n.id!==id); renderNotes(); }
+
+function readFiles(fileList, forceType){
+  if(S.cloud && S.cloud.on){ return uploadCloud(fileList); }
+  [...fileList].forEach(file=>{
+    const r=new FileReader();
+    r.onload=e=>ingestFile(file.name, e.target.result, forceType);
+    r.readAsText(file,'ISO-8859-1');
+  });
+}
+
+/* ============ MODO NUVEM (Apps Script /exec) ============ */
+S.cloud = { on:false, url:'https://script.google.com/macros/s/AKfycbw0VWoe6GOOaxiSKFvYxiryeNKvfrl83PbkqWWrda1AJfaV_W83RtL5dfXdG4VKxY05/exec', token:'AKfycbw0VWoe6GOOaxiSKFvYxiryeNKvfrl83PbkqWWrda1AJfaV_W83RtL5dfXdG4VKxY05' };
+
+function cloudStatus(msg, kind){
+  const el=document.getElementById('cloudStatus'); if(!el) return;
+  el.textContent=msg||''; el.style.color = kind==='err'?'var(--red)':kind==='ok'?'var(--green)':'var(--muted)';
+}
+function fileToB64(file){
+  return new Promise((ok,err)=>{ const r=new FileReader(); r.onload=()=>ok(r.result.split(',')[1]); r.onerror=err; r.readAsDataURL(file); });
+}
+async function cloudPost(payload){
+  // text/plain evita preflight CORS; o doPost lê JSON.parse(e.postData.contents)
+  let res, txt;
+  try {
+    res = await fetch(S.cloud.url, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      redirect:'follow',
+      body: JSON.stringify(payload)
+    });
+  } catch(netErr){
+    console.error('[cloud] falha de rede/CORS:', netErr);
+    throw new Error('Não foi possível contatar o servidor (rede/CORS). Verifique se a implantação está como "Qualquer pessoa" e se a URL termina em /exec.');
+  }
+  txt = await res.text();
+  console.log('[cloud] status', res.status, 'resposta:', txt.slice(0,300));
+  // Se voltou HTML (tela de login/erro) em vez de JSON:
+  if(/^\s*</.test(txt)){
+    throw new Error('O servidor respondeu uma página (login/erro), não JSON. Reimplante como "Qualquer pessoa" e tente de novo.');
+  }
+  try { return JSON.parse(txt); }
+  catch(e){ throw new Error('Resposta inesperada do servidor: '+txt.slice(0,120)); }
+}
+async function uploadCloud(fileList){
+  if(!S.cloud.url){ cloudStatus('Configure o endpoint /exec primeiro.','err'); return; }
+  const files=[...fileList];
+  cloudStatus('Enviando '+files.length+' arquivo(s)…');
+  let arquivos=[];
+  try{
+    for(const f of files){ arquivos.push({ nome:f.name, mime:f.type||'text/plain', base64: await fileToB64(f) }); }
+  }catch(e){ cloudStatus('Erro ao ler arquivos: '+(e.message||e),'err'); return; }
+
+  const payload={ token:S.cloud.token, acao:'upload', arquivos };
+
+  // Em file:// o fetch para domínio externo é bloqueado silenciosamente.
+  // Tentamos fetch; se der erro OU se estivermos em file://, usamos o envio via formulário+iframe.
+  const ehFile = location.protocol==='file:';
+  if(!ehFile){
+    try{
+      const r = await cloudPost(payload);
+      if(!r.ok) throw new Error(r.erro||'Falha no servidor');
+      aplicarResumoCloud(r.resumo);
+      if(r.erros && r.erros.length){ cloudStatus('⚠ Recebidos '+r.recebidos+', salvos '+r.salvos+'. Erros: '+r.erros.join(' | '),'err'); }
+      else { cloudStatus('✓ '+ (r.salvos||files.length) +' salvo(s) no Drive e conciliado(s)','ok'); }
+      return;
+    }catch(e){ console.warn('[cloud] fetch falhou, tentando via iframe:', e); }
+  }
+  // Fallback (funciona em file://): envia e não consegue ler a resposta, mas grava no Drive/Sheet.
+  enviarViaForm(payload, files.length);
+}
+
+// Envio que contorna o bloqueio de file:// — form POST num iframe oculto.
+function enviarViaForm(payload, qtd){
+  const frameName='gasFrame_'+Date.now();
+  const ifr=document.createElement('iframe');
+  ifr.name=frameName; ifr.style.display='none';
+  document.body.appendChild(ifr);
+  const form=document.createElement('form');
+  form.method='POST'; form.action=S.cloud.url; form.target=frameName;
+  // O doPost lê e.postData.contents; um único campo com o JSON inteiro resolve.
+  const inp=document.createElement('textarea');
+  inp.name='payload'; inp.value=JSON.stringify(payload);
+  form.appendChild(inp);
+  document.body.appendChild(form);
+  form.submit();
+  cloudStatus('Enviado '+qtd+' arquivo(s) ao Drive. Não consigo ler a confirmação no modo arquivo local — confira na planilha em alguns segundos.','ok');
+  setTimeout(()=>{ try{ document.body.removeChild(form); document.body.removeChild(ifr); }catch(e){} }, 15000);
+}
+async function reprocCloud(){
+  if(!S.cloud.url){ cloudStatus('Configure o endpoint /exec primeiro.','err'); return; }
+  cloudStatus('Reprocessando na nuvem…');
+  try{
+    const r = await cloudPost({ token:S.cloud.token, acao:'reprocessar' });
+    if(!r.ok) throw new Error(r.erro||'Falha');
+    aplicarResumoCloud(r.resumo); cloudStatus('✓ Reprocessado','ok');
+  }catch(e){ cloudStatus('Erro: '+(e.message||e),'err'); }
+}
+// Mostra os números retornados pela nuvem nos KPIs do painel (sem detalhar linhas, que ficam no Sheet)
+function aplicarResumoCloud(r){
+  if(!r) return;
+  S.cloudSummary=r;
+  document.getElementById('dash-empty').style.display='none';
+  document.getElementById('dash-content').style.display='block';
+  document.getElementById('k-paid').textContent=fmtShort(r.pago);
+  document.getElementById('k-paid-n').textContent=r.pagos+' lançamentos · saiu da conta';
+  document.getElementById('k-sent').textContent=fmtShort(r.enviado);
+  document.getElementById('k-sent-n').textContent='registros em remessa';
+  document.getElementById('k-miss').textContent=r.naoPagos;
+  document.getElementById('k-miss-n').textContent='beneficiários sem retorno';
+  document.getElementById('k-dup').textContent=r.duplicidades;
+  document.getElementById('dash-banner').innerHTML=`<div class="banner good"><div class="bi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div><div class="bc"><h4>Sincronizado com o Google Drive</h4><p>${r.arquivos} arquivo(s) na nuvem · ${r.naoPagos} não pago(s) · ${r.duplicidades} duplicidade(s) · ${r.divergencias} divergência(s). Detalhes completos na aba Conciliação do seu Sheet.</p></div></div>`;
+  document.getElementById('proc-tag').textContent='via nuvem';
+  document.querySelector('#procTbl tbody').innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Arquivos e detalhamento completos no Google Sheet / Drive.</td></tr>`;
+  go('dash');
+}
+
+/* nav */
+function go(v){
+  document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('on',a.dataset.view===v));
+  document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id==='view-'+v));
+  const titles={dash:['Painel','Visão geral da conciliação'],conc:['Conciliação','Todos os lançamentos cruzados'],dup:['Duplicidades','Pagamentos repetidos reais'],imp:['Importar','Carregue retornos e remessas'],notes:['Apontamentos','Observações e alertas']};
+  document.getElementById('t-title').textContent=titles[v][0];
+  document.getElementById('t-sub').textContent=titles[v][1];
+  window.scrollTo(0,0);
+}
+
+/* ============ WIRING ============ */
+document.querySelectorAll('.nav a').forEach(a=>a.onclick=()=>go(a.dataset.view));
+document.getElementById('quickImport').onclick=()=>{go('imp');};
+document.getElementById('fileInput').onchange=e=>{readFiles(e.target.files);e.target.value='';};
+
+function wireDrop(el, type){
+  el.onclick=()=>{ const i=document.getElementById('fileInput'); i.onchange=e=>{readFiles(e.target.files,type);e.target.value='';i.onchange=ev=>{readFiles(ev.target.files);ev.target.value='';};}; i.click(); };
+  el.ondragover=e=>{e.preventDefault();el.classList.add('hot');};
+  el.ondragleave=()=>el.classList.remove('hot');
+  el.ondrop=e=>{e.preventDefault();el.classList.remove('hot');readFiles(e.dataTransfer.files,type);};
+}
+wireDrop(document.getElementById('dropOfx'),'ofx');
+wireDrop(document.getElementById('dropCnab'),'cnab');
+
+document.getElementById('clearAll').onclick=()=>{ if(confirm('Limpar todos os arquivos e dados importados?')){ S.files=[];S.paid=[];S.sent=[];recompute();renderAll(); } };
+
+document.getElementById('searchConc').oninput=e=>{S.search=e.target.value;renderConc();};
+document.querySelectorAll('#segConc button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#segConc button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); S.filter=b.dataset.f; renderConc();
+});
+
+document.getElementById('addNote').onclick=()=>{
+  const inp=document.getElementById('noteInput'), t=document.getElementById('noteType').value;
+  if(!inp.value.trim()) return;
+  S.manualNotes.unshift({id:uid(),type:t,text:inp.value.trim(),when:new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})});
+  inp.value=''; renderNotes();
+};
+document.getElementById('noteInput').onkeydown=e=>{if(e.key==='Enter')document.getElementById('addNote').click();};
+
+document.getElementById('exportBtn').onclick=()=>{
+  let rows=[['Beneficiario','Identificacao','Modalidade','Data','Status','Origem','Valor']];
+  S.paid.forEach(p=>rows.push([p.name,p.ident,p.modality,p.date,p.dup?'Duplicado':'Pago',p.fileName,p.value.toFixed(2).replace('.',',')]));
+  (S.missing||[]).forEach(m=>rows.push([m.name,m.ident,m.modality,m.date,'Nao pago',m.fileName,m.value.toFixed(2).replace('.',',')]));
+  const csv='\uFEFF'+rows.map(r=>r.map(c=>`"${(c||'').toString().replace(/"/g,'""')}"`).join(';')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='conciliacao.csv'; a.click();
+};
+
+/* wiring modo nuvem */
+(function(){
+  const url=document.getElementById('cloudUrl'), tok=document.getElementById('cloudToken');
+  url.value=S.cloud.url; tok.value=S.cloud.token;
+  url.oninput=e=>S.cloud.url=e.target.value.trim();
+  tok.oninput=e=>S.cloud.token=e.target.value.trim();
+  document.querySelectorAll('#segMode button').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('#segMode button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    S.cloud.on = b.dataset.m==='cloud';
+    document.getElementById('cloudCfg').style.display = S.cloud.on?'block':'none';
+  });
+  document.getElementById('cloudTest').onclick=async()=>{
+    cloudStatus('Testando…');
+    try{ const r=await fetch(S.cloud.url+(S.cloud.url.indexOf('?')<0?'?':'&')+'ping=1');
+      const j=await r.json(); aplicarResumoCloud(j.resumo||j); cloudStatus('✓ Conexão OK','ok');
+    }catch(e){ cloudStatus('Falha na conexão. Verifique a URL e a publicação como "Qualquer pessoa".','err'); }
+  };
+  document.getElementById('cloudReproc').onclick=reprocCloud;
+})();
+
+recompute(); renderAll();
+</script>
+</body>
+</html>
