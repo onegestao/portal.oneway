@@ -338,6 +338,9 @@ header.top{background:var(--dark);color:#fff;border-bottom:3px solid var(--ow-or
 #view-revisao .rev-btn-primary:hover{background:var(--ow-orange-bright,#E8730A)}
 #view-revisao .rev-btn-line{background:#fff;border:1px solid var(--line);color:var(--ink-soft);border-radius:9px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
 #view-revisao .rev-btn-line:hover{border-color:var(--ow-orange);color:var(--ow-orange)}
+#view-revisao .rev-btn-danger{background:#fff;border:1px solid #E3B7B2;color:#c8372d;border-radius:9px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+#view-revisao .rev-btn-danger:hover{background:#FBE9E7;border-color:#c8372d}
+#view-revisao .rev-loaded-note{font-size:12.5px;color:var(--ink-soft);background:#EEF5FF;border:1px solid #D6E4F5;border-radius:9px;padding:9px 12px;margin:8px 0 4px;line-height:1.5}
 #view-revisao .rev-summary{font-size:13px;margin-left:6px}
 #view-revisao .pill-ok{color:#1d8a4e;font-weight:800}
 #view-revisao .pill-bad{color:#c8372d;font-weight:800;margin-left:8px}
@@ -803,9 +806,11 @@ header.top{background:var(--dark);color:#fff;border-bottom:3px solid var(--ow-or
       <div class="rev-actions">
         <button class="rev-btn-primary" onclick="revisar()">Conferir</button>
         <button class="rev-btn-line" onclick="revVincularCpf()" title="Grava no ONE o CPF do Flash para quem casou por nome e ainda nao tem CPF">Vincular CPFs ao ONE</button>
-        <button class="rev-btn-line" onclick="revLimpar()">Limpar</button>
+        <button class="rev-btn-line" onclick="revLimpar()" title="Limpa apenas a tela. Os dados continuam salvos na aba Flash e voltam ao atualizar a pagina.">Limpar tela</button>
+        <button class="rev-btn-danger" onclick="revLimparDados()" title="Apaga os dados aqui e zera a aba Flash na planilha. Nao volta no refresh.">Limpar dados</button>
         <span class="rev-summary" id="revSummary"></span>
       </div>
+      <div id="revLoadedNote" class="rev-loaded-note" style="display:none"></div>
       <div id="revFilters" class="rev-filters" style="display:none">
         <input id="revSearch" class="rev-search" type="text" placeholder="Filtrar por nome ou CPF (com ou sem ponto)" oninput="revRender()" autocomplete="off">
         <div class="rev-chips">
@@ -829,7 +834,7 @@ header.top{background:var(--dark);color:#fff;border-bottom:3px solid var(--ow-or
    CONFIGURACAO  ->  cole aqui a URL /exec do seu Web App do Apps Script.
    Ex.: https://script.google.com/macros/s/AKfycb..../exec
    ========================================================================= */
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbx1U5PjkLf16xL1b1Kq9w0cTw-GxCD70fJZnB3IuBUKX0HH-gC0kPK0J9y8lJVYEgKH3g/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbw_HiHN9Rxg5UcpiRgwISplvomG_oJ_R5szu2B_vrxDfPIQ-0zEvi718-CX_c_wzqEuhA/exec';
 
 var STATUS = { ATIVO:'Ativo', PROC:'Em Processo', OFF:'Desligado' };
 var CYCLE = [STATUS.ATIVO, STATUS.PROC, STATUS.OFF];
@@ -1217,7 +1222,7 @@ document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ closeSta
 /* =========================================================================
    Mesma URL /exec do Web App usado pelo Quadro.
    ========================================================================= */
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbx1U5PjkLf16xL1b1Kq9w0cTw-GxCD70fJZnB3IuBUKX0HH-gC0kPK0J9y8lJVYEgKH3g/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbw_HiHN9Rxg5UcpiRgwISplvomG_oJ_R5szu2B_vrxDfPIQ-0zEvi718-CX_c_wzqEuhA/exec';
 
 var MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 var UFS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
@@ -1509,7 +1514,7 @@ function onMonthChange(){
     document.getElementById('d12').value = PARAMS.dias_12x36||'';
     setSync('ok','Sincronizado '+nowLabel());
     updateMonthDisplay();
-    loadAjustes(function(){ setSync('ok','Sincronizado '+nowLabel()); render(); });
+    loadAjustes(function(){ setSync('ok','Sincronizado '+nowLabel()); render(); if(FLASH_LOADED.length){ revCompare(FLASH_LOADED, 'sheet'); } });
   }).catch(function(err){ setSync('err','Falha'); console.error(err); });
 }
 
@@ -1917,6 +1922,8 @@ function recarregar(){
     adopt(res.data);
     document.getElementById('results').style.display='block';
     render();
+    FLASH_LOADED = (res.flash||[]).map(function(f){ return { nome:f.nome, cpf:f.cpf, vrFlash:Number(f.vr)||0, vtFlash:Number(f.vt)||0 }; });
+    if(FLASH_LOADED.length){ revCompare(FLASH_LOADED, 'sheet'); }
     setSync('ok','Sincronizado '+nowLabel());
   }).catch(function(err){ setSync('err','Falha ao ler'); console.error(err); });
 }
@@ -2100,14 +2107,36 @@ function revCpf(s){ return (s||'').toString().replace(/\D/g,''); }
 function revDifCell(dif, ok){
   return '<td class="'+(ok?'ok':'bad')+'">'+(dif>0?'+':'')+money(dif)+'</td>';
 }
-var REV_ROWS=[], REV_FALTAM=[], REV_FILTER='all';
+var REV_ROWS=[], REV_FALTAM=[], REV_FILTER='all', FLASH_LOADED=[];
 function revisar(){
   var flash=revParseFlash(document.getElementById('revInput').value);
+  if(!flash.length){
+    REV_ROWS=[]; REV_FALTAM=[];
+    document.getElementById('revResults').innerHTML='<div class="rev-empty"><b>Nada reconhecido.</b> Confira se colou a tabela do Flash (com os CPFs no formato 000.000.000-00).</div>';
+    document.getElementById('revSummary').textContent=''; document.getElementById('revFilters').style.display='none';
+    var n0=document.getElementById('revLoadedNote'); if(n0) n0.style.display='none';
+    return;
+  }
+  revCompare(flash, 'paste');
+  revSaveFlash(flash);
+}
+function revSaveFlash(flash){
+  if(!GAS_URL) return;
+  var rows=(flash||[]).map(function(p){ return { nome:p.nome, cpf:p.cpf, vr:p.vrFlash, vt:p.vtFlash }; });
+  setSync('busy','Salvando Flash…');
+  apiPost({action:'setFlash', rows:rows}).then(function(res){
+    if(res && res.ok){ FLASH_LOADED=flash.slice(); setSync('ok','Flash salvo '+nowLabel()); }
+    else { setSync('err','Falha ao salvar Flash'); }
+  }).catch(function(e){ setSync('err','Backend sem versao Flash'); console.error('setFlash falhou — publique a versao Flash do Codigo.gs', e); });
+}
+function revCompare(flash, source){
   var res=document.getElementById('revResults');
   var sum=document.getElementById('revSummary');
+  var note=document.getElementById('revLoadedNote');
   REV_ROWS=[]; REV_FALTAM=[];
-  if(!flash.length){ res.innerHTML='<div class="rev-empty"><b>Nada reconhecido.</b> Confira se colou a tabela do Flash (com os CPFs no formato 000.000.000-00).</div>'; sum.textContent=''; document.getElementById('revFilters').style.display='none'; return; }
-  if(!DATA || !DATA.length){ res.innerHTML='<div class="rev-empty"><b>Sem base ONE carregada.</b> Abra a aba Beneficios uma vez para carregar os colaboradores e o mes de referencia.</div>'; sum.textContent=''; document.getElementById('revFilters').style.display='none'; return; }
+  flash=flash||[];
+  if(!flash.length){ res.innerHTML=''; sum.textContent=''; document.getElementById('revFilters').style.display='none'; if(note) note.style.display='none'; return; }
+  if(!DATA || !DATA.length){ res.innerHTML='<div class="rev-empty"><b>Sem base ONE carregada.</b> Abra a aba Beneficios uma vez para carregar os colaboradores e o mes de referencia.</div>'; sum.textContent=''; document.getElementById('revFilters').style.display='none'; if(note) note.style.display='none'; return; }
   var byCpf={}, byName={};
   DATA.forEach(function(r){ var c=revCpf(r.cpf); if(c) byCpf[c]=r; byName[revNorm(r.nome)]=r; });
   flash.forEach(function(p){
@@ -2128,6 +2157,10 @@ function revisar(){
   var flashCpf={}, flashNm={};
   flash.forEach(function(p){ var c=revCpf(p.cpf); if(c) flashCpf[c]=true; flashNm[revNorm(p.nome)]=true; });
   REV_FALTAM=DATA.filter(function(r){ var c=revCpf(r.cpf); return !((c&&flashCpf[c]) || flashNm[revNorm(r.nome)]); });
+  if(note){
+    if(source==='sheet'){ note.textContent='Dados carregados da aba Flash da planilha — permanecem ao atualizar a pagina. Cole uma nova tabela e clique em Conferir para substituir, ou edite direto na planilha.'; note.style.display='block'; }
+    else { note.style.display='none'; }
+  }
   revRender();
 }
 function revRowHtml(o){
@@ -2181,7 +2214,21 @@ function revRender(){
     +(nameC?(' <span class="rev-byname">'+nameC+' por nome</span>'):'')
     +(missC?(' <span class="pill-warn">'+missC+' fora do ONE</span>'):'');
 }
-function revLimpar(){ document.getElementById('revInput').value=''; document.getElementById('revResults').innerHTML=''; document.getElementById('revSummary').textContent=''; REV_ROWS=[]; REV_FALTAM=[]; REV_FILTER='all'; var s=document.getElementById('revSearch'); if(s) s.value=''; var b=document.getElementById('revFilters'); if(b) b.style.display='none'; var cs=document.querySelectorAll('#revFilters .rev-chip'); for(var i=0;i<cs.length;i++){ cs[i].classList.toggle('active', cs[i].getAttribute('data-f')==='all'); } }
+function revLimpar(){ document.getElementById('revInput').value=''; document.getElementById('revResults').innerHTML=''; document.getElementById('revSummary').textContent=''; REV_ROWS=[]; REV_FALTAM=[]; REV_FILTER='all'; var s=document.getElementById('revSearch'); if(s) s.value=''; var b=document.getElementById('revFilters'); if(b) b.style.display='none'; var n=document.getElementById('revLoadedNote'); if(n) n.style.display='none'; var cs=document.querySelectorAll('#revFilters .rev-chip'); for(var i=0;i<cs.length;i++){ cs[i].classList.toggle('active', cs[i].getAttribute('data-f')==='all'); } }
+function revLimparDados(){
+  if(!confirm('Apagar os dados do Flash aqui e zerar a aba "Flash" na planilha?\n\nIsto nao volta ao atualizar a pagina.')) return;
+  setSync('busy','Zerando Flash…');
+  apiPost({action:'clearFlash'}).then(function(res){
+    FLASH_LOADED=[]; revLimpar();
+    if(res && res.ok){ setSync('ok','Dados do Flash zerados '+nowLabel()); }
+    else { setSync('err','Falha ao zerar Flash'); }
+  }).catch(function(e){
+    FLASH_LOADED=[]; revLimpar();
+    setSync('err','Backend sem versao Flash');
+    alert('Limpei a tela, mas nao consegui zerar a aba Flash na planilha. Publique a versao Flash do Codigo.gs (rode setup() e Nova versao).');
+    console.error(e);
+  });
+}
 function revVincularCpf(){
   var flash=revParseFlash(document.getElementById('revInput').value);
   if(!flash.length){ setSync('err','Cole o Flash primeiro'); return; }
@@ -2203,6 +2250,7 @@ function revVincularCpf(){
 function revisaoOnEnter(){
   var mesEl=document.getElementById('mes'), lbl=document.getElementById('revMes');
   if(mesEl && mesEl.value && typeof monthLabel==='function'){ lbl.textContent=monthLabel(mesEl.value); }
+  if(!REV_ROWS.length && FLASH_LOADED.length){ revCompare(FLASH_LOADED, 'sheet'); }
 }
 
 </script>
