@@ -3,181 +3,442 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ONE WAY — Quadro de Colaboradores</title>
+<title>ONE WAY - Gestao de Pessoal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-  :root{
-    --ow-orange:#C85A00; --ow-orange-bright:#E8730A;
-    --ink:#211E1B; --ink-soft:#6B6560;
-    --bg:#F5F4F2; --surface:#FFFFFF; --line:#E5E1DB; --line-soft:#EFECE7; --dark:#211E1B;
-    --ok:#1E8E5A; --ok-bg:#E7F4EC;
-    --proc:#B07207; --proc-bg:#FBEFD9;
-    --off:#8A837C; --off-bg:#ECE9E6;
-    --shadow:0 1px 2px rgba(33,30,27,.04), 0 8px 24px rgba(33,30,27,.06);
-    --radius:14px;
-    --thead-top:0px;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;padding:0}
-  body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.45}
-  .wrap{max-width:1240px;margin:0 auto;padding:0 22px 80px}
+:root{
+  --ow-orange:#C85A00;
+  --ow-orange-bright:#E8730A;
+  --ink:#211E1B;
+  --ink-soft:#6B6560;
+  --bg:#F5F4F2;
+  --surface:#FFFFFF;
+  --line:#E5E1DB;
+  --line-soft:#EFECE7;
+  --dark:#211E1B;
+  --ok:#1E8E5A;
+  --ok-bg:#E7F4EC;
+  --proc:#B07207;
+  --proc-bg:#FBEFD9;
+  --off:#8A837C;
+  --off-bg:#ECE9E6;
+  --shadow:0 1px 2px rgba(33,30,27,.04), 0 8px 24px rgba(33,30,27,.06);
+  --radius:14px;
+  --thead-top:0px;
+  --vt:#2563A8;
+  --vt-bg:#E7EFF7;
+  --vr:#1E8E5A;
+  --vr-bg:#E7F4EC;
+  --rem:#7A5AA6;
+  --hib:#B07207;
+  --pres:#2563A8;
+}
 
-  header.top{background:var(--dark);color:#fff;border-bottom:3px solid var(--ow-orange);position:sticky;top:0;z-index:50}
-  .top-inner{max-width:1240px;margin:0 auto;padding:16px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-  .mark{display:flex;align-items:baseline;gap:8px;font-weight:800;letter-spacing:.04em;font-size:20px}
-  .mark .one{color:#fff}.mark .way{color:var(--ow-orange-bright)}
-  .mark .bar{width:26px;height:3px;background:var(--ow-orange);display:inline-block;margin-right:4px;transform:translateY(-4px)}
-  .top-sub{color:#b9b3ac;font-size:13px;font-weight:500;margin-left:2px;border-left:1px solid #4a453f;padding-left:14px}
-  .sync{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px;color:#b9b3ac}
-  .sync .dot{width:8px;height:8px;border-radius:50%;background:#5b8c6e}
-  .sync.busy .dot{background:var(--ow-orange-bright);animation:pulse 1s infinite}
-  .sync.err .dot{background:#e06a5a}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-  .btn-sync{background:#3a352f;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
-  .btn-sync:hover{background:#4a443d}
+.navbtn{color:#ece8e3;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:7px 14px;border-radius:8px;background:#3a352f;border:1px solid #4a443d;transition:.15s;white-space:nowrap}
+.navbtn:hover{background:#4a443d;color:#fff}
+.navbtn.active{background:var(--ow-orange);border-color:var(--ow-orange);color:#fff}
+.view{display:block}
+.mark{cursor:pointer}
+.landing{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 130px);padding:48px 20px}
+.landing-inner{text-align:center;max-width:780px;width:100%}
+.landing-brand{display:inline-flex;align-items:center;gap:7px;font-weight:800;letter-spacing:.04em;font-size:15px;margin-bottom:18px}
+.landing-brand .bar{width:5px;height:18px;background:var(--ow-orange);border-radius:2px}
+.landing-brand .one{color:var(--ink)} .landing-brand .way{color:var(--ow-orange)}
+.landing-title{font-size:30px;font-weight:800;color:var(--ink);margin:0 0 8px}
+.landing-sub{font-size:15px;color:var(--ink-soft);margin:0 0 34px}
+.landing-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;text-align:left}
+.lcard{background:#fff;border:1px solid var(--line);border-radius:16px;padding:30px 26px;cursor:pointer;transition:.18s;font-family:inherit;display:flex;flex-direction:column;gap:9px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.lcard:hover{border-color:var(--ow-orange);box-shadow:0 14px 34px rgba(200,90,0,.15);transform:translateY(-3px)}
+.lcard-ico{width:54px;height:54px;border-radius:14px;background:rgba(200,90,0,.10);color:var(--ow-orange);display:flex;align-items:center;justify-content:center;margin-bottom:6px}
+.lcard-name{font-size:19px;font-weight:800;color:var(--ink)}
+.lcard-desc{font-size:13px;color:var(--ink-soft);line-height:1.5;flex:1}
+.lcard-go{font-size:13px;font-weight:700;color:var(--ow-orange);margin-top:6px}
+@media(max-width:760px){.landing-cards{grid-template-columns:1fr}.landing-title{font-size:25px}}
 
-  h2.section{font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-soft);font-weight:700;margin:24px 0 12px}
-
-  .setup-warn{margin-top:22px;background:#FFF3E8;border:1px solid #f0d9c2;color:#8a4b12;border-radius:12px;padding:14px 16px;font-size:13.5px;line-height:1.5}
-  .setup-warn b{color:#6e3a0d}
-  .setup-warn code{background:#fff;border:1px solid #ecd9c4;padding:1px 6px;border-radius:5px}
-
-  .intake{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-  .col{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;display:flex;flex-direction:column}
-  .col-head{display:flex;align-items:flex-start;gap:11px;margin-bottom:12px}
-  .badge{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0}
-  .badge-a{background:var(--ok-bg);color:var(--ok)}
-  .badge-b{background:var(--off-bg);color:#6B645D}
-  .badge-c{background:var(--proc-bg);color:var(--proc)}
-  .col-title{font-weight:700;font-size:15px;line-height:1.2}
-  .col-help{font-size:12px;color:var(--ink-soft);margin-top:3px}
-  textarea{width:100%;flex:1;min-height:130px;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:12px;font-family:'SFMono-Regular',ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;color:var(--ink);background:#FBFAF9;line-height:1.5}
-  textarea:focus{outline:none;border-color:var(--ow-orange);box-shadow:0 0 0 3px rgba(200,90,0,.12)}
-  textarea::placeholder{color:#b6afa8}
-
-  button{font-family:inherit;cursor:pointer;border:none;border-radius:9px;font-weight:600;transition:.15s}
-  .btn-apply{margin-top:11px;background:var(--ow-orange);color:#fff;padding:10px 14px;font-size:13.5px}
-  .btn-apply:hover{background:var(--ow-orange-bright)}
-  .btn-apply:disabled{opacity:.5;cursor:not-allowed}
-  .col-msg{font-size:12px;color:var(--ink-soft);margin-top:9px;min-height:16px}
-
-  .stickyhead{position:sticky;z-index:40;background:var(--bg);padding:16px 0 12px;transition:box-shadow .18s}
-  .stickyhead.stuck{box-shadow:0 14px 18px -12px rgba(33,30,27,.22)}
-  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:15px 18px;box-shadow:var(--shadow)}
-  .card .lab{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);font-weight:600}
-  .card .val{font-size:27px;font-weight:800;margin-top:5px;letter-spacing:-.02em}
-  .card.accent{border-top:3px solid var(--ow-orange)}
-  .card .val.ok{color:var(--ok)} .card .val.proc{color:var(--proc)} .card .val.off{color:var(--off)}
-  .card .val.money{font-size:22px}
-
-  .dept-strip{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-  .dept-chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 13px;font-size:12.5px;font-weight:500;color:var(--ink-soft)}
-  .dept-chip b{color:var(--ink);font-weight:700;margin-left:5px}
-
-  .toolbar{display:flex;gap:10px;align-items:center;margin-top:13px;flex-wrap:wrap}
-  .search{flex:1;min-width:200px;position:relative}
-  .search input{width:100%;padding:10px 12px 10px 36px;border:1px solid var(--line);border-radius:9px;font-size:14px;font-family:inherit;background:#fff}
-  .search input:focus{outline:none;border-color:var(--ow-orange);box-shadow:0 0 0 3px rgba(200,90,0,.1)}
-  .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#b6afa8}
-  select{padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink);cursor:pointer}
-  select:focus{outline:none;border-color:var(--ow-orange)}
-
-  .table-wrap{margin-top:6px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:visible;box-shadow:var(--shadow)}
-  table{width:100%;border-collapse:collapse;font-size:13.5px}
-  thead th{text-align:left;background:#F1EEE9;color:var(--ink-soft);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;padding:11px 14px;border-bottom:1px solid var(--line);position:sticky;top:var(--thead-top);z-index:20}
-  thead th:first-child{border-top-left-radius:var(--radius)}
-  thead th:last-child{border-top-right-radius:var(--radius)}
-  th.num,td.num{text-align:right;white-space:nowrap}
-  tbody td{padding:11px 14px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
-  tbody tr:last-child td{border-bottom:none}
-  tbody tr.st-off{background:#FBFAF9}
-  tbody tr.st-off .nm{color:var(--off);text-decoration:line-through;text-decoration-color:#cfc9c2}
-  tbody tr.st-off td{color:var(--off)}
-  tbody tr:hover{background:#FFF8F1}
-  .nm{font-weight:600;color:var(--ink)}
-  .role{color:var(--ink-soft);font-size:12.5px;margin-top:1px}
-
-  .grp td{background:var(--dark);color:#fff;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.07em;padding:8px 14px}
-  .grp td .cnt{color:var(--ow-orange-bright);font-weight:700;margin-left:8px}
-
-  .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid transparent;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer;transition:.15s;white-space:nowrap}
-  .pill .dot{width:7px;height:7px;border-radius:50%}
-  .pill .chev{margin-left:2px;opacity:.55}
-  .pill.on{background:var(--ok-bg);color:var(--ok)} .pill.on .dot{background:var(--ok)}
-  .pill.proc{background:var(--proc-bg);color:var(--proc)} .pill.proc .dot{background:var(--proc)}
-  .pill.off{background:var(--off-bg);color:var(--off)} .pill.off .dot{background:var(--off)}
-  .pill:hover{filter:brightness(.97);border-color:rgba(0,0,0,.06)}
-
-  .row-del{background:none;border:none;color:#c9c2bb;cursor:pointer;padding:4px;border-radius:6px;font-size:15px;line-height:1}
-  .row-del:hover{color:#C0392B;background:#fbeae8}
-
-  .empty{padding:60px 20px;text-align:center;color:var(--ink-soft)}
-  .empty b{display:block;color:var(--ink);font-size:16px;margin-bottom:6px;font-weight:700}
-
-  .btn-export{background:#fff;color:var(--ink);border:1px solid var(--line);padding:9px 14px;font-size:13px;display:inline-flex;align-items:center;gap:7px}
-  .btn-export:hover{border-color:var(--ow-orange);color:var(--ow-orange)}
-  .btn-danger{background:#fff;color:#B23A2E;border:1px solid #eedad6;padding:9px 14px;font-size:13px}
-  .btn-danger:hover{background:#fbeae8}
-  .export-bar{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;align-items:center}
-  .hint{font-size:12.5px;color:var(--ink-soft)}
-  .hint.right{margin-left:auto}
-
-  .foot{margin-top:18px;font-size:12px;color:#a39d96;text-align:center}
-
-  .status-menu{position:fixed;z-index:120;background:#fff;border:1px solid var(--line);border-radius:11px;box-shadow:0 12px 34px rgba(33,30,27,.18);padding:5px;min-width:172px}
-  .sm-opt{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:none;border:none;padding:9px 10px;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer}
-  .sm-opt:hover{background:#FBFAF9}
-  .sm-opt.active{background:#FFF3E8}
-  .sm-opt .dot{width:9px;height:9px;border-radius:50%}
-  .sm-opt .chk{margin-left:auto;color:var(--ow-orange);font-weight:800;opacity:0}
-  .sm-opt.active .chk{opacity:1}
-  .d-ok{background:var(--ok)} .d-proc{background:var(--proc)} .d-off{background:var(--off)}
-
-  .overlay{position:fixed;inset:0;background:rgba(33,30,27,.45);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px}
-  .modal{background:#fff;border-radius:16px;max-width:430px;width:100%;padding:24px;box-shadow:0 24px 64px rgba(0,0,0,.28)}
-  .modal-title{font-size:17px;font-weight:800;margin-bottom:9px}
-  .modal-body{font-size:14px;color:var(--ink-soft);line-height:1.55;margin-bottom:16px}
-  .modal-body b{color:var(--ink)}
-  .modal-body code{background:#FFF3E8;color:var(--ow-orange);font-weight:700;padding:1px 7px;border-radius:5px;font-family:inherit}
-  #delInput{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:9px;font-size:14px;font-family:inherit;margin-bottom:18px}
-  #delInput:focus{outline:none;border-color:var(--ow-orange);box-shadow:0 0 0 3px rgba(200,90,0,.12)}
-  .modal-actions{display:flex;justify-content:flex-end;gap:10px}
-  .btn-ghost{background:transparent;color:var(--ink-soft);padding:10px 16px;border:1px solid var(--line);border-radius:9px;font-weight:600;font-size:14px}
-  .btn-ghost:hover{border-color:var(--ink-soft);color:var(--ink)}
-  .btn-danger-solid{background:#C0392B;color:#fff;padding:10px 18px;border-radius:9px;font-weight:700;font-size:14px}
-  .btn-danger-solid:disabled{background:#e7c4bf;cursor:not-allowed}
-  .btn-danger-solid:not(:disabled):hover{background:#a93226}
-
-  @media (max-width:880px){
-    .intake{grid-template-columns:1fr}
-    .cards{grid-template-columns:repeat(2,1fr)}
-    thead th.esc,tbody td.esc{display:none}
-    .hint.right{display:none}
-    .sync .lbl{display:none}
-  }
+/* ===== BENEFICIOS ===== */
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.45}
+.wrap{max-width:1300px;margin:0 auto;padding:0 22px 80px}
+header.top{background:var(--dark);color:#fff;border-bottom:3px solid var(--ow-orange);position:sticky;top:0;z-index:50}
+.top-inner{max-width:1300px;margin:0 auto;padding:16px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.mark{display:flex;align-items:baseline;gap:8px;font-weight:800;letter-spacing:.04em;font-size:20px}
+.mark .one{color:#fff}
+.mark .way{color:var(--ow-orange-bright)}
+.mark .bar{width:26px;height:3px;background:var(--ow-orange);display:inline-block;margin-right:4px;transform:translateY(-4px)}
+.top-sub{color:#b9b3ac;font-size:13px;font-weight:500;margin-left:2px;border-left:1px solid #4a453f;padding-left:14px}
+.nav{margin-left:18px;display:flex;gap:8px;flex-wrap:wrap}
+.nav a{color:#ece8e3;font-size:13px;font-weight:600;text-decoration:none;padding:7px 14px;border-radius:8px;background:#3a352f;border:1px solid #4a443d;transition:.15s;white-space:nowrap}
+.nav a:hover{background:#4a443d;color:#fff}
+.nav a.active{background:var(--ow-orange);border-color:var(--ow-orange);color:#fff}
+.sync{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px;color:#b9b3ac}
+.sync .dot{width:8px;height:8px;border-radius:50%;background:#5b8c6e}
+.sync.busy .dot{background:var(--ow-orange-bright);animation:pulse 1s infinite}
+.sync.err .dot{background:#e06a5a}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.btn-sync{background:#3a352f;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn-sync:hover{background:#4a443d}
+#view-beneficios button{font-family:inherit;cursor:pointer;border:none;border-radius:9px;font-weight:600;transition:.15s}
+#view-beneficios select, #view-beneficios input{font-family:inherit}
+.setup-warn{margin-top:22px;background:#FFF3E8;border:1px solid #f0d9c2;color:#8a4b12;border-radius:12px;padding:14px 16px;font-size:13.5px;line-height:1.5}
+.setup-warn code{background:#fff;border:1px solid #ecd9c4;padding:1px 6px;border-radius:5px}
+#view-beneficios h2.section{font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-soft);font-weight:700;margin:24px 0 12px;display:flex;align-items:center;gap:10px}
+#view-beneficios .month-panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 18px;display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}
+#view-beneficios .field, #view-beneficios .daybox{display:flex;flex-direction:column;gap:6px}
+#view-beneficios .field label, #view-beneficios .daybox label{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);font-weight:700;line-height:1.3;white-space:nowrap}
+#view-beneficios .field input[type=month]{height:40px;padding:0 12px;border:1px solid var(--line);border-radius:9px;font-size:14px;font-weight:600;background:#fff;min-width:170px}
+#view-beneficios .daysgrid{display:flex;gap:10px;flex-wrap:wrap}
+#view-beneficios .daybox{width:94px}
+#view-beneficios .daybox input{height:40px;padding:0 8px;border:1px solid var(--line);border-radius:9px;font-size:16px;font-weight:800;text-align:center;background:#fff;width:100%}
+#view-beneficios .daybox input[readonly]{background:#F4F2EF;color:var(--ink);cursor:default;border-color:var(--line-soft)}
+#view-beneficios .daybox input:not([readonly]):focus{outline:none;border-color:var(--ow-orange);box-shadow:0 0 0 3px rgba(200,90,0,.12)}
+#view-beneficios .field small, #view-beneficios .daybox small{font-size:10px;color:#a39d96;line-height:1.2;min-height:13px}
+#view-beneficios .daybox small{text-align:center}
+#view-beneficios .field small{text-align:left}
+#view-beneficios .mp-actions{display:flex;gap:10px;align-items:center;margin-left:auto;align-self:flex-end}
+#view-beneficios .btn-line{background:#fff;color:var(--ink);border:1px solid var(--line);padding:10px 14px;font-size:13px}
+#view-beneficios .btn-line:hover{border-color:var(--ow-orange);color:var(--ow-orange)}
+#view-beneficios .btn-primary{background:var(--ow-orange);color:#fff;padding:10px 16px;font-size:13.5px}
+#view-beneficios .btn-primary:hover{background:var(--ow-orange-bright)}
+#view-beneficios .mp-flag{font-size:12px;font-weight:600;padding:4px 9px;border-radius:999px}
+#view-beneficios .mp-flag.saved{background:var(--vr-bg);color:var(--vr)}
+#view-beneficios .mp-flag.unsaved{background:#FBEFD9;color:var(--hib)}
+#view-beneficios .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
+#view-beneficios .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)}
+#view-beneficios .card .lab{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);font-weight:600}
+#view-beneficios .card .val{font-size:25px;font-weight:800;margin-top:5px;letter-spacing:-.02em}
+#view-beneficios .card.vt{border-top:3px solid var(--vt)}
+#view-beneficios .card.vt .val{color:var(--vt)}
+#view-beneficios .card.vr{border-top:3px solid var(--vr)}
+#view-beneficios .card.vr .val{color:var(--vr)}
+#view-beneficios .card.total{border-top:3px solid var(--ow-orange)}
+#view-beneficios .card.total .val{color:var(--ow-orange)}
+#view-beneficios .toolbar{display:flex;gap:10px;align-items:center;margin-top:22px;flex-wrap:wrap}
+#view-beneficios .search{flex:0 1 280px;min-width:170px;position:relative}
+#view-beneficios .search input{width:100%;padding:10px 12px 10px 36px;border:1px solid var(--line);border-radius:9px;font-size:14px;background:#fff}
+#view-beneficios .search input:focus{outline:none;border-color:var(--ow-orange);box-shadow:0 0 0 3px rgba(200,90,0,.1)}
+#view-beneficios .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#b6afa8}
+#view-beneficios .toolbar select{padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:14px;background:#fff;color:var(--ink);cursor:pointer}
+#view-beneficios .table-wrap{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow-x:auto;box-shadow:var(--shadow)}
+#view-beneficios table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:920px}
+#view-beneficios thead th{text-align:left;background:#F1EEE9;color:var(--ink-soft);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;padding:11px 14px;border-bottom:1px solid var(--line)}
+#view-beneficios th.num, #view-beneficios td.num{text-align:right;white-space:nowrap}
+#view-beneficios th.ctr, #view-beneficios td.ctr{text-align:center;white-space:nowrap}
+#view-beneficios tbody td{padding:10px 14px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+#view-beneficios tbody tr:last-child td{border-bottom:none}
+#view-beneficios tbody tr:hover{background:#FFF8F1}
+#view-beneficios .nm{font-weight:600;color:var(--ink)}
+#view-beneficios .role{color:var(--ink-soft);font-size:12px;margin-top:1px}
+#view-beneficios tbody td.vtval{color:var(--vt);font-weight:600}
+#view-beneficios tbody td.vtdia{color:var(--ink-soft);font-weight:600}
+#view-beneficios .muted{color:#c9c2ba}
+#view-beneficios tbody td.vrval{color:var(--vr);font-weight:600}
+#view-beneficios tbody td.totval{font-weight:800}
+#view-beneficios .grp td{background:var(--dark);color:#fff;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.07em;padding:8px 14px}
+#view-beneficios tfoot td{padding:13px 14px;font-weight:800;background:#FBFAF9;border-top:2px solid var(--line)}
+#view-beneficios tfoot td.vtval{color:var(--vt)}
+#view-beneficios tfoot td.vrval{color:var(--vr)}
+#view-beneficios tfoot td.totval{color:var(--ow-orange)}
+#view-beneficios .tag{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:700}
+#view-beneficios .tag .dot{width:6px;height:6px;border-radius:50%}
+#view-beneficios .tag.pres{background:var(--vt-bg);color:var(--pres)}
+#view-beneficios .tag.pres .dot{background:var(--pres)}
+#view-beneficios .tag.hib{background:#FBEFD9;color:var(--hib)}
+#view-beneficios .tag.hib .dot{background:var(--hib)}
+#view-beneficios .tag.rem{background:#F0EAF7;color:var(--rem)}
+#view-beneficios .tag.rem .dot{background:var(--rem)}
+#view-beneficios .tag.none{background:#EFEDEA;color:#9A938C}
+#view-beneficios .tag.none .dot{background:#9A938C}
+#view-beneficios .esc-tag{font-size:11px;font-weight:700;color:var(--ink-soft);background:#F1EEE9;border-radius:6px;padding:2px 7px}
+#view-beneficios .uf-tag{font-size:10px;font-weight:800;color:#2563A8;background:#E7EFF7;border-radius:5px;padding:1px 6px;vertical-align:middle}
+#view-beneficios .uf-tag.uf-feriado{color:var(--hib);background:#FBEFD9;cursor:help}
+#view-beneficios .daycell{cursor:pointer;border-radius:6px;transition:background .12s}
+#view-beneficios .daycell:hover{background:rgba(200,90,0,.10)}
+#view-beneficios .daycell.ovd{color:var(--ow-orange);font-weight:800}
+#view-beneficios .daycell.ovd::after{content:'•';margin-left:3px;color:var(--ow-orange)}
+#view-beneficios .dayedit{width:58px;padding:5px 6px;border:1.5px solid var(--ow-orange);border-radius:7px;font-size:14px;font-weight:700;text-align:center;font-family:inherit;outline:none;background:#fff}
+#view-beneficios .daynote{font-size:12px;color:var(--ink-soft);background:#FBF6F1;border:1px solid #F0E3D7;border-radius:9px;padding:8px 12px;margin-bottom:12px;line-height:1.5}
+#view-beneficios .farol{width:18px;height:18px;border-radius:50%;border:2px solid #d8d3cd;background:#fff;cursor:pointer;padding:0;transition:.15s;vertical-align:middle}
+#view-beneficios .farol:hover{transform:scale(1.12)}
+#view-beneficios .farol.fl-none{background:#fff;border-color:#d8d3cd}
+#view-beneficios .farol.fl-verde{background:#1E8E5A;border-color:#1E8E5A}
+#view-beneficios .farol.fl-amarelo{background:#E0A800;border-color:#E0A800}
+#view-beneficios .farol.fl-vermelho{background:#C0392B;border-color:#C0392B}
+#view-beneficios .farol-menu{position:fixed;z-index:130;background:#fff;border:1px solid var(--line);border-radius:11px;box-shadow:0 12px 34px rgba(33,30,27,.18);padding:6px;display:flex;gap:6px}
+#view-beneficios .fm-opt{width:30px;height:30px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;position:relative}
+#view-beneficios .fm-opt:hover{transform:scale(1.1)}
+#view-beneficios .fm-v{background:#1E8E5A}
+#view-beneficios .fm-a{background:#E0A800}
+#view-beneficios .fm-r{background:#C0392B}
+#view-beneficios .fm-n{background:#fff;border-color:#d8d3cd;color:#9a938c;font-weight:800;font-size:13px;line-height:26px}
+#view-beneficios .feriado-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line-soft);font-size:13px}
+#view-beneficios .feriado-row:last-child{border-bottom:none}
+#view-beneficios .feriado-row .fdata{font-weight:700;color:var(--ink);width:84px}
+#view-beneficios .feriado-row .fdesc{flex:1;color:var(--ink-soft)}
+#view-beneficios .feriado-row .fabr{font-size:11px;font-weight:700;border-radius:5px;padding:2px 8px}
+#view-beneficios .fabr.nac{background:#E7F4EC;color:#1E8E5A}
+#view-beneficios .fabr.uf{background:#E7EFF7;color:#2563A8}
+#view-beneficios .fdel{background:none;border:none;color:#c9c2bb;cursor:pointer;font-size:16px;padding:2px 6px;border-radius:6px}
+#view-beneficios .fdel:hover{color:#C0392B;background:#fbeae8}
+#view-beneficios .fpad{font-size:10.5px;font-weight:700;color:#9a938c;background:#F1EEE9;border-radius:5px;padding:2px 8px}
+#view-beneficios .fgrp{font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin:4px 0 4px}
+#view-beneficios .ferform{display:grid;grid-template-columns:130px 1fr 110px auto;gap:10px;align-items:end;margin-top:6px}
+#view-beneficios .ferform .mrow{margin-bottom:0}
+#view-beneficios .btn-cfg{background:#fff;border:1px solid var(--line);color:var(--ink-soft);border-radius:8px;padding:5px 9px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+#view-beneficios .btn-cfg:hover{border-color:var(--ow-orange);color:var(--ow-orange)}
+#view-beneficios .empty{padding:60px 20px;text-align:center;color:var(--ink-soft)}
+#view-beneficios .empty b{display:block;color:var(--ink);font-size:16px;margin-bottom:6px;font-weight:700}
+#view-beneficios .export-bar{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;align-items:center}
+#view-beneficios .btn-export{background:#fff;color:var(--ink);border:1px solid var(--line);padding:9px 14px;font-size:13px;display:inline-flex;align-items:center;gap:7px}
+#view-beneficios .btn-export:hover{border-color:var(--ow-orange);color:var(--ow-orange)}
+#view-beneficios .hint{font-size:12.5px;color:var(--ink-soft)}
+#view-beneficios .hint.right{margin-left:auto}
+#view-beneficios .foot{margin-top:18px;font-size:12px;color:#a39d96;text-align:center}
+#view-beneficios .overlay{position:fixed;inset:0;background:rgba(33,30,27,.45);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px}
+#view-beneficios .modal{background:#fff;border-radius:16px;max-width:480px;width:100%;padding:24px;box-shadow:0 24px 64px rgba(0,0,0,.28);max-height:90vh;overflow:auto}
+#view-beneficios .modal-title{font-size:17px;font-weight:800;margin-bottom:3px}
+#view-beneficios .modal-sub{font-size:13px;color:var(--ink-soft);margin-bottom:18px}
+#view-beneficios .mrow{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+#view-beneficios .mrow label{font-size:12px;font-weight:700;color:var(--ink-soft)}
+#view-beneficios .mrow select, #view-beneficios .mrow input{padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:14px;background:#fff}
+#view-beneficios .mrow select:focus, #view-beneficios .mrow input:focus{outline:none;border-color:var(--ow-orange);box-shadow:0 0 0 3px rgba(200,90,0,.12)}
+#view-beneficios .mrow .help{font-size:11.5px;color:#a39d96}
+#view-beneficios .m2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+#view-beneficios .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
+#view-beneficios .btn-ghost{background:transparent;color:var(--ink-soft);padding:10px 16px;border:1px solid var(--line)}
+#view-beneficios .btn-ghost:hover{border-color:var(--ink-soft);color:var(--ink)}
+#view-beneficios .preview{background:#FBFAF9;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13px;margin-bottom:16px}
+#view-beneficios .preview b{color:var(--ink)}
+#view-beneficios .hide{display:none !important}
+@media (max-width:880px){
+#view-beneficios .cards{grid-template-columns:repeat(2,1fr)}
+#view-beneficios .month-panel{gap:16px}
+#view-beneficios .mp-actions{margin-left:0;width:100%}
+#view-beneficios .hint.right{display:none}
+.sync .lbl{display:none}
+}
+/* ===== QUADRO ===== */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+#view-quadro h2.section{font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-soft);font-weight:700;margin:24px 0 12px}
+#view-quadro .intake{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+#view-quadro .col{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;display:flex;flex-direction:column}
+#view-quadro .col-head{display:flex;align-items:flex-start;gap:11px;margin-bottom:12px}
+#view-quadro .badge{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0}
+#view-quadro .badge-a{background:var(--ok-bg);color:var(--ok)}
+#view-quadro .badge-b{background:var(--off-bg);color:#6B645D}
+#view-quadro .badge-c{background:var(--proc-bg);color:var(--proc)}
+#view-quadro .col-title{font-weight:700;font-size:15px;line-height:1.2}
+#view-quadro .col-help{font-size:12px;color:var(--ink-soft);margin-top:3px}
+#view-quadro textarea{width:100%;flex:1;min-height:130px;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:12px;font-family:'SFMono-Regular',ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;color:var(--ink);background:#FBFAF9;line-height:1.5}
+#view-quadro textarea:focus{outline:none;border-color:var(--ow-orange);box-shadow:0 0 0 3px rgba(200,90,0,.12)}
+#view-quadro textarea::placeholder{color:#b6afa8}
+#view-quadro button{font-family:inherit;cursor:pointer;border:none;border-radius:9px;font-weight:600;transition:.15s}
+#view-quadro .btn-apply{margin-top:11px;background:var(--ow-orange);color:#fff;padding:10px 14px;font-size:13.5px}
+#view-quadro .btn-apply:hover{background:var(--ow-orange-bright)}
+#view-quadro .btn-apply:disabled{opacity:.5;cursor:not-allowed}
+#view-quadro .col-msg{font-size:12px;color:var(--ink-soft);margin-top:9px;min-height:16px}
+#view-quadro .stickyhead{position:sticky;z-index:40;background:var(--bg);padding:16px 0 12px;transition:box-shadow .18s}
+#view-quadro .stickyhead.stuck{box-shadow:0 14px 18px -12px rgba(33,30,27,.22)}
+#view-quadro .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+#view-quadro .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:15px 18px;box-shadow:var(--shadow)}
+#view-quadro .card .lab{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);font-weight:600}
+#view-quadro .card .val{font-size:27px;font-weight:800;margin-top:5px;letter-spacing:-.02em}
+#view-quadro .card.accent{border-top:3px solid var(--ow-orange)}
+#view-quadro .card .val.ok{color:var(--ok)}
+#view-quadro .card .val.proc{color:var(--proc)}
+#view-quadro .card .val.off{color:var(--off)}
+#view-quadro .card .val.money{font-size:22px}
+#view-quadro .dept-strip{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+#view-quadro .dept-chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 13px;font-size:12.5px;font-weight:500;color:var(--ink-soft)}
+#view-quadro .dept-chip b{color:var(--ink);font-weight:700;margin-left:5px}
+#view-quadro .toolbar{display:flex;gap:10px;align-items:center;margin-top:13px;flex-wrap:wrap}
+#view-quadro .search{flex:1;min-width:200px;position:relative}
+#view-quadro .search input{width:100%;padding:10px 12px 10px 36px;border:1px solid var(--line);border-radius:9px;font-size:14px;font-family:inherit;background:#fff}
+#view-quadro .search input:focus{outline:none;border-color:var(--ow-orange);box-shadow:0 0 0 3px rgba(200,90,0,.1)}
+#view-quadro .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#b6afa8}
+#view-quadro select{padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink);cursor:pointer}
+#view-quadro select:focus{outline:none;border-color:var(--ow-orange)}
+#view-quadro .table-wrap{margin-top:6px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:visible;box-shadow:var(--shadow)}
+#view-quadro table{width:100%;border-collapse:collapse;font-size:13.5px}
+#view-quadro thead th{text-align:left;background:#F1EEE9;color:var(--ink-soft);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;padding:11px 14px;border-bottom:1px solid var(--line);position:sticky;top:var(--thead-top);z-index:20}
+#view-quadro thead th:first-child{border-top-left-radius:var(--radius)}
+#view-quadro thead th:last-child{border-top-right-radius:var(--radius)}
+#view-quadro th.num, #view-quadro td.num{text-align:right;white-space:nowrap}
+#view-quadro tbody td{padding:11px 14px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+#view-quadro tbody tr:last-child td{border-bottom:none}
+#view-quadro tbody tr.st-off{background:#FBFAF9}
+#view-quadro tbody tr.st-off .nm{color:var(--off);text-decoration:line-through;text-decoration-color:#cfc9c2}
+#view-quadro tbody tr.st-off td{color:var(--off)}
+#view-quadro tbody tr:hover{background:#FFF8F1}
+#view-quadro .nm{font-weight:600;color:var(--ink)}
+#view-quadro .role{color:var(--ink-soft);font-size:12.5px;margin-top:1px}
+#view-quadro .grp td{background:var(--dark);color:#fff;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.07em;padding:8px 14px}
+#view-quadro .grp td .cnt{color:var(--ow-orange-bright);font-weight:700;margin-left:8px}
+#view-quadro .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid transparent;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer;transition:.15s;white-space:nowrap}
+#view-quadro .pill .dot{width:7px;height:7px;border-radius:50%}
+#view-quadro .pill .chev{margin-left:2px;opacity:.55}
+#view-quadro .pill.on{background:var(--ok-bg);color:var(--ok)}
+#view-quadro .pill.on .dot{background:var(--ok)}
+#view-quadro .pill.proc{background:var(--proc-bg);color:var(--proc)}
+#view-quadro .pill.proc .dot{background:var(--proc)}
+#view-quadro .pill.off{background:var(--off-bg);color:var(--off)}
+#view-quadro .pill.off .dot{background:var(--off)}
+#view-quadro .pill:hover{filter:brightness(.97);border-color:rgba(0,0,0,.06)}
+#view-quadro .row-del{background:none;border:none;color:#c9c2bb;cursor:pointer;padding:4px;border-radius:6px;font-size:15px;line-height:1}
+#view-quadro .row-del:hover{color:#C0392B;background:#fbeae8}
+#view-quadro .empty{padding:60px 20px;text-align:center;color:var(--ink-soft)}
+#view-quadro .empty b{display:block;color:var(--ink);font-size:16px;margin-bottom:6px;font-weight:700}
+#view-quadro .btn-export{background:#fff;color:var(--ink);border:1px solid var(--line);padding:9px 14px;font-size:13px;display:inline-flex;align-items:center;gap:7px}
+#view-quadro .btn-export:hover{border-color:var(--ow-orange);color:var(--ow-orange)}
+#view-quadro .btn-danger{background:#fff;color:#B23A2E;border:1px solid #eedad6;padding:9px 14px;font-size:13px}
+#view-quadro .btn-danger:hover{background:#fbeae8}
+#view-quadro .export-bar{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;align-items:center}
+#view-quadro .hint{font-size:12.5px;color:var(--ink-soft)}
+#view-quadro .hint.right{margin-left:auto}
+#view-quadro .foot{margin-top:18px;font-size:12px;color:#a39d96;text-align:center}
+#view-quadro .status-menu{position:fixed;z-index:120;background:#fff;border:1px solid var(--line);border-radius:11px;box-shadow:0 12px 34px rgba(33,30,27,.18);padding:5px;min-width:172px}
+#view-quadro .sm-opt{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:none;border:none;padding:9px 10px;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer}
+#view-quadro .sm-opt:hover{background:#FBFAF9}
+#view-quadro .sm-opt.active{background:#FFF3E8}
+#view-quadro .sm-opt .dot{width:9px;height:9px;border-radius:50%}
+#view-quadro .sm-opt .chk{margin-left:auto;color:var(--ow-orange);font-weight:800;opacity:0}
+#view-quadro .sm-opt.active .chk{opacity:1}
+#view-quadro .d-ok{background:var(--ok)}
+#view-quadro .d-proc{background:var(--proc)}
+#view-quadro .d-off{background:var(--off)}
+#view-quadro .overlay{position:fixed;inset:0;background:rgba(33,30,27,.45);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px}
+#view-quadro .modal{background:#fff;border-radius:16px;max-width:430px;width:100%;padding:24px;box-shadow:0 24px 64px rgba(0,0,0,.28)}
+#view-quadro .modal-title{font-size:17px;font-weight:800;margin-bottom:9px}
+#view-quadro .modal-body{font-size:14px;color:var(--ink-soft);line-height:1.55;margin-bottom:16px}
+#view-quadro .modal-body b{color:var(--ink)}
+#view-quadro .modal-body code{background:#FFF3E8;color:var(--ow-orange);font-weight:700;padding:1px 7px;border-radius:5px;font-family:inherit}
+#view-quadro #delInput{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:9px;font-size:14px;font-family:inherit;margin-bottom:18px}
+#view-quadro #delInput:focus{outline:none;border-color:var(--ow-orange);box-shadow:0 0 0 3px rgba(200,90,0,.12)}
+#view-quadro .modal-actions{display:flex;justify-content:flex-end;gap:10px}
+#view-quadro .btn-ghost{background:transparent;color:var(--ink-soft);padding:10px 16px;border:1px solid var(--line);border-radius:9px;font-weight:600;font-size:14px}
+#view-quadro .btn-ghost:hover{border-color:var(--ink-soft);color:var(--ink)}
+#view-quadro .btn-danger-solid{background:#C0392B;color:#fff;padding:10px 18px;border-radius:9px;font-weight:700;font-size:14px}
+#view-quadro .btn-danger-solid:disabled{background:#e7c4bf;cursor:not-allowed}
+#view-quadro .btn-danger-solid:not(:disabled):hover{background:#a93226}
+@media (max-width:880px){
+#view-quadro .intake{grid-template-columns:1fr}
+#view-quadro .cards{grid-template-columns:repeat(2,1fr)}
+#view-quadro thead th.esc, #view-quadro tbody td.esc{display:none}
+#view-quadro .hint.right{display:none}
+}
+#view-revisao .rev-title{font-size:18px;font-weight:800;color:var(--ink);margin:0 0 12px;padding-bottom:12px;border-bottom:2px solid var(--ow-orange);display:inline-block}
+#view-revisao .rev-intro{font-size:13px;color:var(--ink-soft);line-height:1.65;margin-bottom:14px;max-width:920px}
+#view-revisao .rev-textarea{width:100%;min-height:150px;border:1px solid var(--line);border-radius:12px;padding:13px 14px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;line-height:1.5;resize:vertical;background:#fff;color:var(--ink)}
+#view-revisao .rev-textarea:focus{outline:none;border-color:var(--ow-orange);box-shadow:0 0 0 3px rgba(200,90,0,.1)}
+#view-revisao .rev-actions{display:flex;gap:10px;align-items:center;margin:14px 0;flex-wrap:wrap}
+#view-revisao .rev-btn-primary{background:var(--ow-orange);color:#fff;border:none;border-radius:9px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+#view-revisao .rev-btn-primary:hover{background:var(--ow-orange-bright,#E8730A)}
+#view-revisao .rev-btn-line{background:#fff;border:1px solid var(--line);color:var(--ink-soft);border-radius:9px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+#view-revisao .rev-btn-line:hover{border-color:var(--ow-orange);color:var(--ow-orange)}
+#view-revisao .rev-summary{font-size:13px;margin-left:6px}
+#view-revisao .pill-ok{color:#1d8a4e;font-weight:800}
+#view-revisao .pill-bad{color:#c8372d;font-weight:800;margin-left:8px}
+#view-revisao .pill-warn{color:#b8860b;font-weight:800;margin-left:8px}
+#view-revisao .muted{color:#9a948c}
+#view-revisao .rev-table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:#fff}
+#view-revisao table{width:100%;border-collapse:collapse;min-width:680px}
+#view-revisao thead th{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-soft);font-weight:700;padding:9px 10px;background:#F7F5F2;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+#view-revisao thead th.l{text-align:left}
+#view-revisao tbody td{padding:9px 10px;font-size:13px;border-bottom:1px solid var(--line-soft);text-align:right;white-space:nowrap}
+#view-revisao tbody td.l{text-align:left;font-weight:600;color:var(--ink)}
+#view-revisao tbody tr:last-child td{border-bottom:none}
+#view-revisao td.ok{color:#1d8a4e;font-weight:700;background:rgba(29,138,78,.09)}
+#view-revisao td.bad{color:#c8372d;font-weight:700;background:rgba(200,55,45,.09)}
+#view-revisao .sep{border-left:2px solid var(--line)}
+#view-revisao tr.miss td{background:#FBF4E6}
+#view-revisao .rev-warn{color:#b8860b;font-size:11px;font-weight:600}
+#view-revisao .rev-missing{margin-top:12px;font-size:12px;color:var(--ink-soft);background:#FBF6F1;border:1px solid #F0E3D7;border-radius:10px;padding:10px 13px;line-height:1.5}
+#view-revisao td.cpf{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;color:var(--ink-soft);font-weight:500;white-space:nowrap}
+#view-revisao .rev-byname{font-size:10px;font-weight:700;color:#a6730a;background:#FBF1DD;border-radius:4px;padding:1px 5px;text-transform:none;letter-spacing:0}
+#view-revisao .rev-empty{padding:28px;text-align:center;color:var(--ink-soft);font-size:14px;background:#fff;border:1px dashed var(--line);border-radius:12px}
+#view-revisao .rev-filters{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;margin:6px 0 12px;padding:11px 13px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+#view-revisao .rev-search{flex:1 1 240px;min-width:190px;height:38px;border:1px solid var(--line);border-radius:9px;padding:0 12px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink)}
+#view-revisao .rev-search:focus{outline:none;border-color:var(--ow-orange);box-shadow:0 0 0 3px rgba(200,90,0,.12)}
+#view-revisao .rev-chips{display:flex;gap:6px;flex-wrap:wrap}
+#view-revisao .rev-chip{height:34px;padding:0 13px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);border-radius:999px;font-weight:600;font-size:12.5px;cursor:pointer;white-space:nowrap;font-family:inherit;transition:border-color .12s, background .12s, color .12s}
+#view-revisao .rev-chip:hover{border-color:#c9c2b8;color:var(--ink)}
+#view-revisao .rev-chip.active{background:var(--ow-orange);border-color:var(--ow-orange);color:#fff}
+#view-revisao .rev-count{margin-left:auto;font-size:12px;white-space:nowrap}
+#view-revisao td.rev-none-row{text-align:center;color:var(--ink-soft);padding:18px 8px;font-weight:500}
+#view-revisao .uf-tag{font-size:10px;font-weight:800;color:#2563A8;background:#E7EFF7;border-radius:5px;padding:1px 6px;vertical-align:middle}
+#view-revisao .esc-tag{font-size:11px;font-weight:700;color:var(--ink-soft);background:#F1EEE9;border-radius:6px;padding:2px 7px}
+#view-revisao .tag{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:700}
+#view-revisao .tag .dot{width:6px;height:6px;border-radius:50%}
+#view-revisao .tag.pres{background:var(--vt-bg);color:var(--pres)}
+#view-revisao .tag.pres .dot{background:var(--pres)}
+#view-revisao .tag.hib{background:#FBEFD9;color:var(--hib)}
+#view-revisao .tag.hib .dot{background:var(--hib)}
+#view-revisao .tag.rem{background:#F0EAF7;color:var(--rem)}
+#view-revisao .tag.rem .dot{background:var(--rem)}
+#view-revisao .tag.none{background:#EFEDEA;color:#9A938C}
+#view-revisao .tag.none .dot{background:#9A938C}
+.backend-warn{background:#FDECEA;border-bottom:1px solid #F1C7C2;color:#9b2c22;font-size:13px;padding:11px 18px;line-height:1.55;text-align:center}
+.backend-warn code{background:rgba(155,44,34,.10);padding:1px 5px;border-radius:4px;font-size:12px;font-family:'IBM Plex Mono',ui-monospace,monospace}
 </style>
 </head>
 <body>
   <header class="top">
     <div class="top-inner">
-      <div class="mark"><span class="bar"></span><span class="one">ONE</span><span class="way">WAY</span></div>
-      <span class="top-sub">Quadro de Colaboradores</span>
+      <div class="mark" onclick="showLanding()" title="Voltar ao inicio"><span class="bar"></span><span class="one">ONE</span><span class="way">WAY</span></div>
+      <span class="top-sub">Gestao de Pessoal</span>
+      <nav class="nav">
+        <button id="tab-quadro" class="navbtn" onclick="showTab('quadro')">Quadro</button>
+        <button id="tab-beneficios" class="navbtn" onclick="showTab('beneficios')">Beneficios</button>
+        <button id="tab-revisao" class="navbtn" onclick="showTab('revisao')">Revisao</button>
+      </nav>
       <div class="sync" id="sync">
-        <span class="dot"></span><span class="lbl" id="syncLbl">Conectando…</span>
-        <button class="btn-sync" onclick="recarregar()" title="Reler da planilha">
+        <span class="dot"></span><span class="lbl" id="syncLbl">Conectando...</span>
+        <button class="btn-sync" onclick="refreshCurrent()" title="Recarregar a aba atual">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
           Sincronizar
         </button>
       </div>
     </div>
   </header>
+  <div id="backendWarn" class="backend-warn" style="display:none">
+    <b>Backend desatualizado.</b> A versão publicada no Google é <b id="bwVer">?</b>, com <b id="bwCols">?</b> colunas — o <b>CPF</b> exige a versão de <b>18 colunas</b>. Republique o <code>Codigo.gs</code> como <b>Nova versão</b> e rode <code>setup()</code> uma vez. Este aviso some sozinho quando a versão certa entrar no ar.
+  </div>
+  <div id="landing" class="landing">
+    <div class="landing-inner">
+      <div class="landing-brand"><span class="bar"></span><span class="one">ONE</span><span class="way">WAY</span></div>
+      <h1 class="landing-title">Gestao de Pessoal</h1>
+      <p class="landing-sub">Por onde voce quer comecar?</p>
+      <div class="landing-cards">
+        <button class="lcard" onclick="enter('quadro')">
+          <div class="lcard-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div class="lcard-name">Quadro de Pessoal</div>
+          <div class="lcard-desc">Colaboradores, status, admissoes e desligamentos</div>
+          <div class="lcard-go">Entrar &rarr;</div>
+        </button>
+        <button class="lcard" onclick="enter('beneficios')">
+          <div class="lcard-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v14"/></svg></div>
+          <div class="lcard-name">Pacote de Beneficios</div>
+          <div class="lcard-desc">VT e VR por escala, modalidade e UF</div>
+          <div class="lcard-go">Entrar &rarr;</div>
+        </button>
+        <button class="lcard" onclick="enter('revisao')">
+          <div class="lcard-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+          <div class="lcard-name">Revisao de Atribuicoes</div>
+          <div class="lcard-desc">Conferir o Flash contra o calculo do mes (VR e VT)</div>
+          <div class="lcard-go">Entrar &rarr;</div>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div id="view-quadro" class="view" style="display:none">
+
+  
 
   <div class="wrap">
-    <div class="setup-warn" id="setupWarn" style="display:none">
+    <div class="setup-warn" id="q_setupWarn" style="display:none">
       <b>Configuração pendente:</b> abra o arquivo e preencha a constante <code>GAS_URL</code> com a URL <code>/exec</code> do seu Web App do Apps Script. Enquanto isso, o quadro não consegue ler nem gravar na planilha.
     </div>
 
@@ -209,7 +470,7 @@
       </div>
     </div>
 
-    <div id="results" style="display:none">
+    <div id="q_results" style="display:none">
       <div class="stickyhead" id="stickyhead">
         <div class="cards">
           <div class="card accent"><div class="lab">Ativos</div><div class="val ok" id="cAtivos">0</div></div>
@@ -223,16 +484,16 @@
         <div class="toolbar">
           <div class="search">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
-            <input id="search" type="text" placeholder="Buscar por nome, cargo ou departamento…" oninput="render()" />
+            <input id="q_search" type="text" placeholder="Buscar por nome, cargo ou departamento…" oninput="q_render()" />
           </div>
-          <select id="fDept" onchange="render()"><option value="">Todos os departamentos</option></select>
-          <select id="fStatus" onchange="render()">
+          <select id="fDept" onchange="q_render()"><option value="">Todos os departamentos</option></select>
+          <select id="fStatus" onchange="q_render()">
             <option value="">Todos os status</option>
             <option value="Ativo">Ativos</option>
             <option value="Em Processo">Em processo</option>
             <option value="Desligado">Desligados</option>
           </select>
-          <select id="fSort" onchange="render()">
+          <select id="q_fSort" onchange="q_render()">
             <option value="dept">Agrupar por departamento</option>
             <option value="nome">Ordem alfabética</option>
             <option value="status">Por status</option>
@@ -252,21 +513,21 @@
               <th style="width:36px"></th>
             </tr>
           </thead>
-          <tbody id="tbody"></tbody>
+          <tbody id="q_tbody"></tbody>
         </table>
       </div>
 
       <div class="export-bar">
-        <button class="btn-export" onclick="exportXLSX()">
+        <button class="btn-export" onclick="q_exportXLSX()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg> Exportar Excel
         </button>
-        <button class="btn-export" onclick="exportCSV()">
+        <button class="btn-export" onclick="q_exportCSV()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg> Exportar CSV
         </button>
         <button class="btn-export" onclick="copiarAtivos()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg> Copiar nomes ativos
         </button>
-        <span class="hint right" id="exportHint">A exportação respeita os filtros aplicados.</span>
+        <span class="hint right" id="q_exportHint">A exportação respeita os filtros aplicados.</span>
         <button class="btn-danger" onclick="zerar()">Zerar quadro</button>
       </div>
     </div>
@@ -292,29 +553,298 @@
     </div>
   </div>
 
+
+  </div>
+  <div id="view-beneficios" class="view" style="display:none">
+
+  
+
+  <div class="wrap">
+    <div class="setup-warn" id="setupWarn" style="display:none">
+      <b>Configuração pendente:</b> preencha a constante <code>GAS_URL</code> no arquivo com a URL <code>/exec</code> do Web App.
+    </div>
+
+    <h2 class="section">Mês de referência &amp; dias por escala</h2>
+    <div class="month-panel">
+      <div class="field">
+        <label>Mês</label>
+        <input type="month" id="mes" onchange="onMonthChange()" />
+        <small>abre no próximo mês</small>
+      </div>
+      <div class="daysgrid">
+        <div class="daybox">
+          <label>Seg–Sex (5x2)</label>
+          <input type="number" id="d5" readonly />
+          <small id="d5info">nacional, c/ feriados</small>
+        </div>
+        <div class="daybox">
+          <label>6x1</label>
+          <input type="number" id="d6" readonly />
+          <small id="d6info">nacional, c/ feriados</small>
+        </div>
+        <div class="daybox">
+          <label>12x36</label>
+          <input type="number" id="d12" min="0" max="31" oninput="markUnsaved();recompute()" />
+          <small>fixo no mês</small>
+        </div>
+      </div>
+      <div class="mp-actions">
+        <span class="mp-flag" id="mpFlag"></span>
+        <button class="btn-line" onclick="openFeriados()" title="Cadastrar feriados nacionais e estaduais">Feriados</button>
+        <button class="btn-primary" onclick="saveMonth()" title="Salva o número fixo do 12x36 para o mês">Salvar</button>
+      </div>
+    </div>
+
+    <div id="results" style="display:none">
+      <div class="cards">
+        <div class="card"><div class="lab">Colaboradores (ativos)</div><div class="val" id="cQtd">0</div></div>
+        <div class="card vt"><div class="lab">Total VT</div><div class="val" id="cVT">R$ 0,00</div></div>
+        <div class="card vr"><div class="lab">Total VR</div><div class="val" id="cVR">R$ 0,00</div></div>
+        <div class="card total"><div class="lab">Total geral</div><div class="val" id="cTot">R$ 0,00</div></div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <input id="search" type="text" placeholder="Buscar por nome, cargo ou departamento…" oninput="render()" />
+        </div>
+        <select id="fUf" onchange="render()" title="Filtrar por estado (UF)">
+          <option value="">Todas as UF</option>
+        </select>
+        <select id="fEscala" onchange="render()">
+          <option value="">Todas as escalas</option>
+          <option value="5x2">5x2 (seg–sex)</option>
+          <option value="6x1">6x1</option>
+          <option value="12x36">12x36</option>
+        </select>
+        <select id="fMod" onchange="render()">
+          <option value="">Todas as modalidades</option>
+          <option value="Presencial">Presencial</option>
+          <option value="Híbrido">Híbrido</option>
+          <option value="Remoto">Remoto</option>
+        </select>
+        <select id="fSort" onchange="render()">
+          <option value="nome">Ordem alfabética</option>
+          <option value="dept">Agrupar por departamento</option>
+          <option value="total">Maior total</option>
+          <option value="farol">Por farol</option>
+        </select>
+        <button class="btn-line" onclick="openImport()" title="Colar dados da planilha e cadastrar em massa">Importar cadastro</button>
+      </div>
+
+      <div class="daynote">As colunas <b>Dias</b> e <b>Dias pres.</b> são editáveis: clique no número para ajustar uma pessoa só neste mês (ex.: remoto que trabalhou, folga, presencial). O valor laranja com <span style="color:var(--ow-orange)">•</span> é manual; apague para voltar ao cálculo automático.</div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:38px" class="ctr" title="Farol de revisão">●</th>
+              <th style="width:23%">Colaborador</th>
+              <th class="ctr">UF</th>
+              <th class="ctr">Escala</th>
+              <th>Modalidade</th>
+              <th class="ctr">Dias</th>
+              <th class="ctr">Dias pres.</th>
+              <th class="num" title="Valor diário de VT cadastrado">VT/dia</th>
+              <th class="num">VT</th>
+              <th class="num">VR</th>
+              <th class="num">Total</th>
+              <th class="ctr">Cadastro</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+          <tfoot id="tfoot"></tfoot>
+        </table>
+      </div>
+
+      <div class="export-bar">
+        <button class="btn-export" onclick="exportXLSX()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg> Exportar Excel
+        </button>
+        <button class="btn-export" onclick="exportCSV()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg> Exportar CSV
+        </button>
+        <span class="hint right" id="exportHint">Os valores são do mês selecionado acima.</span>
+      </div>
+    </div>
+
+    <div class="foot">ONE WAY — Base de cálculo de VT/VR por colaborador. Os cadastros e os dias do mês ficam salvos na planilha.</div>
+  </div>
+
+  <!-- modal importacao em massa -->
+  <div id="impOverlay" class="overlay" style="display:none">
+    <div class="modal" style="max-width:640px">
+      <div class="modal-title">Importar cadastro em massa</div>
+      <div class="modal-sub">Cole as linhas da sua planilha (selecione o intervalo de <b>NOME</b> até <b>TT VR</b> no Excel/Sheets e copie). O sistema identifica modalidade, escala, VT/dia e VR de cada colaborador. Quem é 100% home office entra como Remoto, VR fixo R$ 500 e sem VT.</div>
+      <textarea id="impText" placeholder="ANANDA DIAS DOS SANTOS&#9;100% HOME OFFICE - SP&#9;0&#9;-&#9;-&#9;500,00&#9;1&#9;500,00&#10;BEATRIZ DOS SANTOS GAMA&#9;PRESENCIAL SEG A SEXTA / SABADO HOME OFFICE&#9;25&#9;12,20&#9;305,00&#9;27,00&#9;26&#9;702,00" style="width:100%;min-height:190px;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:12px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;background:#FBFAF9;line-height:1.5"></textarea>
+      <div class="preview" id="impPrev" style="display:none;margin-top:14px"></div>
+      <div class="modal-actions" style="margin-top:16px">
+        <button class="btn-ghost" onclick="closeImport()">Fechar</button>
+        <button class="btn-line" onclick="previewImport()">Pré-visualizar</button>
+        <button class="btn-primary" id="impBtn" onclick="doImport()">Importar e gravar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- menu do farol -->
+  <div id="farolMenu" class="farol-menu" style="display:none">
+    <button class="fm-opt fm-v" title="OK" onclick="setFarol('verde')"></button>
+    <button class="fm-opt fm-a" title="Revisar" onclick="setFarol('amarelo')"></button>
+    <button class="fm-opt fm-r" title="Errado" onclick="setFarol('vermelho')"></button>
+    <button class="fm-opt fm-n" title="Limpar" onclick="setFarol('')">×</button>
+  </div>
+
+  <!-- modal de feriados -->
+  <div id="ferOverlay" class="overlay" style="display:none">
+    <div class="modal" style="max-width:560px">
+      <div class="modal-title">Feriados</div>
+      <div class="modal-sub">Os feriados <b>nacionais obrigatórios</b> e os <b>estaduais de SP e RJ</b> já vêm aplicados automaticamente (lista "padrão" abaixo). O cálculo de dias de 5x2 e 6x1 desconta os feriados aplicáveis (nacionais + do estado de cada pessoa); o 12x36 é fixo. Aqui você só adiciona o que for <b>extra</b>: municipais ou os facultativos (Carnaval/Corpus), se a empresa não trabalhar.</div>
+
+      <div class="ferform">
+        <div class="mrow"><label>Data</label><input type="date" id="ferData" /></div>
+        <div class="mrow"><label>Descrição</label><input type="text" id="ferDesc" placeholder="Ex.: Aniversário da cidade" /></div>
+        <div class="mrow"><label>Abrangência</label><select id="ferAbr"></select></div>
+        <button class="btn-primary" onclick="addFeriadoUI()">Adicionar</button>
+      </div>
+
+      <div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <button class="btn-line" onclick="presetFeriados()" title="Adiciona Carnaval (seg/ter) e Corpus Christi do ano">Adicionar facultativos (Carnaval/Corpus) <input type="number" id="ferAno" style="width:74px;margin-left:6px" /></button>
+        <span class="help" style="margin:0">Use se a empresa não trabalha nesses dias.</span>
+      </div>
+
+      <div style="margin-top:16px;max-height:300px;overflow:auto" id="ferList"></div>
+
+      <div class="modal-actions" style="margin-top:16px">
+        <button class="btn-ghost" onclick="closeFeriados()">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- modal cadastro de beneficios -->
+  <div id="cfgOverlay" class="overlay" style="display:none">
+    <div class="modal">
+      <div class="modal-title" id="cfgName">Cadastro de benefícios</div>
+      <div class="modal-sub" id="cfgRole"></div>
+
+      <div class="m2">
+        <div class="mrow">
+          <label>Escala</label>
+          <select id="cfgEscala" onchange="cfgPreview()">
+            <option value="5x2">5x2 (seg–sex)</option>
+            <option value="6x1">6x1</option>
+            <option value="12x36">12x36</option>
+          </select>
+        </div>
+        <div class="mrow">
+          <label>Modalidade</label>
+          <select id="cfgMod" onchange="cfgToggle();cfgPreview()">
+            <option value="Presencial">Presencial</option>
+            <option value="Híbrido">Híbrido</option>
+            <option value="Remoto">Remoto</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mrow" id="rowUf">
+        <label>Estado / filial (UF)</label>
+        <select id="cfgUf" onchange="cfgPreview()"></select>
+        <span class="help">Define quais feriados estaduais entram no cálculo dos dias.</span>
+      </div>
+
+      <div class="mrow">
+        <label>CPF</label>
+        <input type="text" id="cfgCpf" placeholder="000.000.000-00" inputmode="numeric" oninput="cfgMaskCpf(this)" />
+        <span class="help">Usado para cruzar com o Flash na aba Revisão — mais confiável que o nome.</span>
+      </div>
+
+      <div class="mrow" id="rowVtDia">
+        <label>VT por dia (R$)</label>
+        <input type="number" id="cfgVtDia" min="0" step="0.01" oninput="cfgPreview()" />
+        <span class="help">Valor diário de transporte. Para Remoto não há VT.</span>
+      </div>
+
+      <div class="m2">
+        <div class="mrow" id="rowVrDia">
+          <label>VR por dia (R$)</label>
+          <input type="number" id="cfgVrDia" min="0" step="0.01" oninput="cfgPreview()" />
+        </div>
+        <div class="mrow" id="rowVrFixo">
+          <label>VR fixo no mês (R$)</label>
+          <input type="number" id="cfgVrFixo" min="0" step="0.01" oninput="cfgPreview()" />
+          <span class="help">Usado quando Remoto.</span>
+        </div>
+      </div>
+
+      <div class="mrow" id="rowPres">
+        <label>Presencial (dias por semana)</label>
+        <input type="number" id="cfgPres" min="0" max="7" step="1" oninput="cfgPreview()" />
+        <span class="help">Só para Híbrido. Os dias presenciais do mês são proporcionais à escala.</span>
+      </div>
+
+      <div class="preview" id="cfgPrev"></div>
+
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeCfg()">Cancelar</button>
+        <button class="btn-primary" id="cfgSave" onclick="saveCfg()">Salvar cadastro</button>
+      </div>
+    </div>
+  </div>
+
+
+  </div>
+  <div id="view-revisao" class="view" style="display:none">
+    <div class="wrap">
+      <h2 class="rev-title">Revisão de Atribuições — Flash &times; ONE</h2>
+      <div class="rev-intro">
+        Cole abaixo a tabela exportada do Flash. A conferência compara o que está atribuído no Flash com o valor calculado na aba Benefícios para <b id="revMes">o mês de referência</b>.
+        <br><span class="muted">VR = Alimentação + Refeição (somados) &middot; VT = Mobilidade. <b style="color:#1d8a4e">Verde</b> = igual &middot; <b style="color:#c8372d">Vermelho</b> = diferente.</span>
+      </div>
+      <textarea id="revInput" class="rev-textarea" placeholder="Cole aqui a tabela do Flash (Pessoa, CPF, Mobilidade, Alimentação, Refeição...)"></textarea>
+      <div class="rev-actions">
+        <button class="rev-btn-primary" onclick="revisar()">Conferir</button>
+        <button class="rev-btn-line" onclick="revVincularCpf()" title="Grava no ONE o CPF do Flash para quem casou por nome e ainda nao tem CPF">Vincular CPFs ao ONE</button>
+        <button class="rev-btn-line" onclick="revLimpar()">Limpar</button>
+        <span class="rev-summary" id="revSummary"></span>
+      </div>
+      <div id="revFilters" class="rev-filters" style="display:none">
+        <input id="revSearch" class="rev-search" type="text" placeholder="Filtrar por nome ou CPF (com ou sem ponto)" oninput="revRender()" autocomplete="off">
+        <div class="rev-chips">
+          <button type="button" class="rev-chip active" data-f="all" onclick="revSetFilter('all',this)">Todos</button>
+          <button type="button" class="rev-chip" data-f="diff" onclick="revSetFilter('diff',this)">Com diferença</button>
+          <button type="button" class="rev-chip" data-f="same" onclick="revSetFilter('same',this)">Sem diferença</button>
+          <button type="button" class="rev-chip" data-f="vr" onclick="revSetFilter('vr',this)">Só dif. VR</button>
+          <button type="button" class="rev-chip" data-f="vt" onclick="revSetFilter('vt',this)">Só dif. VT</button>
+        </div>
+        <span class="rev-count muted" id="revCount"></span>
+      </div>
+      <div id="revResults"></div>
+    </div>
+  </div>
 <script>
 "use strict";
+/* ========================= QUADRO (prefixo q_) ========================= */
+
 
 /* =========================================================================
    CONFIGURACAO  ->  cole aqui a URL /exec do seu Web App do Apps Script.
    Ex.: https://script.google.com/macros/s/AKfycb..../exec
    ========================================================================= */
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbyJAF9Q9dQEKTZ_E53iyoNdwbZLXa8aDkA0W5O_Cbx0p3K54AiifPfvpqeC4oDKuRgOIQ/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbx1U5PjkLf16xL1b1Kq9w0cTw-GxCD70fJZnB3IuBUKX0HH-gC0kPK0J9y8lJVYEgKH3g/exec';
 
 var STATUS = { ATIVO:'Ativo', PROC:'Em Processo', OFF:'Desligado' };
 var CYCLE = [STATUS.ATIVO, STATUS.PROC, STATUS.OFF];
-var DATA = [];
+var q_DATA = [];
 var statusMenuId = null;
 var pendingDeleteId = null;
 var busy = false;
 
-function normKey(s){ return (s||'').toString().trim().toLowerCase().replace(/\s+/g,' '); }
+function q_normKey(s){ return (s||'').toString().trim().toLowerCase().replace(/\s+/g,' '); }
 function normDept(s){ var d=(s||'').toString().trim(); if(!d) d='Sem departamento'; return d.toUpperCase().replace(/\s+/g,' '); }
-function money(n){ return 'R$ ' + (n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function q_money(n){ return 'R$ ' + (n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function q_esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 /* ----------------- comunicacao com o Apps Script ----------------- */
-function setSync(state, label){
+function q_setSync(state, label){
   var el = document.getElementById('sync');
   el.className = 'sync' + (state==='busy'?' busy':state==='err'?' err':'');
   document.getElementById('syncLbl').textContent = label;
@@ -324,10 +854,10 @@ function setBusy(b){
   ['A','B','C'].forEach(function(w){ document.getElementById('btn'+w).disabled = b; });
 }
 
-function apiGet(){
+function q_apiGet(){
   return fetch(GAS_URL + '?action=list', { method:'GET' }).then(function(r){ return r.json(); });
 }
-function apiPost(payload){
+function q_apiPost(payload){
   return fetch(GAS_URL, {
     method:'POST',
     headers:{ 'Content-Type':'text/plain;charset=utf-8' },
@@ -336,7 +866,7 @@ function apiPost(payload){
 }
 
 function adoptData(list){
-  DATA = (list||[]).map(function(r){
+  q_DATA = (list||[]).map(function(r){
     return {
       id:r.id, nome:r.nome, cargo:r.cargo||'', dept:r.dept||'Sem departamento',
       deptKey:normDept(r.dept), salarioNum:Number(r.salarioNum||0),
@@ -346,24 +876,24 @@ function adoptData(list){
   });
 }
 
-function recarregar(){
-  if(!GAS_URL){ document.getElementById('setupWarn').style.display='block'; setSync('err','Sem URL'); return; }
-  setSync('busy','Sincronizando…');
-  apiGet().then(function(res){
+function q_recarregar(){
+  if(!GAS_URL){ document.getElementById('q_setupWarn').style.display='block'; q_setSync('err','Sem URL'); return; }
+  q_setSync('busy','Sincronizando…');
+  q_apiGet().then(function(res){
     if(!res || !res.ok){ throw new Error(res && res.error ? res.error : 'resposta inválida'); }
     adoptData(res.data);
-    document.getElementById('results').style.display='block';
+    document.getElementById('q_results').style.display='block';
     buildDeptFilter();
-    render();
+    q_render();
     computeSticky();
-    setSync('ok', 'Sincronizado ' + nowLabel());
+    q_setSync('ok', 'Sincronizado ' + q_nowLabel());
   }).catch(function(err){
-    setSync('err','Falha ao ler');
+    q_setSync('err','Falha ao ler');
     console.error(err);
   });
 }
 
-function nowLabel(){
+function q_nowLabel(){
   var d=new Date();
   function p(n){ return (n<10?'0':'')+n; }
   return p(d.getHours())+':'+p(d.getMinutes());
@@ -412,14 +942,14 @@ function parseRecords(text){
 /* ----------------- acoes ----------------- */
 function aplicar(which){
   if(busy) return;
-  if(!GAS_URL){ document.getElementById('setupWarn').style.display='block'; return; }
+  if(!GAS_URL){ document.getElementById('q_setupWarn').style.display='block'; return; }
   var box = document.getElementById('box'+which);
   var msg = document.getElementById('msg'+which);
   var recs = parseRecords(box.value);
   if(recs.length===0){ msg.textContent = 'Cole algum dado nesta coluna antes de aplicar.'; return; }
 
-  setBusy(true); setSync('busy','Gravando…'); msg.textContent='Enviando para a planilha…';
-  apiPost({ action:'apply', box:which, records:recs }).then(function(res){
+  setBusy(true); q_setSync('busy','Gravando…'); msg.textContent='Enviando para a planilha…';
+  q_apiPost({ action:'apply', box:which, records:recs }).then(function(res){
     if(!res || !res.ok){ throw new Error(res && res.error ? res.error : 'falha'); }
     adoptData(res.data);
     var s = res.summary || {};
@@ -435,26 +965,26 @@ function aplicar(which){
       msg.textContent = (s.upd||0)+' atualizado(s) p/ em processo' + (s.add? ' · '+s.add+' novo(s)':'') + '.';
     }
     box.value='';
-    document.getElementById('results').style.display='block';
-    buildDeptFilter(); render(); computeSticky();
-    setSync('ok','Salvo ' + nowLabel());
+    document.getElementById('q_results').style.display='block';
+    buildDeptFilter(); q_render(); computeSticky();
+    q_setSync('ok','Salvo ' + q_nowLabel());
   }).catch(function(err){
     msg.textContent = 'Erro ao gravar. Tente novamente.';
-    setSync('err','Falha ao gravar'); console.error(err);
+    q_setSync('err','Falha ao gravar'); console.error(err);
   }).then(function(){ setBusy(false); });
 }
 
 function setStatus(v){
   var id = statusMenuId; closeStatusMenu();
   if(!id || !GAS_URL) return;
-  var r = DATA.find(function(x){return x.id===id;});
-  if(r){ r.status = v; render(); } // otimista
-  setSync('busy','Gravando…');
-  apiPost({ action:'setStatus', id:id, status:v }).then(function(res){
+  var r = q_DATA.find(function(x){return x.id===id;});
+  if(r){ r.status = v; q_render(); } // otimista
+  q_setSync('busy','Gravando…');
+  q_apiPost({ action:'setStatus', id:id, status:v }).then(function(res){
     if(!res || !res.ok) throw new Error(res && res.error ? res.error : 'falha');
-    adoptData(res.data); buildDeptFilter(); render();
-    setSync('ok','Salvo ' + nowLabel());
-  }).catch(function(err){ setSync('err','Falha'); recarregar(); console.error(err); });
+    adoptData(res.data); buildDeptFilter(); q_render();
+    q_setSync('ok','Salvo ' + q_nowLabel());
+  }).catch(function(err){ q_setSync('err','Falha'); q_recarregar(); console.error(err); });
 }
 
 function doRemove(){
@@ -462,24 +992,24 @@ function doRemove(){
   if(inp.value.trim().toLowerCase() !== 'confirmar') return;
   var id = pendingDeleteId; closeConfirm();
   if(!id || !GAS_URL) return;
-  setSync('busy','Removendo…');
-  apiPost({ action:'remove', id:id }).then(function(res){
+  q_setSync('busy','Removendo…');
+  q_apiPost({ action:'remove', id:id }).then(function(res){
     if(!res || !res.ok) throw new Error(res && res.error ? res.error : 'falha');
-    adoptData(res.data); buildDeptFilter(); render();
-    setSync('ok','Removido ' + nowLabel());
-  }).catch(function(err){ setSync('err','Falha'); recarregar(); console.error(err); });
+    adoptData(res.data); buildDeptFilter(); q_render();
+    q_setSync('ok','Removido ' + q_nowLabel());
+  }).catch(function(err){ q_setSync('err','Falha'); q_recarregar(); console.error(err); });
 }
 
 function zerar(){
   if(!GAS_URL) return;
   if(!confirm('Isto apaga TODOS os colaboradores da planilha. Deseja continuar?')) return;
-  setSync('busy','Limpando…');
-  apiPost({ action:'clear' }).then(function(res){
+  q_setSync('busy','Limpando…');
+  q_apiPost({ action:'clear' }).then(function(res){
     if(!res || !res.ok) throw new Error(res && res.error ? res.error : 'falha');
-    adoptData(res.data); buildDeptFilter(); render();
+    adoptData(res.data); buildDeptFilter(); q_render();
     ['A','B','C'].forEach(function(w){ document.getElementById('msg'+w).textContent=''; });
-    setSync('ok','Limpo ' + nowLabel());
-  }).catch(function(err){ setSync('err','Falha'); console.error(err); });
+    q_setSync('ok','Limpo ' + q_nowLabel());
+  }).catch(function(err){ q_setSync('err','Falha'); console.error(err); });
 }
 
 /* ----------------- render ----------------- */
@@ -487,46 +1017,46 @@ function buildDeptFilter(){
   var sel = document.getElementById('fDept');
   var prev = sel.value;
   var keys = {};
-  DATA.forEach(function(r){ if(!keys[r.deptKey]) keys[r.deptKey] = r.dept; });
+  q_DATA.forEach(function(r){ if(!keys[r.deptKey]) keys[r.deptKey] = r.dept; });
   var arr = Object.keys(keys).sort();
   sel.innerHTML = '<option value="">Todos os departamentos</option>' +
-    arr.map(function(k){ return '<option value="'+k+'">'+esc(keys[k])+'</option>'; }).join('');
+    arr.map(function(k){ return '<option value="'+k+'">'+q_esc(keys[k])+'</option>'; }).join('');
   if(prev) sel.value = prev;
 }
 
-function filtered(){
-  var q = normKey(document.getElementById('search').value);
+function q_filtered(){
+  var q = q_normKey(document.getElementById('q_search').value);
   var fd = document.getElementById('fDept').value;
   var fs = document.getElementById('fStatus').value;
-  return DATA.filter(function(r){
+  return q_DATA.filter(function(r){
     if(fd && r.deptKey !== fd) return false;
     if(fs && r.status !== fs) return false;
-    if(q){ var hay = normKey(r.nome+' '+r.cargo+' '+r.dept); if(hay.indexOf(q)===-1) return false; }
+    if(q){ var hay = q_normKey(r.nome+' '+r.cargo+' '+r.dept); if(hay.indexOf(q)===-1) return false; }
     return true;
   });
 }
 
 function pillClass(st){ return st===STATUS.ATIVO?'on':(st===STATUS.PROC?'proc':'off'); }
 
-function render(){
-  var ativos = DATA.filter(function(r){return r.status===STATUS.ATIVO;});
-  var proc = DATA.filter(function(r){return r.status===STATUS.PROC;});
-  var off = DATA.filter(function(r){return r.status===STATUS.OFF;});
+function q_render(){
+  var ativos = q_DATA.filter(function(r){return r.status===STATUS.ATIVO;});
+  var proc = q_DATA.filter(function(r){return r.status===STATUS.PROC;});
+  var off = q_DATA.filter(function(r){return r.status===STATUS.OFF;});
   var folha = ativos.reduce(function(a,r){return a + (r.salarioNum||0);},0);
   document.getElementById('cAtivos').textContent = ativos.length;
   document.getElementById('cProc').textContent = proc.length;
   document.getElementById('cOff').textContent = off.length;
-  document.getElementById('cFolha').textContent = money(folha);
+  document.getElementById('cFolha').textContent = q_money(folha);
 
   var counts = {};
   ativos.forEach(function(r){ counts[r.dept] = (counts[r.dept]||0)+1; });
   document.getElementById('deptStrip').innerHTML = Object.keys(counts).sort().map(function(d){
-    return '<span class="dept-chip">'+esc(d)+'<b>'+counts[d]+'</b></span>';
+    return '<span class="dept-chip">'+q_esc(d)+'<b>'+counts[d]+'</b></span>';
   }).join('');
 
-  var rows = filtered();
-  var sort = document.getElementById('fSort').value;
-  var tbody = document.getElementById('tbody');
+  var rows = q_filtered();
+  var sort = document.getElementById('q_fSort').value;
+  var tbody = document.getElementById('q_tbody');
   if(rows.length===0){
     tbody.innerHTML = '<tr><td colspan="6"><div class="empty"><b>Nada para mostrar</b>Ajuste a busca/filtros ou aplique uma admissão.</div></td></tr>';
     computeSticky(); return;
@@ -538,27 +1068,27 @@ function render(){
     var cur=null;
     rows.forEach(function(r){
       if(r.dept!==cur){ cur=r.dept; var n=rows.filter(function(x){return x.dept===cur;}).length;
-        html += '<tr class="grp"><td colspan="6">'+esc(cur)+'<span class="cnt">'+n+'</span></td></tr>'; }
-      html += rowHtml(r);
+        html += '<tr class="grp"><td colspan="6">'+q_esc(cur)+'<span class="cnt">'+n+'</span></td></tr>'; }
+      html += q_rowHtml(r);
     });
   } else {
     if(sort==='nome') rows.sort(function(a,b){ return a.nome.localeCompare(b.nome,'pt-BR'); });
     else rows.sort(function(a,b){ return CYCLE.indexOf(a.status)-CYCLE.indexOf(b.status) || a.nome.localeCompare(b.nome,'pt-BR'); });
-    rows.forEach(function(r){ html += rowHtml(r); });
+    rows.forEach(function(r){ html += q_rowHtml(r); });
   }
   tbody.innerHTML = html;
   computeSticky();
 }
 
-function rowHtml(r){
+function q_rowHtml(r){
   var rowCls = r.status===STATUS.OFF ? 'st-off' : '';
-  var escTxt = r.escala ? esc(r.escala) : '<span style="color:#c9c2bb">—</span>';
-  var interv = r.intervalo ? ' · '+esc(r.intervalo) : '';
-  var sal = (r.salarioNum>0) ? esc(money(r.salarioNum)) : '<span style="color:#c9c2bb">—</span>';
-  var cargo = r.cargo ? esc(r.cargo) : '<span style="color:#c9c2bb">cargo não informado</span>';
+  var escTxt = r.escala ? q_esc(r.escala) : '<span style="color:#c9c2bb">—</span>';
+  var interv = r.intervalo ? ' · '+q_esc(r.intervalo) : '';
+  var sal = (r.salarioNum>0) ? q_esc(q_money(r.salarioNum)) : '<span style="color:#c9c2bb">—</span>';
+  var cargo = r.cargo ? q_esc(r.cargo) : '<span style="color:#c9c2bb">cargo não informado</span>';
   return '<tr class="'+rowCls+'">'
-    + '<td><div class="nm">'+esc(r.nome)+'</div><div class="role">'+cargo+'</div></td>'
-    + '<td>'+esc(r.dept)+'</td>'
+    + '<td><div class="nm">'+q_esc(r.nome)+'</div><div class="role">'+cargo+'</div></td>'
+    + '<td>'+q_esc(r.dept)+'</td>'
     + '<td class="esc">'+escTxt+interv+'</td>'
     + '<td class="num">'+sal+'</td>'
     + '<td><button class="pill '+pillClass(r.status)+'" title="Alterar status" onclick="openStatusMenu(event,\''+r.id+'\')"><span class="dot"></span>'+r.status+'<svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button></td>'
@@ -579,14 +1109,14 @@ function openStatusMenu(ev, id){
   if(top + mh > window.innerHeight - 10) top = r.top - mh - 6;
   menu.style.left = Math.max(10,left) + 'px';
   menu.style.top = Math.max(10,top) + 'px';
-  var cur = (DATA.find(function(x){return x.id===id;})||{}).status;
+  var cur = (q_DATA.find(function(x){return x.id===id;})||{}).status;
   menu.querySelectorAll('.sm-opt').forEach(function(o){ o.classList.toggle('active', o.getAttribute('data-v')===cur); });
 }
 function closeStatusMenu(){ document.getElementById('statusMenu').style.display='none'; statusMenuId=null; }
 
 function askRemover(id){
   pendingDeleteId = id;
-  var r = DATA.find(function(x){return x.id===id;});
+  var r = q_DATA.find(function(x){return x.id===id;});
   document.getElementById('delName').textContent = r ? r.nome : '';
   var inp = document.getElementById('delInput'); inp.value = '';
   document.getElementById('delBtn').disabled = true;
@@ -608,20 +1138,20 @@ function computeSticky(){
 function onScroll(){
   var header = document.querySelector('header.top');
   var sh = document.getElementById('stickyhead');
-  if(!header || !sh || document.getElementById('results').style.display==='none') return;
+  if(!header || !sh || document.getElementById('q_results').style.display==='none') return;
   var h = header.offsetHeight;
   sh.classList.toggle('stuck', sh.getBoundingClientRect().top <= h + 0.5);
 }
 
 /* ----------------- export ----------------- */
-function exportRows(){
-  return filtered().map(function(r){
+function q_exportRows(){
+  return q_filtered().map(function(r){
     return { 'Nome':r.nome, 'Cargo':r.cargo, 'Departamento':r.dept, 'Salario':r.salarioNum,
              'Escala':r.escala, 'Intervalo':r.intervalo, 'Status':r.status, 'Atualizado_em':r.atualizadoEm };
   });
 }
-function exportXLSX(){
-  var rows = exportRows();
+function q_exportXLSX(){
+  var rows = q_exportRows();
   if(rows.length===0){ alert('Nenhum registro para exportar com os filtros atuais.'); return; }
   var ws = XLSX.utils.json_to_sheet(rows);
   ws['!cols'] = [{wch:34},{wch:34},{wch:24},{wch:12},{wch:40},{wch:12},{wch:13},{wch:16}];
@@ -629,8 +1159,8 @@ function exportXLSX(){
   XLSX.utils.book_append_sheet(wb, ws, 'Colaboradores');
   XLSX.writeFile(wb, 'quadro_colaboradores_oneway.xlsx');
 }
-function exportCSV(){
-  var rows = exportRows();
+function q_exportCSV(){
+  var rows = q_exportRows();
   if(rows.length===0){ alert('Nenhum registro para exportar com os filtros atuais.'); return; }
   var head = Object.keys(rows[0]);
   var csv = head.join(';') + '\n' + rows.map(function(r){
@@ -645,10 +1175,10 @@ function exportCSV(){
   a.download = 'quadro_colaboradores_oneway.csv'; a.click();
 }
 function copiarAtivos(){
-  var nomes = filtered().filter(function(r){return r.status===STATUS.ATIVO;}).map(function(r){return r.nome;});
+  var nomes = q_filtered().filter(function(r){return r.status===STATUS.ATIVO;}).map(function(r){return r.nome;});
   if(nomes.length===0){ alert('Nenhum colaborador ativo na seleção atual.'); return; }
   navigator.clipboard.writeText(nomes.join('\n')).then(function(){
-    document.getElementById('exportHint').textContent = nomes.length+' nome(s) ativo(s) copiado(s).';
+    document.getElementById('q_exportHint').textContent = nomes.length+' nome(s) ativo(s) copiado(s).';
   });
 }
 
@@ -674,12 +1204,1007 @@ document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ closeSta
 /* ----------------- init ----------------- */
 (function init(){
   if(!GAS_URL){
-    document.getElementById('setupWarn').style.display='block';
-    setSync('err','Sem URL');
+    document.getElementById('q_setupWarn').style.display='block';
+    q_setSync('err','Sem URL');
     return;
   }
-  recarregar();
+  q_recarregar();
 })();
+
+/* ========================= BENEFICIOS ========================= */
+
+
+/* =========================================================================
+   Mesma URL /exec do Web App usado pelo Quadro.
+   ========================================================================= */
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbx1U5PjkLf16xL1b1Kq9w0cTw-GxCD70fJZnB3IuBUKX0HH-gC0kPK0J9y8lJVYEgKH3g/exec';
+
+var MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+var UFS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
+var DATA = [];
+var FERIADOS = [];           // {id, data 'YYYY-MM-DD', descricao, abrangencia 'NACIONAL'|UF}
+var PARAMS = { dias_12x36:0 };
+var savedMonth = false;
+var cfgId = null;
+var farolMenuId = null;
+// ajustes manuais de dias do MES corrente: id -> {dias, dias_pres} (null = automatico)
+var AJUSTES = {};
+var BACKEND_INFO = { version:'', cols:0 };
+
+function money(n){ return 'R$ ' + (n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function normKey(s){ return (s||'').toString().trim().toLowerCase().replace(/\s+/g,' '); }
+function val(id){ return document.getElementById(id).value; }
+function pad2(n){ return (n<10?'0':'')+n; }
+
+/* ----- sync ----- */
+function setSync(state,label){
+  var el=document.getElementById('sync');
+  el.className='sync'+(state==='busy'?' busy':state==='err'?' err':'');
+  document.getElementById('syncLbl').textContent=label;
+}
+function nowLabel(){ var d=new Date(); function p(n){return(n<10?'0':'')+n;} return p(d.getHours())+':'+p(d.getMinutes()); }
+
+function apiGet(){ return fetch(GAS_URL+'?action=list',{method:'GET'}).then(function(r){return r.json();}); }
+function apiPost(p){ return fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p)}).then(function(r){return r.json();}); }
+
+/* ----- escala guess ----- */
+function guessTipo(escala){
+  var s=(escala||'').toLowerCase();
+  if(/12\s*x\s*36/.test(s)) return '12x36';
+  if(/6\s*x\s*1/.test(s) || /s[aá]b/.test(s)) return '6x1';
+  if(/5\s*x\s*2/.test(s) || /sex/.test(s)) return '5x2';
+  return '5x2';
+}
+
+function adopt(list){
+  DATA = (list||[]).filter(function(r){return r.status==='Ativo';}).map(function(r){
+    return {
+      id:r.id, nome:r.nome, cargo:r.cargo||'', dept:r.dept||'Sem departamento',
+      escala:r.escala||'',
+      escala_tipo: r.escala_tipo || guessTipo(r.escala),
+      modalidade: r.modalidade || 'Presencial',
+      vt_dia: Number(r.vt_dia||0),
+      vr_dia: r.vr_dia? Number(r.vr_dia) : 27,
+      vr_fixo: r.vr_fixo? Number(r.vr_fixo) : 500,
+      pres_dias: r.pres_dias? Number(r.pres_dias) : 3,
+      farol: r.farol||'',
+      uf: (r.uf||'').toUpperCase(),
+      cpf: r.cpf||'',
+      _raw:r
+    };
+  });
+  fillUfFilter();
+}
+
+/* ----- calculo (com feriados por estado) ----- */
+function diasSemana(tipo){ return tipo==='6x1'?6 : tipo==='12x36'?5 : 5; }
+function currentYM(){ var v=val('mes'); if(!v) return null; var p=v.split('-'); return {y:parseInt(p[0],10), m:parseInt(p[1],10)}; }
+
+// Feriados obrigatorios (nao facultativos) ja embutidos no sistema.
+// Nacionais + estaduais SP (09/07) e RJ (23/04). Carnaval e Corpus NAO entram (facultativos).
+function defaultFeriadosForYear(Y){
+  var P=easterDate(Y);
+  return [
+    {data:Y+'-01-01', descricao:'Confraternização Universal', abrangencia:'NACIONAL'},
+    {data:ymd(addDays(P,-2)), descricao:'Sexta-feira Santa', abrangencia:'NACIONAL'},
+    {data:Y+'-04-21', descricao:'Tiradentes', abrangencia:'NACIONAL'},
+    {data:Y+'-05-01', descricao:'Dia do Trabalho', abrangencia:'NACIONAL'},
+    {data:Y+'-09-07', descricao:'Independência', abrangencia:'NACIONAL'},
+    {data:Y+'-10-12', descricao:'N. Sra. Aparecida', abrangencia:'NACIONAL'},
+    {data:Y+'-11-02', descricao:'Finados', abrangencia:'NACIONAL'},
+    {data:Y+'-11-15', descricao:'Proclamação da República', abrangencia:'NACIONAL'},
+    {data:Y+'-11-20', descricao:'Consciência Negra', abrangencia:'NACIONAL'},
+    {data:Y+'-12-25', descricao:'Natal', abrangencia:'NACIONAL'},
+    {data:Y+'-07-09', descricao:'Revolução Constitucionalista', abrangencia:'SP'},
+    {data:Y+'-04-23', descricao:'São Jorge', abrangencia:'RJ'}
+  ];
+}
+// Facultativos (so entram se o usuario adicionar pelo botao)
+function facultativosForYear(Y){
+  var P=easterDate(Y);
+  return [
+    {data:ymd(addDays(P,-48)), descricao:'Carnaval (segunda)', abrangencia:'NACIONAL'},
+    {data:ymd(addDays(P,-47)), descricao:'Carnaval (terça)', abrangencia:'NACIONAL'},
+    {data:ymd(addDays(P,60)), descricao:'Corpus Christi', abrangencia:'NACIONAL'}
+  ];
+}
+function isDefaultFeriado(f){
+  var ym=currentYM(); if(!ym) return false;
+  var defs=defaultFeriadosForYear(ym.y);
+  for(var i=0;i<defs.length;i++){ if(defs[i].data===f.data && defs[i].abrangencia===(f.abrangencia||'NACIONAL').toUpperCase()) return true; }
+  return false;
+}
+// padrao embutido (do ano do mes selecionado) + os cadastrados na planilha
+function allFeriados(){
+  var ym=currentYM();
+  var base = ym ? defaultFeriadosForYear(ym.y) : [];
+  return base.concat(FERIADOS);
+}
+function holidaySetFor(uf){
+  // dias (int) que sao feriado no mes selecionado para a abrangencia nacional + UF
+  var ym=currentYM(); var set={};
+  if(!ym) return set;
+  var ufU=(uf||'').toUpperCase();
+  allFeriados().forEach(function(f){
+    if(!f.data) return;
+    var p=String(f.data).split('-');
+    if(p.length<3) return;
+    if(parseInt(p[0],10)!==ym.y || parseInt(p[1],10)!==ym.m) return;
+    var ab=(f.abrangencia||'NACIONAL').toUpperCase();
+    if(ab==='NACIONAL' || (ufU && ab===ufU)) set[parseInt(p[2],10)]=true;
+  });
+  return set;
+}
+function countWorkdays(includeSat, holiSet){
+  var ym=currentYM(); if(!ym) return 0;
+  var dim=new Date(ym.y, ym.m, 0).getDate(); var n=0;
+  for(var day=1; day<=dim; day++){
+    var w=new Date(ym.y, ym.m-1, day).getDay();
+    var work = includeSat ? (w>=1&&w<=6) : (w>=1&&w<=5);
+    if(!work) continue;
+    if(holiSet[day]) continue;
+    n++;
+  }
+  return n;
+}
+function ufHolidayImpacts(r){
+  // feriados aplicaveis (nacional + UF da pessoa) que caem em dia util da escala dela neste mes
+  var out=[];
+  if(!r.uf) return out;
+  var tipo=r.escala_tipo;
+  if(tipo==='12x36') return out; // dias fixos: feriado nao altera
+  var ym=currentYM(); if(!ym) return out;
+  var ufU=(r.uf||'').toUpperCase();
+  var includeSat=(tipo==='6x1');
+  allFeriados().forEach(function(f){
+    if(!f.data) return;
+    var p=String(f.data).split('-'); if(p.length<3) return;
+    if(parseInt(p[0],10)!==ym.y || parseInt(p[1],10)!==ym.m) return;
+    var ab=(f.abrangencia||'NACIONAL').toUpperCase();
+    if(!(ab==='NACIONAL' || (ufU && ab===ufU))) return;
+    var day=parseInt(p[2],10);
+    var w=new Date(ym.y, ym.m-1, day).getDay();
+    var work = includeSat ? (w>=1&&w<=6) : (w>=1&&w<=5);
+    if(work) out.push({day:day, desc:f.descricao||'Feriado', ab:ab});
+  });
+  return out;
+}
+function diasDoMes(tipo, uf){
+  if(tipo==='12x36') return PARAMS.dias_12x36||0;
+  return countWorkdays(tipo==='6x1', holidaySetFor(uf));
+}
+function calc(r){
+  var baseDias = diasDoMes(r.escala_tipo, r.uf);
+  var basePres;
+  if(r.modalidade==='Remoto'){ basePres = 0; }
+  else if(r.modalidade==='Híbrido'){ basePres = Math.min(baseDias, Math.round(r.pres_dias * baseDias / diasSemana(r.escala_tipo))); }
+  else { basePres = baseDias; }
+  // sobreposicao manual (so deste mes)
+  var ov = AJUSTES[r.id] || {};
+  var ovDias = (ov.dias != null);
+  var ovPres = (ov.dias_pres != null);
+  var dias = ovDias ? ov.dias : baseDias;
+  var diasPres = ovPres ? ov.dias_pres : basePres;
+  var vr = (r.modalidade==='Remoto') ? r.vr_fixo : (r.vr_dia * dias);
+  var vt = r.vt_dia * diasPres;
+  return { dias:dias, diasPres:diasPres, vt:vt, vr:vr, total:vt+vr,
+           baseDias:baseDias, basePres:basePres, ovDias:ovDias, ovPres:ovPres };
+}
+
+/* ----------------- ajustes de dias por mes (clicaveis) ----------------- */
+function dayCellHtml(id, field, disp, isOv){
+  return '<td class="ctr daycell'+(isOv?' ovd':'')+'" onclick="editDay(this,\''+id+'\',\''+field+'\')"'
+    + ' title="Ajuste manual so deste mes — clique para editar; deixe vazio para voltar ao automatico">'+disp+'</td>';
+}
+
+function editDay(td, id, field){
+  if(td.querySelector('input')) return;
+  var cur = td.textContent.trim(); if(cur==='—') cur='';
+  td.innerHTML = '<input type="number" min="0" max="31" class="dayedit" value="'+cur+'">';
+  var inp = td.querySelector('input'); inp.focus(); inp.select();
+  var done=false;
+  function finish(save){
+    if(done) return; done=true;
+    if(save){ var s=inp.value.trim(); saveAjuste(id, field, s===''? null : (parseInt(s,10)||0)); }
+    else { render(); }
+  }
+  inp.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); finish(true); } else if(e.key==='Escape'){ e.preventDefault(); finish(false); } };
+  inp.onblur=function(){ finish(true); };
+}
+
+function applyAjustes(list){
+  AJUSTES={};
+  (list||[]).forEach(function(a){
+    AJUSTES[a.id]={
+      dias:(a.dias===''||a.dias==null? null : Number(a.dias)),
+      dias_pres:(a.dias_pres===''||a.dias_pres==null? null : Number(a.dias_pres))
+    };
+  });
+}
+
+function loadAjustes(cb){
+  var mes = val('mes');
+  if(!mes){ AJUSTES={}; if(cb) cb(); return; }
+  apiPost({action:'getAjustes', mes:mes}).then(function(res){
+    if(res && res.ok) applyAjustes(res.ajustes); else AJUSTES={};
+    if(cb) cb();
+  }).catch(function(err){ console.error(err); AJUSTES={}; if(cb) cb(); });
+}
+
+function saveAjuste(id, field, value){
+  var mes = val('mes'); if(!mes) return;
+  var ov = AJUSTES[id] || { dias:null, dias_pres:null };
+  ov[field] = value;
+  if(ov.dias==null && ov.dias_pres==null) delete AJUSTES[id]; else AJUSTES[id]=ov;
+  render();
+  var od = AJUSTES[id] || { dias:null, dias_pres:null };
+  setSync('busy','Salvando ajuste…');
+  apiPost({ action:'setAjuste', mes:mes, id:id,
+            dias:(od.dias==null?'':od.dias), dias_pres:(od.dias_pres==null?'':od.dias_pres) })
+    .then(function(res){
+      if(res && res.ok){ applyAjustes(res.ajustes); render(); setSync('ok','Salvo '+nowLabel()); }
+      else throw new Error(res&&res.error?res.error:'falha');
+    }).catch(function(err){ setSync('err','Falha'); console.error(err); });
+}
+
+/* ----- mes ----- */
+function defaultMonth(){
+  // sempre inicia no proximo mes (ex.: em junho, abre julho)
+  var d=new Date(); d.setDate(1); d.setMonth(d.getMonth()+1);
+  var m=d.getMonth()+1;
+  return d.getFullYear()+'-'+(m<10?'0':'')+m;
+}
+function monthLabel(v){
+  if(!v) return '';
+  var p=v.split('-'); return MESES[parseInt(p[1],10)-1]+'/'+p[0];
+}
+function calcCalendar(v){
+  var p=v.split('-'); var y=parseInt(p[0],10), m=parseInt(p[1],10);
+  var dim=new Date(y,m,0).getDate(); var d5=0,d6=0;
+  for(var day=1;day<=dim;day++){
+    var w=new Date(y,m-1,day).getDay(); // 0 dom .. 6 sab
+    if(w>=1&&w<=5) d5++;
+    if(w>=1&&w<=6) d6++;
+  }
+  return { d5:d5, d6:d6, d12:Math.round(dim/2) };
+}
+
+function setMonthFlag(saved){
+  savedMonth=saved;
+  var f=document.getElementById('mpFlag');
+  if(saved){ f.className='mp-flag saved'; f.textContent='Salvo'; }
+  else { f.className='mp-flag unsaved'; f.textContent='Não salvo'; }
+}
+function markUnsaved(){ setMonthFlag(false); }
+
+function readDayInputs(){ PARAMS.dias_12x36 = parseInt(val('d12'),10)||0; }
+
+// 5x2 e 6x1 sao calculados (baseline nacional, descontando feriados nacionais)
+function updateMonthDisplay(){
+  var nac=holidaySetFor('');
+  document.getElementById('d5').value = countWorkdays(false, nac) || '';
+  document.getElementById('d6').value = countWorkdays(true, nac) || '';
+  var ym=currentYM(); var nNac=0;
+  if(ym){ allFeriados().forEach(function(f){ var p=String(f.data).split('-');
+    if(parseInt(p[0],10)===ym.y && parseInt(p[1],10)===ym.m && (f.abrangencia||'NACIONAL').toUpperCase()==='NACIONAL') nNac++; }); }
+  var info = nNac? ('nacional · '+nNac+' feriado(s)') : 'nacional';
+  document.getElementById('d5info').textContent=info;
+  document.getElementById('d6info').textContent=info;
+}
+
+function loadFeriados(cb){
+  apiPost({action:'getFeriados'}).then(function(res){
+    if(res&&res.ok) FERIADOS=res.feriados||[];
+    if(cb) cb();
+  }).catch(function(err){ console.error(err); if(cb) cb(); });
+}
+
+function onMonthChange(){
+  var v=val('mes'); if(!v) return;
+  setSync('busy','Lendo mês…');
+  apiPost({action:'getMonthParams', mes:v}).then(function(res){
+    if(res && res.ok && res.params){ PARAMS.dias_12x36=res.params.dias_12x36||0; setMonthFlag(true); }
+    else { PARAMS.dias_12x36=calcCalendar(v).d12; setMonthFlag(false); }
+    document.getElementById('d12').value = PARAMS.dias_12x36||'';
+    setSync('ok','Sincronizado '+nowLabel());
+    updateMonthDisplay();
+    loadAjustes(function(){ setSync('ok','Sincronizado '+nowLabel()); render(); });
+  }).catch(function(err){ setSync('err','Falha'); console.error(err); });
+}
+
+function saveMonth(){
+  var v=val('mes'); if(!v){ alert('Selecione o mês.'); return; }
+  readDayInputs();
+  var nac=holidaySetFor('');
+  var p={ dias_5x2:countWorkdays(false,nac), dias_6x1:countWorkdays(true,nac), dias_12x36:PARAMS.dias_12x36 };
+  setSync('busy','Salvando…');
+  apiPost({action:'setMonthParams', mes:v, params:p}).then(function(res){
+    if(!res||!res.ok) throw new Error(res&&res.error?res.error:'falha');
+    setMonthFlag(true); setSync('ok','Salvo '+nowLabel());
+  }).catch(function(err){ setSync('err','Falha ao salvar'); console.error(err); });
+}
+
+function recompute(){ readDayInputs(); updateMonthDisplay(); render(); }
+
+/* ----- render ----- */
+function modTag(m){
+  if(m==='Remoto') return '<span class="tag rem"><span class="dot"></span>Remoto</span>';
+  if(m==='Híbrido') return '<span class="tag hib"><span class="dot"></span>Híbrido</span>';
+  if(m==='Presencial') return '<span class="tag pres"><span class="dot"></span>Presencial</span>';
+  return '<span class="tag none"><span class="dot"></span>—</span>';
+}
+
+function filtered(){
+  var q=normKey(val('search'));
+  var fm=val('fMod');
+  var fe=val('fEscala');
+  var fu=val('fUf');
+  return DATA.filter(function(r){
+    if(fm && r.modalidade!==fm) return false;
+    if(fe && r.escala_tipo!==fe) return false;
+    if(fu){ if(fu==='__none__'){ if(r.uf) return false; } else if((r.uf||'')!==fu) return false; }
+    if(q){ var hay=normKey(r.nome+' '+r.cargo+' '+r.dept+' '+(r.uf||'')); if(hay.indexOf(q)===-1) return false; }
+    return true;
+  });
+}
+
+// popula o filtro de UF com os estados presentes nos dados (mantem a selecao)
+function fillUfFilter(){
+  var sel=document.getElementById('fUf'); if(!sel) return;
+  var cur=sel.value;
+  var present={}; DATA.forEach(function(r){ if(r.uf) present[r.uf]=true; });
+  var list=Object.keys(present).sort();
+  var html='<option value="">Todas as UF</option>';
+  list.forEach(function(u){ html+='<option value="'+u+'">'+u+'</option>'; });
+  if(DATA.some(function(r){return !r.uf;})) html+='<option value="__none__">Sem UF</option>';
+  sel.innerHTML=html;
+  sel.value=cur; if(sel.value!==cur) sel.value='';
+}
+var FAROL_ORDER={ vermelho:0, amarelo:1, verde:2, '':3 };
+
+function render(){
+  var rows = filtered();
+  var sort = val('fSort');
+  var totVT=0, totVR=0, totGeral=0;
+  rows.forEach(function(r){ var c=calc(r); totVT+=c.vt; totVR+=c.vr; totGeral+=c.total; });
+  document.getElementById('cQtd').textContent = rows.length;
+  document.getElementById('cVT').textContent = money(totVT);
+  document.getElementById('cVR').textContent = money(totVR);
+  document.getElementById('cTot').textContent = money(totGeral);
+
+  var tbody=document.getElementById('tbody');
+  var tfoot=document.getElementById('tfoot');
+  if(rows.length===0){
+    tbody.innerHTML='<tr><td colspan="12"><div class="empty"><b>Nada para mostrar</b>Ajuste a busca/filtros ou cadastre colaboradores no Quadro.</div></td></tr>';
+    tfoot.innerHTML=''; return;
+  }
+
+  var fVT=0,fVR=0,fTot=0;
+  var html='';
+  if(sort==='dept'){
+    rows.sort(function(a,b){ return a.dept.localeCompare(b.dept,'pt-BR')||a.nome.localeCompare(b.nome,'pt-BR'); });
+    var cur=null;
+    rows.forEach(function(r){
+      if(r.dept!==cur){ cur=r.dept; html+='<tr class="grp"><td colspan="12">'+esc(cur)+'</td></tr>'; }
+      var c=calc(r); fVT+=c.vt; fVR+=c.vr; fTot+=c.total;
+      html+=rowHtml(r,c);
+    });
+  } else {
+    if(sort==='total') rows.sort(function(a,b){ return calc(b).total-calc(a).total; });
+    else if(sort==='farol') rows.sort(function(a,b){ return (FAROL_ORDER[a.farol||'']-FAROL_ORDER[b.farol||''])||a.nome.localeCompare(b.nome,'pt-BR'); });
+    else rows.sort(function(a,b){ return a.nome.localeCompare(b.nome,'pt-BR'); });
+    rows.forEach(function(r){ var c=calc(r); fVT+=c.vt; fVR+=c.vr; fTot+=c.total; html+=rowHtml(r,c); });
+  }
+  tbody.innerHTML=html;
+  tfoot.innerHTML='<tr><td colspan="8" style="text-align:right">Totais (filtro atual)</td>'
+    +'<td class="num vtval">'+money(fVT)+'</td><td class="num vrval">'+money(fVR)+'</td>'
+    +'<td class="num totval">'+money(fTot)+'</td><td></td></tr>';
+}
+
+function farolHtml(r){
+  var cls = r.farol? ('fl-'+r.farol) : 'fl-none';
+  return '<button class="farol '+cls+'" title="Sinalizar revisão" onclick="openFarolMenu(event,\''+r.id+'\')"></button>';
+}
+function rowHtml(r,c){
+  var presDisp = (r.modalidade==='Remoto' && !c.ovPres) ? '—' : c.diasPres;
+  var ufImp = ufHolidayImpacts(r);
+  var ufCls = ufImp.length ? 'uf-tag uf-feriado' : 'uf-tag';
+  var ufTit = ufImp.length ? ' title="Feriado no mes: '+esc(ufImp.map(function(x){return ('0'+x.day).slice(-2)+' '+x.desc;}).join(' \u2022 '))+' \u2014 reduz os dias, confira"' : '';
+  var ufCell = r.uf? '<span class="'+ufCls+'"'+ufTit+'>'+esc(r.uf)+'</span>' : '<span class="muted">—</span>';
+  return '<tr>'
+    + '<td class="ctr">'+farolHtml(r)+'</td>'
+    + '<td><div class="nm">'+esc(r.nome)+'</div><div class="role">'+esc(r.cargo||'')+'</div></td>'
+    + '<td class="ctr">'+ufCell+'</td>'
+    + '<td class="ctr"><span class="esc-tag">'+esc(r.escala_tipo)+'</span></td>'
+    + '<td>'+modTag(r.modalidade)+'</td>'
+    + dayCellHtml(r.id,'dias',c.dias,c.ovDias)
+    + dayCellHtml(r.id,'dias_pres',presDisp,c.ovPres)
+    + '<td class="num vtdia">'+(r.vt_dia?money(r.vt_dia):'<span class="muted">—</span>')+'</td>'
+    + '<td class="num vtval">'+((r.modalidade==='Remoto' && !c.ovPres)?'—':money(c.vt))+'</td>'
+    + '<td class="num vrval">'+money(c.vr)+'</td>'
+    + '<td class="num totval">'+money(c.total)+'</td>'
+    + '<td class="ctr"><button class="btn-cfg" onclick="openCfg(\''+r.id+'\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H2a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 3.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H8a1.65 1.65 0 0 0 1-1.51V2a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V8a1.65 1.65 0 0 0 1.51 1H22a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Editar</button></td>'
+    + '</tr>';
+}
+
+/* ----- modal cadastro ----- */
+function openCfg(id){
+  var r=DATA.find(function(x){return x.id===id;}); if(!r) return;
+  cfgId=id;
+  document.getElementById('cfgName').textContent=r.nome;
+  document.getElementById('cfgRole').textContent=(r.cargo? r.cargo+' · ':'')+r.dept;
+  document.getElementById('cfgEscala').value=r.escala_tipo;
+  document.getElementById('cfgMod').value=r.modalidade;
+  document.getElementById('cfgVtDia').value=r.vt_dia||0;
+  document.getElementById('cfgVrDia').value=r.vr_dia||27;
+  document.getElementById('cfgVrFixo').value=r.vr_fixo||500;
+  document.getElementById('cfgPres').value=r.pres_dias||3;
+  document.getElementById('cfgCpf').value = r.cpf||'';
+  fillUfSelect('cfgUf', r.uf||'');
+  cfgToggle(); cfgPreview();
+  document.getElementById('cfgOverlay').style.display='flex';
+}
+function fillUfSelect(id, sel){
+  var opts='<option value="">— sem UF —</option>'+UFS.map(function(u){ return '<option value="'+u+'"'+(u===sel?' selected':'')+'>'+u+'</option>'; }).join('');
+  document.getElementById(id).innerHTML=opts;
+}
+function closeCfg(){ document.getElementById('cfgOverlay').style.display='none'; cfgId=null; }
+
+function cfgToggle(){
+  var mod=document.getElementById('cfgMod').value;
+  document.getElementById('rowVtDia').classList.toggle('hide', mod==='Remoto');
+  document.getElementById('rowVrDia').classList.toggle('hide', mod==='Remoto');
+  document.getElementById('rowVrFixo').classList.toggle('hide', mod!=='Remoto');
+  document.getElementById('rowPres').classList.toggle('hide', mod!=='Híbrido');
+}
+function cfgMaskCpf(el){
+  var d=(el.value||'').replace(/\D/g,'').slice(0,11), o=d;
+  if(d.length>9) o=d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9);
+  else if(d.length>6) o=d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6);
+  else if(d.length>3) o=d.slice(0,3)+'.'+d.slice(3);
+  el.value=o;
+}
+function cfgReadModel(){
+  return {
+    escala_tipo: document.getElementById('cfgEscala').value,
+    modalidade: document.getElementById('cfgMod').value,
+    vt_dia: parseFloat(document.getElementById('cfgVtDia').value)||0,
+    vr_dia: parseFloat(document.getElementById('cfgVrDia').value)||0,
+    vr_fixo: parseFloat(document.getElementById('cfgVrFixo').value)||0,
+    pres_dias: parseInt(document.getElementById('cfgPres').value,10)||0,
+    uf: document.getElementById('cfgUf').value||'',
+    cpf: (document.getElementById('cfgCpf').value||'').trim()
+  };
+}
+function cfgPreview(){
+  var m=cfgReadModel();
+  var fake={ escala_tipo:m.escala_tipo, modalidade:m.modalidade, vt_dia:m.vt_dia, vr_dia:m.vr_dia, vr_fixo:m.vr_fixo, pres_dias:m.pres_dias, uf:m.uf };
+  var c=calc(fake);
+  var v=val('mes');
+  var txt='No mês <b>'+esc(monthLabel(v))+'</b>: '+c.dias+' dias de trabalho';
+  if(m.modalidade==='Híbrido') txt+=' · '+c.diasPres+' presenciais';
+  txt+='.<br>VT <b>'+(m.modalidade==='Remoto'?'—':money(c.vt))+'</b> · VR <b>'+money(c.vr)+'</b> · Total <b>'+money(c.total)+'</b>';
+  document.getElementById('cfgPrev').innerHTML=txt;
+}
+function saveCfg(){
+  if(!cfgId) return;
+  var m=cfgReadModel();
+  // atualiza local (otimista)
+  var r=DATA.find(function(x){return x.id===cfgId;});
+  if(r){ r.escala_tipo=m.escala_tipo; r.modalidade=m.modalidade; r.vt_dia=m.vt_dia; r.vr_dia=m.vr_dia; r.vr_fixo=m.vr_fixo; r.pres_dias=m.pres_dias; r.uf=(m.uf||'').toUpperCase(); r.cpf=m.cpf||''; }
+  render();
+  setSync('busy','Salvando cadastro…');
+  apiPost({action:'saveConfig', id:cfgId, config:m}).then(function(res){
+    if(!res||!res.ok) throw new Error(res&&res.error?res.error:'falha');
+    adopt(res.data); render(); setSync('ok','Salvo '+nowLabel());
+  }).catch(function(err){ setSync('err','Falha'); recarregar(); console.error(err); });
+  closeCfg();
+}
+
+/* ----- export ----- */
+function exportRows(){
+  var v=val('mes');
+  return filtered().map(function(r){
+    var c=calc(r);
+    return {
+      'Mes': monthLabel(v), 'Nome': r.nome, 'Cargo': r.cargo, 'Departamento': r.dept, 'UF': r.uf||'',
+      'Escala': r.escala_tipo, 'Modalidade': r.modalidade,
+      'Dias': c.dias, 'Dias_presenciais': c.diasPres, 'Ajuste_manual': (c.ovDias||c.ovPres)?'Sim':'',
+      'VT': c.vt, 'VR': c.vr, 'Total': c.total, 'Farol': r.farol||''
+    };
+  });
+}
+function exportXLSX(){
+  var rows=exportRows(); if(rows.length===0){ alert('Nada para exportar.'); return; }
+  var ws=XLSX.utils.json_to_sheet(rows);
+  ws['!cols']=[{wch:14},{wch:32},{wch:30},{wch:22},{wch:6},{wch:10},{wch:12},{wch:8},{wch:14},{wch:12},{wch:12},{wch:12},{wch:10}];
+  var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Beneficios');
+  XLSX.writeFile(wb,'beneficios_'+(val('mes')||'mes')+'_oneway.xlsx');
+}
+function exportCSV(){
+  var rows=exportRows(); if(rows.length===0){ alert('Nada para exportar.'); return; }
+  var head=Object.keys(rows[0]);
+  var csv=head.join(';')+'\n'+rows.map(function(r){
+    return head.map(function(h){ var v=r[h]==null?'':String(r[h]); if(v.indexOf(';')>-1||v.indexOf('"')>-1) v='"'+v.replace(/"/g,'""')+'"'; return v; }).join(';');
+  }).join('\n');
+  var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='beneficios_'+(val('mes')||'mes')+'_oneway.csv'; a.click();
+}
+
+/* ----- importacao em massa ----- */
+function deriveFromLocal(local){
+  var s=(local||'').toLowerCase();
+  var mod, escTipo, pres=3;
+  if(/h[ií]brid/.test(s)) mod='Híbrido';
+  else if(/100\s*%?\s*home/.test(s)) mod='Remoto';
+  else if(/presencial/.test(s)) mod='Presencial';
+  else if(/home office/.test(s)) mod='Remoto';
+  else mod='Presencial';
+
+  if(/12\s*x\s*36/.test(s)){
+    escTipo='12x36';
+  } else if(mod==='Híbrido'){
+    var nums=(s.match(/(\d+)\s*dias?/g)||[]).map(function(x){return parseInt(x,10);});
+    if(nums.length){
+      pres=nums[0];
+      var tot=0; nums.forEach(function(n){tot+=n;});
+      escTipo = tot>=6 ? '6x1' : '5x2';
+    } else {
+      escTipo = /s[aá]b/.test(s) ? '6x1' : '5x2';
+    }
+  } else if(/s[aá]b/.test(s) || /6\s*x\s*1/.test(s)){
+    escTipo='6x1';
+  } else {
+    escTipo='5x2';
+  }
+  return { mod:mod, esc:escTipo, pres:pres };
+}
+function moneyParse(v){
+  if(v==null) return 0;
+  var t=String(v).replace(/[R$\s.]/g,'').replace(',','.');
+  var n=parseFloat(t); return isNaN(n)?0:n;
+}
+function guessUF(local){
+  var s=(local||'').toUpperCase();
+  // cidades conhecidas -> UF
+  if(/MACAE|ANGRA|NITEROI|NITERÓI/.test(s)) return 'RJ';
+  if(/OSASCO|BARUERI|JANDIRA|COTIA|SANTANA/.test(s)) return 'SP';
+  // UF explicita (pega a ultima ocorrencia)
+  var found='';
+  for(var i=0;i<UFS.length;i++){
+    var re=new RegExp('(^|[^A-Z])'+UFS[i]+'([^A-Z]|$)');
+    if(re.test(s)) found=UFS[i];
+  }
+  return found;
+}
+function splitCells(line){
+  if(line.indexOf('\t')>=0) return line.split('\t');
+  if(line.indexOf(';')>=0) return line.split(';');
+  return null;
+}
+function inferEscalaFromDays(d){
+  if(!d) return null;
+  if(d>=24) return '6x1';
+  if(d>=18) return '5x2';
+  if(d>=1) return '12x36';
+  return null;
+}
+function parseImportText(text){
+  var lines=text.split(/\r?\n/).filter(function(l){return l.trim().length>0;});
+  if(lines.length===0) return [];
+
+  // detecta cabecalho e mapeia colunas pelo nome (NOME, LOCAL, VLR DIA VT, VLR DIA VR, DIAS VR)
+  var map=null;
+  var first=splitCells(lines[0]);
+  if(first){
+    var up=first.map(function(c){return c.trim().toUpperCase();});
+    var hasNome=up.indexOf('NOME')>=0;
+    var hasLocal=up.some(function(c){return c.indexOf('LOCAL')>=0;});
+    if(hasNome && hasLocal){
+      map={};
+      up.forEach(function(c,i){
+        if(c==='NOME') map.nome=i;
+        else if(c.indexOf('LOCAL')>=0) map.local=i;
+        else if(c.indexOf('VLR')>=0 && c.indexOf('VT')>=0) map.vt=i;
+        else if(c.indexOf('VLR')>=0 && c.indexOf('VR')>=0) map.vr=i;
+        else if(c.indexOf('DIAS')>=0 && c.indexOf('VR')>=0) map.diasVr=i;
+      });
+    }
+  }
+
+  var items=[];
+  var startIdx = map ? 1 : 0;
+  for(var li=startIdx; li<lines.length; li++){
+    var cells=splitCells(lines[li]);
+    if(!cells || cells.length<2) continue;
+    cells=cells.map(function(c){return c.trim();});
+
+    var nome='', local='', vt=0, vr=0, diasVr=0;
+    if(map){
+      nome = cells[map.nome]||'';
+      local = map.local!=null ? (cells[map.local]||'') : '';
+      vt = map.vt!=null ? moneyParse(cells[map.vt]) : 0;
+      vr = map.vr!=null ? moneyParse(cells[map.vr]) : 0;
+      diasVr = map.diasVr!=null ? (parseInt(cells[map.diasVr],10)||0) : 0;
+    } else {
+      // sem cabecalho: detecta coluna de matricula (codigo curto sem espaco) no inicio
+      var off=0;
+      if(cells.length>=8 && cells[0].indexOf(' ')<0 && /^[0-9a-z\-\/]{1,8}$/i.test(cells[0]) && /[a-zà-ú]/i.test(cells[1])){ off=1; }
+      nome=cells[off]||'';
+      if(cells.length-off>=6){ local=cells[off+1]; vt=moneyParse(cells[off+3]); vr=moneyParse(cells[off+5]); diasVr=parseInt(cells[off+6],10)||0; }
+      else if(cells.length-off>=4){ local=cells[off+1]; vt=moneyParse(cells[off+2]); vr=moneyParse(cells[off+3]); }
+      else { local=cells[off+1]||''; }
+    }
+
+    if(!nome || /^nome$/i.test(nome)) continue;
+
+    var d=deriveFromLocal(local);
+    // REGRA PRINCIPAL: VR de 500 (ou mais) => Remoto automatico.
+    // VR de 27 (ou outro < 100) => nao-remoto (recebe VR/dia e VT/dia de quem tem).
+    var isRemoto = (vr >= 100);
+    var mod = isRemoto ? 'Remoto'
+            : (/h[ií]brid/.test((local||'').toLowerCase()) ? 'Híbrido' : 'Presencial');
+    var escala = isRemoto ? d.esc : (inferEscalaFromDays(diasVr) || d.esc);
+
+    var item={ nome:nome, escala_tipo:escala, modalidade:mod, uf:guessUF(local) };
+    if(mod==='Remoto'){
+      item.vt_dia=0; item.vr_fixo=(vr>=100?vr:500); item.vr_dia=27; item.pres_dias=0;
+    } else {
+      item.vt_dia=vt;
+      item.vr_dia=(vr>0 && vr<100 ? vr : (vr===0 ? 0 : 27));
+      item.vr_fixo=500;
+      item.pres_dias=(mod==='Híbrido' ? d.pres : 0);
+    }
+    item._local=local;
+    items.push(item);
+  }
+  return items;
+}
+function openImport(){ document.getElementById('impText').value=''; document.getElementById('impPrev').style.display='none'; document.getElementById('impOverlay').style.display='flex'; }
+function closeImport(){ document.getElementById('impOverlay').style.display='none'; }
+function previewImport(){
+  var items=parseImportText(document.getElementById('impText').value);
+  var box=document.getElementById('impPrev');
+  if(items.length===0){ box.style.display='block'; box.innerHTML='Nenhuma linha reconhecida. Cole com colunas separadas por TAB (cópia do Excel) ou ponto e vírgula.'; return; }
+  var rem=items.filter(function(i){return i.modalidade==='Remoto';}).length;
+  var hib=items.filter(function(i){return i.modalidade==='Híbrido';}).length;
+  var pre=items.filter(function(i){return i.modalidade==='Presencial';}).length;
+  var rows=items.slice(0,6).map(function(i){
+    var v=i.modalidade==='Remoto'?('VR fixo '+money(i.vr_fixo)):('VT/dia '+money(i.vt_dia)+' · VR/dia '+money(i.vr_dia)+(i.modalidade==='Híbrido'?' · '+i.pres_dias+'d pres/sem':''));
+    return '<div style="margin-top:4px">• <b>'+esc(i.nome)+'</b> — '+i.modalidade+' / '+i.escala_tipo+' — '+v+'</div>';
+  }).join('');
+  box.style.display='block';
+  box.innerHTML='<b>'+items.length+'</b> colaboradores reconhecidos · '+pre+' presencial, '+hib+' híbrido, '+rem+' remoto.'+rows+(items.length>6?'<div style="margin-top:4px;color:#a39d96">… e mais '+(items.length-6)+'.</div>':'');
+}
+function doImport(){
+  var items=parseImportText(document.getElementById('impText').value);
+  if(items.length===0){ previewImport(); return; }
+  // remove o campo auxiliar antes de enviar
+  var payload=items.map(function(i){ return { nome:i.nome, escala_tipo:i.escala_tipo, modalidade:i.modalidade, vt_dia:i.vt_dia, vr_dia:i.vr_dia, vr_fixo:i.vr_fixo, pres_dias:i.pres_dias, uf:i.uf||'' }; });
+  document.getElementById('impBtn').disabled=true;
+  setSync('busy','Importando…');
+  apiPost({action:'saveConfigBatch', items:payload}).then(function(res){
+    if(!res||!res.ok) throw new Error(res&&res.error?res.error:'falha');
+    adopt(res.data); render();
+    var s=res.summary||{};
+    var box=document.getElementById('impPrev'); box.style.display='block';
+    var msg='<b>'+(s.upd||0)+'</b> cadastros gravados na planilha.';
+    if(s.notFound && s.notFound.length){
+      msg+='<br><span style="color:#B5560A"><b>'+s.notFound.length+'</b> não encontrado(s) pelo nome (confira a grafia ou cadastre primeiro no Quadro):</span><br>'+s.notFound.map(esc).join(', ');
+    }
+    box.innerHTML=msg;
+    setSync('ok','Importado '+nowLabel());
+  }).catch(function(err){ setSync('err','Falha ao importar'); console.error(err); alert('Erro ao importar. Tente novamente.'); })
+    .then(function(){ document.getElementById('impBtn').disabled=false; });
+}
+
+/* ----- recarregar ----- */
+function checkBackend(){
+  var w=document.getElementById('backendWarn'); if(!w) return;
+  var cols=BACKEND_INFO.cols||0, ver=BACKEND_INFO.version||'';
+  var vEl=document.getElementById('bwVer'), cEl=document.getElementById('bwCols');
+  if(vEl) vEl.textContent = ver || 'antiga (sem carimbo de versão)';
+  if(cEl) cEl.textContent = cols || '?';
+  w.style.display = (cols!==18) ? 'block' : 'none';
+}
+function recarregar(){
+  if(!GAS_URL){ document.getElementById('setupWarn').style.display='block'; setSync('err','Sem URL'); return; }
+  setSync('busy','Sincronizando…');
+  apiGet().then(function(res){
+    if(!res||!res.ok) throw new Error(res&&res.error?res.error:'resposta inválida');
+    BACKEND_INFO.version=res.version||''; BACKEND_INFO.cols=res.cols||0; checkBackend();
+    adopt(res.data);
+    document.getElementById('results').style.display='block';
+    render();
+    setSync('ok','Sincronizado '+nowLabel());
+  }).catch(function(err){ setSync('err','Falha ao ler'); console.error(err); });
+}
+
+/* ----- farol ----- */
+function openFarolMenu(ev, id){
+  ev.stopPropagation();
+  farolMenuId=id;
+  var btn=ev.currentTarget;
+  var menu=document.getElementById('farolMenu');
+  var r=btn.getBoundingClientRect();
+  menu.style.display='flex';
+  var mw=menu.offsetWidth||160;
+  var left=r.left, top=r.bottom+6;
+  if(left+mw>window.innerWidth-10) left=window.innerWidth-10-mw;
+  menu.style.left=Math.max(10,left)+'px';
+  menu.style.top=Math.max(10,top)+'px';
+}
+function closeFarolMenu(){ document.getElementById('farolMenu').style.display='none'; farolMenuId=null; }
+function setFarol(v){
+  var id=farolMenuId; closeFarolMenu();
+  if(!id) return;
+  var r=DATA.find(function(x){return x.id===id;});
+  if(r){ r.farol=v; render(); }
+  apiPost({action:'saveConfig', id:id, config:{farol:v}}).then(function(res){
+    if(res&&res.ok){ adopt(res.data); render(); setSync('ok','Salvo '+nowLabel()); }
+  }).catch(function(err){ setSync('err','Falha'); console.error(err); });
+}
+
+/* ----- feriados ----- */
+function openFeriados(){
+  // popula abrangencia
+  var sel=document.getElementById('ferAbr');
+  sel.innerHTML='<option value="NACIONAL">Nacional</option>'+UFS.map(function(u){return '<option value="'+u+'">'+u+'</option>';}).join('');
+  var ym=currentYM();
+  if(ym) document.getElementById('ferData').value = ym.y+'-'+pad2(ym.m)+'-01';
+  document.getElementById('ferAno').value = ym ? ym.y : new Date().getFullYear();
+  renderFeriados();
+  document.getElementById('ferOverlay').style.display='flex';
+}
+function easterDate(Y){
+  var a=Y%19, b=Math.floor(Y/100), c=Y%100, d=Math.floor(b/4), e=b%4,
+      f=Math.floor((b+8)/25), g=Math.floor((b-f+1)/3), h=(19*a+b-d-g+15)%30,
+      i=Math.floor(c/4), k=c%4, l=(32+2*e+2*i-h-k)%7, m=Math.floor((a+11*h+22*l)/451),
+      mon=Math.floor((h+l-7*m+114)/31), day=((h+l-7*m+114)%31)+1;
+  return new Date(Y, mon-1, day);
+}
+function ymd(dt){ return dt.getFullYear()+'-'+pad2(dt.getMonth()+1)+'-'+pad2(dt.getDate()); }
+function addDays(dt,n){ var d=new Date(dt.getTime()); d.setDate(d.getDate()+n); return d; }
+function presetFeriados(){
+  var Y=parseInt(val('ferAno'),10);
+  if(!Y || Y<2000 || Y>2100){ alert('Informe um ano válido.'); return; }
+  var arr=facultativosForYear(Y);
+  setSync('busy','Adicionando facultativos…');
+  apiPost({action:'addFeriadosBatch', feriados:arr}).then(function(res){
+    if(!res||!res.ok) throw new Error(res&&res.error?res.error:'falha');
+    FERIADOS=res.feriados||[];
+    renderFeriados(); updateMonthDisplay(); render();
+    setSync('ok','Facultativos '+Y+' ('+(res.added||0)+' novos)');
+  }).catch(function(err){ setSync('err','Falha'); console.error(err); });
+}
+function closeFeriados(){ document.getElementById('ferOverlay').style.display='none'; }
+function byData(a,b){ return String(a.data).localeCompare(String(b.data)); }
+function feriadoRowHtml(f, isDefault){
+  var nac=(f.abrangencia||'NACIONAL').toUpperCase()==='NACIONAL';
+  var d=String(f.data).split('-'); var dataBr = d.length>=3 ? (d[2]+'/'+d[1]+'/'+d[0]) : f.data;
+  var acao = isDefault
+    ? '<span class="fpad" title="Feriado padrão do sistema">padrão</span>'
+    : '<button class="fdel" title="Remover" onclick="delFeriado(\''+f.id+'\')">&times;</button>';
+  return '<div class="feriado-row"><span class="fdata">'+esc(dataBr)+'</span>'
+    +'<span class="fdesc">'+esc(f.descricao||'')+'</span>'
+    +'<span class="fabr '+(nac?'nac':'uf')+'">'+(nac?'Nacional':esc(f.abrangencia))+'</span>'+acao+'</div>';
+}
+function renderFeriados(){
+  var list=document.getElementById('ferList');
+  var ym=currentYM();
+  var defs = ym ? defaultFeriadosForYear(ym.y).slice().sort(byData) : [];
+  var custom = FERIADOS.filter(function(f){ return !isDefaultFeriado(f); }).slice().sort(byData);
+  var html='';
+  html += '<div class="fgrp">Padrão do sistema'+(ym?(' · '+ym.y):'')+' <span style="font-weight:500;text-transform:none;color:#a39d96">(nacionais + SP/RJ, sempre aplicados)</span></div>';
+  html += defs.map(function(f){ return feriadoRowHtml(f,true); }).join('');
+  html += '<div class="fgrp" style="margin-top:14px">Adicionados por você</div>';
+  html += custom.length ? custom.map(function(f){ return feriadoRowHtml(f,false); }).join('')
+                        : '<div style="color:#a39d96;padding:6px 0">Nenhum extra. Use o campo acima para municipais, ou o botão para Carnaval/Corpus (facultativos).</div>';
+  list.innerHTML=html;
+}
+function addFeriadoUI(){
+  var data=val('ferData'); var desc=val('ferDesc'); var abr=val('ferAbr');
+  if(!data){ alert('Informe a data do feriado.'); return; }
+  setSync('busy','Salvando feriado…');
+  apiPost({action:'addFeriado', feriado:{data:data, descricao:desc, abrangencia:abr}}).then(function(res){
+    if(!res||!res.ok) throw new Error(res&&res.error?res.error:'falha');
+    FERIADOS=res.feriados||[];
+    document.getElementById('ferDesc').value='';
+    renderFeriados(); updateMonthDisplay(); render();
+    setSync('ok','Feriado salvo '+nowLabel());
+  }).catch(function(err){ setSync('err','Falha'); console.error(err); });
+}
+function delFeriado(id){
+  apiPost({action:'removeFeriado', id:id}).then(function(res){
+    if(!res||!res.ok) throw new Error(res&&res.error?res.error:'falha');
+    FERIADOS=res.feriados||[];
+    renderFeriados(); updateMonthDisplay(); render();
+    setSync('ok','Removido '+nowLabel());
+  }).catch(function(err){ setSync('err','Falha'); console.error(err); });
+}
+
+/* ----- listeners ----- */
+document.addEventListener('click', function(e){
+  var fm=document.getElementById('farolMenu');
+  if(fm.style.display==='flex' && !fm.contains(e.target)) closeFarolMenu();
+});
+window.addEventListener('scroll', function(){ closeFarolMenu(); }, true);
+document.getElementById('cfgOverlay').addEventListener('click', function(e){ if(e.target===this) closeCfg(); });
+document.getElementById('impOverlay').addEventListener('click', function(e){ if(e.target===this) closeImport(); });
+document.getElementById('ferOverlay').addEventListener('click', function(e){ if(e.target===this) closeFeriados(); });
+document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ closeCfg(); closeImport(); closeFeriados(); closeFarolMenu(); } });
+
+(function init(){
+  if(!GAS_URL){ document.getElementById('setupWarn').style.display='block'; setSync('err','Sem URL'); return; }
+  document.getElementById('mes').value = defaultMonth();
+  recarregar();
+  loadFeriados(function(){ onMonthChange(); });
+})();
+
+
+/* ===== ABAS / TELA INICIAL ===== */
+window._tab='';
+function showTab(name){
+  window._tab=name;
+  var l=document.getElementById('landing'); if(l) l.style.display='none';
+  ['quadro','beneficios','revisao'].forEach(function(t){
+    var v=document.getElementById('view-'+t); if(v) v.style.display=(name===t)?'block':'none';
+    var b=document.getElementById('tab-'+t); if(b) b.classList.toggle('active', name===t);
+  });
+  if(name==='revisao' && typeof revisaoOnEnter==='function') revisaoOnEnter();
+}
+function enter(name){ showTab(name); }
+function showLanding(){
+  window._tab='';
+  var l=document.getElementById('landing'); if(l) l.style.display='flex';
+  ['quadro','beneficios','revisao'].forEach(function(t){
+    var v=document.getElementById('view-'+t); if(v) v.style.display='none';
+    var b=document.getElementById('tab-'+t); if(b) b.classList.remove('active');
+  });
+}
+function refreshCurrent(){
+  if(window._tab==='beneficios'){ if(typeof recarregar==='function') recarregar(); }
+  else if(window._tab==='quadro'){ if(typeof q_recarregar==='function') q_recarregar(); }
+}
+
+/* ===== REVISAO DE ATRIBUICOES (Flash x ONE) ===== */
+function revParseValor(s){
+  s=(s||'').trim(); if(!s) return 0;
+  var low=s.toLowerCase();
+  if(low.indexOf('sem valor')>=0 || low.indexOf('atrib')>=0 || s==='-') return 0;
+  var m=s.replace(/[^\d,.-]/g,'').replace(/\./g,'').replace(',', '.');
+  var v=parseFloat(m); return isNaN(v)?0:v;
+}
+function revParseFlash(text){
+  var raw=(text||'').split(/\r?\n/).map(function(x){return x.trim();}).filter(function(x){return x.length>0;});
+  var cpfRe=/^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
+  var people=[];
+  for(var i=0;i<raw.length;i++){
+    if(cpfRe.test(raw[i])){
+      var nome=(i>0)?raw[i-1]:'';
+      var v=[]; for(var k=1;k<=8;k++){ v.push(revParseValor(raw[i+k]||'')); }
+      // 0 Mobilidade(VT) 1 Alimentacao 2 Multibeneficio 3 Alim+Refeicao 4 Premiacao 5 Refeicao 6 Clube 7 TotalPass
+      people.push({ nome:nome, cpf:raw[i], vtFlash:v[0], vrFlash:(v[1]+v[2]+v[3]+v[5]) });
+    }
+  }
+  return people;
+}
+function revNorm(s){
+  return (s||'').toString().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/\b(de|da|do|das|dos|e)\b/g,' ')
+    .replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+}
+function revCpf(s){ return (s||'').toString().replace(/\D/g,''); }
+function revDifCell(dif, ok){
+  return '<td class="'+(ok?'ok':'bad')+'">'+(dif>0?'+':'')+money(dif)+'</td>';
+}
+var REV_ROWS=[], REV_FALTAM=[], REV_FILTER='all';
+function revisar(){
+  var flash=revParseFlash(document.getElementById('revInput').value);
+  var res=document.getElementById('revResults');
+  var sum=document.getElementById('revSummary');
+  REV_ROWS=[]; REV_FALTAM=[];
+  if(!flash.length){ res.innerHTML='<div class="rev-empty"><b>Nada reconhecido.</b> Confira se colou a tabela do Flash (com os CPFs no formato 000.000.000-00).</div>'; sum.textContent=''; document.getElementById('revFilters').style.display='none'; return; }
+  if(!DATA || !DATA.length){ res.innerHTML='<div class="rev-empty"><b>Sem base ONE carregada.</b> Abra a aba Beneficios uma vez para carregar os colaboradores e o mes de referencia.</div>'; sum.textContent=''; document.getElementById('revFilters').style.display='none'; return; }
+  var byCpf={}, byName={};
+  DATA.forEach(function(r){ var c=revCpf(r.cpf); if(c) byCpf[c]=r; byName[revNorm(r.nome)]=r; });
+  flash.forEach(function(p){
+    var fc=revCpf(p.cpf);
+    var r = (fc && byCpf[fc]) ? byCpf[fc] : byName[revNorm(p.nome)];
+    var via = (fc && byCpf[fc]) ? 'cpf' : (r ? 'nome' : '');
+    if(!r){
+      REV_ROWS.push({ nome:p.nome, cpf:p.cpf||'', cpfDigits:fc, nameNorm:revNorm(p.nome), via:'', inOne:false, uf:'', escala:'', modalidade:'', vrFlash:p.vrFlash, vtFlash:p.vtFlash, hasDiff:true });
+      return;
+    }
+    var c=calc(r);
+    var difVR=p.vrFlash-c.vr, difVT=p.vtFlash-c.vt;
+    var vrOk=Math.abs(difVR)<0.01, vtOk=Math.abs(difVT)<0.01;
+    REV_ROWS.push({ nome:r.nome, cpf:p.cpf||'', cpfDigits:(fc||revCpf(r.cpf)), nameNorm:revNorm(r.nome), via:via, inOne:true, uf:r.uf||'', escala:r.escala_tipo||'', modalidade:r.modalidade||'',
+      vrFlash:p.vrFlash, vrOne:c.vr, difVR:difVR, vrOk:vrOk,
+      vtFlash:p.vtFlash, vtOne:c.vt, difVT:difVT, vtOk:vtOk, hasDiff:(!vrOk||!vtOk) });
+  });
+  var flashCpf={}, flashNm={};
+  flash.forEach(function(p){ var c=revCpf(p.cpf); if(c) flashCpf[c]=true; flashNm[revNorm(p.nome)]=true; });
+  REV_FALTAM=DATA.filter(function(r){ var c=revCpf(r.cpf); return !((c&&flashCpf[c]) || flashNm[revNorm(r.nome)]); });
+  revRender();
+}
+function revRowHtml(o){
+  var cpfCell='<td class="l cpf">'+(o.cpf||'<span class="muted">&mdash;</span>')+(o.via==='nome'?' <span class="rev-byname" title="Casado pelo nome; adicione o CPF para travar">nome</span>':'')+'</td>';
+  var ufC = o.uf ? '<span class="uf-tag">'+esc(o.uf)+'</span>' : '<span class="muted">&mdash;</span>';
+  var escC = o.escala ? '<span class="esc-tag">'+esc(o.escala)+'</span>' : '<span class="muted">&mdash;</span>';
+  var modC = o.modalidade ? modTag(o.modalidade) : '<span class="muted">&mdash;</span>';
+  var infoCells = '<td class="l">'+ufC+'</td><td class="l">'+escC+'</td><td class="l">'+modC+'</td>';
+  if(!o.inOne){
+    return '<tr class="miss"><td class="l">'+esc(o.nome)+' <span class="rev-warn">(fora do ONE)</span></td>'+cpfCell+infoCells
+      +'<td>'+money(o.vrFlash)+'</td><td>&mdash;</td><td>&mdash;</td>'
+      +'<td class="sep">'+money(o.vtFlash)+'</td><td>&mdash;</td><td>&mdash;</td></tr>';
+  }
+  return '<tr><td class="l">'+esc(o.nome)+'</td>'+cpfCell+infoCells
+    +'<td>'+money(o.vrFlash)+'</td><td>'+money(o.vrOne)+'</td>'+revDifCell(o.difVR,o.vrOk)
+    +'<td class="sep">'+money(o.vtFlash)+'</td><td>'+money(o.vtOne)+'</td>'+revDifCell(o.difVT,o.vtOk)+'</tr>';
+}
+function revSetFilter(f, btn){
+  REV_FILTER=f;
+  var chips=document.querySelectorAll('#revFilters .rev-chip');
+  for(var i=0;i<chips.length;i++) chips[i].classList.remove('active');
+  if(btn) btn.classList.add('active');
+  revRender();
+}
+function revRender(){
+  var res=document.getElementById('revResults'), bar=document.getElementById('revFilters');
+  if(!REV_ROWS.length){ if(bar) bar.style.display='none'; return; }
+  if(bar) bar.style.display='flex';
+  var q=(document.getElementById('revSearch').value||'').trim();
+  var qn=revNorm(q), qd=revCpf(q), f=REV_FILTER, shown=0, rows='';
+  REV_ROWS.forEach(function(o){
+    if(q){ var hit=(qn && o.nameNorm.indexOf(qn)>=0) || (qd && o.cpfDigits && o.cpfDigits.indexOf(qd)>=0); if(!hit) return; }
+    if(f==='diff' && !o.hasDiff) return;
+    if(f==='same' && !(o.inOne && !o.hasDiff)) return;
+    if(f==='vt' && !(o.inOne && !o.vtOk)) return;
+    if(f==='vr' && !(o.inOne && !o.vrOk)) return;
+    shown++; rows+=revRowHtml(o);
+  });
+  var okC=0,difC=0,missC=0,nameC=0;
+  REV_ROWS.forEach(function(o){ if(!o.inOne) missC++; else if(o.hasDiff) difC++; else okC++; if(o.via==='nome') nameC++; });
+  var html='<div class="rev-table-wrap"><table>'
+    +'<thead><tr><th class="l" rowspan="2">Colaborador</th><th class="l" rowspan="2">CPF</th><th class="l" rowspan="2">UF</th><th class="l" rowspan="2">Escala</th><th class="l" rowspan="2">Modalidade</th><th colspan="3">VR &mdash; Alimentacao + Refeicao</th><th colspan="3" class="sep">VT &mdash; Mobilidade</th></tr>'
+    +'<tr><th>Flash</th><th>ONE</th><th>Dif R$</th><th class="sep">Flash</th><th>ONE</th><th>Dif R$</th></tr></thead>'
+    +'<tbody>'+(rows||'<tr><td colspan="11" class="rev-none-row">Nenhum colaborador neste filtro.</td></tr>')+'</tbody></table></div>';
+  if(REV_FALTAM.length){
+    html+='<div class="rev-missing"><b>'+REV_FALTAM.length+'</b> no ONE sem correspondencia no Flash colado: '+REV_FALTAM.map(function(r){return esc(r.nome);}).join(', ')+'</div>';
+  }
+  res.innerHTML=html;
+  document.getElementById('revCount').textContent = shown+' de '+REV_ROWS.length+' exibidos';
+  document.getElementById('revSummary').innerHTML='<span class="pill-ok">'+okC+' OK</span> <span class="pill-bad">'+difC+' divergente(s)</span>'
+    +(nameC?(' <span class="rev-byname">'+nameC+' por nome</span>'):'')
+    +(missC?(' <span class="pill-warn">'+missC+' fora do ONE</span>'):'');
+}
+function revLimpar(){ document.getElementById('revInput').value=''; document.getElementById('revResults').innerHTML=''; document.getElementById('revSummary').textContent=''; REV_ROWS=[]; REV_FALTAM=[]; REV_FILTER='all'; var s=document.getElementById('revSearch'); if(s) s.value=''; var b=document.getElementById('revFilters'); if(b) b.style.display='none'; var cs=document.querySelectorAll('#revFilters .rev-chip'); for(var i=0;i<cs.length;i++){ cs[i].classList.toggle('active', cs[i].getAttribute('data-f')==='all'); } }
+function revVincularCpf(){
+  var flash=revParseFlash(document.getElementById('revInput').value);
+  if(!flash.length){ setSync('err','Cole o Flash primeiro'); return; }
+  if(!DATA || !DATA.length){ setSync('err','Sem base ONE'); return; }
+  var byName={}; DATA.forEach(function(r){ byName[revNorm(r.nome)]=r; });
+  var items=[];
+  flash.forEach(function(p){
+    if(!p.cpf) return;
+    var r=byName[revNorm(p.nome)];
+    if(r && !revCpf(r.cpf)){ items.push({ id:r.id, cpf:p.cpf }); }
+  });
+  if(!items.length){ setSync('ok','Nada a vincular (CPFs ja preenchidos ou nomes sem correspondencia)'); return; }
+  setSync('busy','Vinculando '+items.length+' CPF(s)...');
+  apiPost({ action:'saveConfigBatch', items:items }).then(function(res){
+    if(res && res.ok){ adopt(res.data); setSync('ok', items.length+' CPF(s) vinculados '+nowLabel()); revisar(); }
+    else throw new Error(res&&res.error?res.error:'falha');
+  }).catch(function(err){ setSync('err','Falha ao vincular'); console.error(err); });
+}
+function revisaoOnEnter(){
+  var mesEl=document.getElementById('mes'), lbl=document.getElementById('revMes');
+  if(mesEl && mesEl.value && typeof monthLabel==='function'){ lbl.textContent=monthLabel(mesEl.value); }
+}
+
 </script>
 </body>
 </html>
