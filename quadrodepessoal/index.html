@@ -834,7 +834,7 @@ header.top{background:var(--dark);color:#fff;border-bottom:3px solid var(--ow-or
    CONFIGURACAO  ->  cole aqui a URL /exec do seu Web App do Apps Script.
    Ex.: https://script.google.com/macros/s/AKfycb..../exec
    ========================================================================= */
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbx0FzPPR6qej6dMSGy_UCsKUJE4-Hh0qTZ7Hq25WDE4XrUR5bZqerG5LHHbDDJc2NGg/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbwFbhU1srrPY4qLZE_PwScbGHOJlrSG9tcsS5Vl-3ld7tlkMv-5Yz9gjX8G2XfRGxc3QA/exec';
 
 var STATUS = { ATIVO:'Ativo', PROC:'Em Processo', OFF:'Desligado' };
 var CYCLE = [STATUS.ATIVO, STATUS.PROC, STATUS.OFF];
@@ -1222,7 +1222,7 @@ document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ closeSta
 /* =========================================================================
    Mesma URL /exec do Web App usado pelo Quadro.
    ========================================================================= */
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbw_HiHN9Rxg5UcpiRgwISplvomG_oJ_R5szu2B_vrxDfPIQ-0zEvi718-CX_c_wzqEuhA/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbwFbhU1srrPY4qLZE_PwScbGHOJlrSG9tcsS5Vl-3ld7tlkMv-5Yz9gjX8G2XfRGxc3QA/exec';
 
 var MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 var UFS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
@@ -1385,22 +1385,27 @@ function calc(r){
   if(r.modalidade==='Remoto'){ basePres = 0; }
   else if(r.modalidade==='Híbrido'){ basePres = Math.min(baseDias, Math.round(r.pres_dias * baseDias / diasSemana(r.escala_tipo))); }
   else { basePres = baseDias; }
-  // sobreposicao manual (so deste mes)
+  // Ajuste manual do mes em DELTAS sobre a base (que ja desconta feriados):
+  // ftrab = feriado trabalhado (entra no VR);  fpres = feriado presencial (entra no VT).
   var ov = AJUSTES[r.id] || {};
-  var ovDias = (ov.dias != null);
-  var ovPres = (ov.dias_pres != null);
-  var dias = ovDias ? ov.dias : baseDias;
-  var diasPres = ovPres ? ov.dias_pres : basePres;
+  var ftrab = Number(ov.ftrab)||0;
+  var fpres = Number(ov.fpres)||0;
+  var dias = baseDias + ftrab;
+  var diasPres = basePres + fpres;
   var vr = (r.modalidade==='Remoto') ? r.vr_fixo : (r.vr_dia * dias);
   var vt = r.vt_dia * diasPres;
   return { dias:dias, diasPres:diasPres, vt:vt, vr:vr, total:vt+vr,
-           baseDias:baseDias, basePres:basePres, ovDias:ovDias, ovPres:ovPres };
+           baseDias:baseDias, basePres:basePres, ftrab:ftrab, fpres:fpres,
+           ovDias:(ftrab!==0), ovPres:(fpres!==0) };
 }
 
 /* ----------------- ajustes de dias por mes (clicaveis) ----------------- */
-function dayCellHtml(id, field, disp, isOv){
+function dayCellHtml(id, field, disp, isOv, delta){
+  var nome = (field==='dias') ? 'F.Trabalhado (entra no VR)' : 'F.Presencial (entra no VT)';
+  var t = isOv ? (nome+': '+((delta>0?'+':'')+delta)+' dia(s) vs. automatico \u2014 clique para editar')
+              : 'Automatico (feriados ja descontados) \u2014 clique para ajustar; deixe vazio para voltar ao automatico';
   return '<td class="ctr daycell'+(isOv?' ovd':'')+'" onclick="editDay(this,\''+id+'\',\''+field+'\')"'
-    + ' title="Ajuste manual so deste mes — clique para editar; deixe vazio para voltar ao automatico">'+disp+'</td>';
+    + ' title="'+t+'">'+disp+'</td>';
 }
 
 function editDay(td, id, field){
@@ -1421,10 +1426,9 @@ function editDay(td, id, field){
 function applyAjustes(list){
   AJUSTES={};
   (list||[]).forEach(function(a){
-    AJUSTES[a.id]={
-      dias:(a.dias===''||a.dias==null? null : Number(a.dias)),
-      dias_pres:(a.dias_pres===''||a.dias_pres==null? null : Number(a.dias_pres))
-    };
+    var ft = (a.dias===''||a.dias==null) ? 0 : Number(a.dias);
+    var fp = (a.dias_pres===''||a.dias_pres==null) ? 0 : Number(a.dias_pres);
+    if(ft!==0 || fp!==0) AJUSTES[a.id]={ ftrab:ft, fpres:fp };
   });
 }
 
@@ -1437,20 +1441,30 @@ function loadAjustes(cb){
   }).catch(function(err){ console.error(err); AJUSTES={}; if(cb) cb(); });
 }
 
-function saveAjuste(id, field, value){
+var AJUSTE_Q = Promise.resolve();
+function saveAjuste(id, field, absVal){
   var mes = val('mes'); if(!mes) return;
-  var ov = AJUSTES[id] || { dias:null, dias_pres:null };
-  ov[field] = value;
-  if(ov.dias==null && ov.dias_pres==null) delete AJUSTES[id]; else AJUSTES[id]=ov;
+  var r=null; for(var i=0;i<DATA.length;i++){ if(String(DATA[i].id)===String(id)){ r=DATA[i]; break; } }
+  if(!r) return;
+  var c = calc(r);
+  var base = (field==='dias') ? c.baseDias : c.basePres;   // base ja desconta feriados
+  var delta = (absVal==null) ? 0 : ((parseInt(absVal,10)||0) - base);
+  var ov = AJUSTES[id] || { ftrab:0, fpres:0 };
+  if(field==='dias') ov.ftrab = delta; else ov.fpres = delta;
+  var ft = Number(ov.ftrab)||0, fp = Number(ov.fpres)||0;
+  if(ft===0 && fp===0) delete AJUSTES[id]; else AJUSTES[id]={ ftrab:ft, fpres:fp };
   render();
-  var od = AJUSTES[id] || { dias:null, dias_pres:null };
+  // backend grava posicionalmente nas colunas F.Trabalhado / F.Presencial; vazio = remove (volta ao automatico)
+  var payload = { action:'setAjuste', mes:mes, id:id, dias:(ft===0?'':ft), dias_pres:(fp===0?'':fp) };
   setSync('busy','Salvando ajuste…');
-  apiPost({ action:'setAjuste', mes:mes, id:id,
-            dias:(od.dias==null?'':od.dias), dias_pres:(od.dias_pres==null?'':od.dias_pres) })
-    .then(function(res){
-      if(res && res.ok){ applyAjustes(res.ajustes); render(); setSync('ok','Salvo '+nowLabel()); }
-      else throw new Error(res&&res.error?res.error:'falha');
-    }).catch(function(err){ setSync('err','Falha'); console.error(err); });
+  // Serializa as gravacoes: cada ajuste so e enviado depois que o anterior terminou,
+  // senao duas gravacoes concorrentes gravam na mesma linha e uma sobrescreve a outra.
+  AJUSTE_Q = AJUSTE_Q.then(function(){
+    return apiPost(payload).then(function(res){
+      if(!res || !res.ok) throw new Error(res&&res.error?res.error:'falha');
+      setSync('ok','Salvo '+nowLabel());
+    });
+  }).catch(function(err){ setSync('err','Falha ao salvar ajuste'); console.error(err); loadAjustes(function(){ render(); }); });
 }
 
 /* ----- mes ----- */
@@ -1623,8 +1637,8 @@ function rowHtml(r,c){
     + '<td class="ctr">'+ufCell+'</td>'
     + '<td class="ctr"><span class="esc-tag">'+esc(r.escala_tipo)+'</span></td>'
     + '<td>'+modTag(r.modalidade)+'</td>'
-    + dayCellHtml(r.id,'dias',c.dias,c.ovDias)
-    + dayCellHtml(r.id,'dias_pres',presDisp,c.ovPres)
+    + dayCellHtml(r.id,'dias',c.dias,c.ovDias,c.ftrab)
+    + dayCellHtml(r.id,'dias_pres',presDisp,c.ovPres,c.fpres)
     + '<td class="num vtdia">'+(r.vt_dia?money(r.vt_dia):'<span class="muted">—</span>')+'</td>'
     + '<td class="num vtval">'+((r.modalidade==='Remoto' && !c.ovPres)?'—':money(c.vt))+'</td>'
     + '<td class="num vrval">'+money(c.vr)+'</td>'
