@@ -81,6 +81,9 @@ header.top{background:var(--dark);color:#fff;border-bottom:3px solid var(--ow-or
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .btn-sync{background:#3a352f;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
 .btn-sync:hover{background:#4a443d}
+.btn-save{background:var(--ow-orange);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn-save:hover{background:var(--ow-orange-bright)}
+.btn-save:disabled{opacity:.6;cursor:default}
 #view-beneficios button{font-family:inherit;cursor:pointer;border:none;border-radius:9px;font-weight:600;transition:.15s}
 #view-beneficios select, #view-beneficios input{font-family:inherit}
 .setup-warn{margin-top:22px;background:#FFF3E8;border:1px solid #f0d9c2;color:#8a4b12;border-radius:12px;padding:14px 16px;font-size:13.5px;line-height:1.5}
@@ -341,6 +344,11 @@ header.top{background:var(--dark);color:#fff;border-bottom:3px solid var(--ow-or
 #view-revisao .rev-btn-danger{background:#fff;border:1px solid #E3B7B2;color:#c8372d;border-radius:9px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
 #view-revisao .rev-btn-danger:hover{background:#FBE9E7;border-color:#c8372d}
 #view-revisao .rev-loaded-note{font-size:12.5px;color:var(--ink-soft);background:#EEF5FF;border:1px solid #D6E4F5;border-radius:9px;padding:9px 12px;margin:8px 0 4px;line-height:1.5}
+#view-revisao .rev-comp{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px}
+#view-revisao .rev-comp label{font-weight:700;font-size:13px;color:var(--ink)}
+#view-revisao .rev-comp input[type=month]{height:38px;border:1px solid var(--line);border-radius:9px;padding:0 10px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink)}
+#view-revisao .rev-comp input[type=month]:focus{outline:none;border-color:var(--ow-orange);box-shadow:0 0 0 3px rgba(200,90,0,.12)}
+#view-revisao .rev-comp .muted{font-size:12px}
 #view-revisao .rev-summary{font-size:13px;margin-left:6px}
 #view-revisao .pill-ok{color:#1d8a4e;font-weight:800}
 #view-revisao .pill-bad{color:#c8372d;font-weight:800;margin-left:8px}
@@ -399,6 +407,10 @@ header.top{background:var(--dark);color:#fff;border-bottom:3px solid var(--ow-or
       </nav>
       <div class="sync" id="sync">
         <span class="dot"></span><span class="lbl" id="syncLbl">Conectando...</span>
+        <button class="btn-save" id="btnSalvar" onclick="forcarSalvar()" title="Forçar gravação dos cálculos na planilha do Drive agora">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+          Salvar
+        </button>
         <button class="btn-sync" onclick="refreshCurrent()" title="Recarregar a aba atual">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
           Sincronizar
@@ -802,6 +814,11 @@ header.top{background:var(--dark);color:#fff;border-bottom:3px solid var(--ow-or
         Cole abaixo a tabela exportada do Flash. A conferência compara o que está atribuído no Flash com o valor calculado na aba Benefícios para <b id="revMes">o mês de referência</b>.
         <br><span class="muted">VR = Alimentação + Refeição (somados) &middot; VT = Mobilidade. <b style="color:#1d8a4e">Verde</b> = igual &middot; <b style="color:#c8372d">Vermelho</b> = diferente.</span>
       </div>
+      <div class="rev-comp">
+        <label for="revMesInput">Competência (mês/ano)</label>
+        <input type="month" id="revMesInput" onchange="revChangeMes(this.value)">
+        <span class="muted">Carrega e compara o Flash desta competência. Subir nova tabela substitui a anterior do mesmo mês.</span>
+      </div>
       <textarea id="revInput" class="rev-textarea" placeholder="Cole aqui a tabela do Flash (Pessoa, CPF, Mobilidade, Alimentação, Refeição...)"></textarea>
       <div class="rev-actions">
         <button class="rev-btn-primary" onclick="revisar()">Conferir</button>
@@ -834,7 +851,7 @@ header.top{background:var(--dark);color:#fff;border-bottom:3px solid var(--ow-or
    CONFIGURACAO  ->  cole aqui a URL /exec do seu Web App do Apps Script.
    Ex.: https://script.google.com/macros/s/AKfycb..../exec
    ========================================================================= */
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbwFbhU1srrPY4qLZE_PwScbGHOJlrSG9tcsS5Vl-3ld7tlkMv-5Yz9gjX8G2XfRGxc3QA/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbx17k5NQvKt4mwWIgDx_gPir6roxynpM2tUaZ3EwJL5KIVVWYDfEPQG8Syy8FaV8jOxqg/exec';
 
 var STATUS = { ATIVO:'Ativo', PROC:'Em Processo', OFF:'Desligado' };
 var CYCLE = [STATUS.ATIVO, STATUS.PROC, STATUS.OFF];
@@ -1222,7 +1239,7 @@ document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ closeSta
 /* =========================================================================
    Mesma URL /exec do Web App usado pelo Quadro.
    ========================================================================= */
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbwFbhU1srrPY4qLZE_PwScbGHOJlrSG9tcsS5Vl-3ld7tlkMv-5Yz9gjX8G2XfRGxc3QA/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbx17k5NQvKt4mwWIgDx_gPir6roxynpM2tUaZ3EwJL5KIVVWYDfEPQG8Syy8FaV8jOxqg/exec';
 
 var MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 var UFS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
@@ -1453,9 +1470,9 @@ function saveAjuste(id, field, absVal){
   if(field==='dias') ov.ftrab = delta; else ov.fpres = delta;
   var ft = Number(ov.ftrab)||0, fp = Number(ov.fpres)||0;
   if(ft===0 && fp===0) delete AJUSTES[id]; else AJUSTES[id]={ ftrab:ft, fpres:fp };
-  render();
+  render(); pushCalculado();
   // backend grava posicionalmente nas colunas F.Trabalhado / F.Presencial; vazio = remove (volta ao automatico)
-  var payload = { action:'setAjuste', mes:mes, id:id, dias:(ft===0?'':ft), dias_pres:(fp===0?'':fp) };
+  var payload = { action:'setAjuste', mes:mes, id:id, nome:r.nome, dias:(ft===0?'':ft), dias_pres:(fp===0?'':fp) };
   setSync('busy','Salvando ajuste…');
   // Serializa as gravacoes: cada ajuste so e enviado depois que o anterior terminou,
   // senao duas gravacoes concorrentes gravam na mesma linha e uma sobrescreve a outra.
@@ -1528,7 +1545,7 @@ function onMonthChange(){
     document.getElementById('d12').value = PARAMS.dias_12x36||'';
     setSync('ok','Sincronizado '+nowLabel());
     updateMonthDisplay();
-    loadAjustes(function(){ setSync('ok','Sincronizado '+nowLabel()); render(); if(FLASH_LOADED.length){ revCompare(FLASH_LOADED, 'sheet'); } });
+    loadAjustes(function(){ setSync('ok','Sincronizado '+nowLabel()); render(); var rmi=document.getElementById('revMesInput'); if(rmi) rmi.value=val('mes'); var rml=document.getElementById('revMes'); if(rml && typeof monthLabel==='function') rml.textContent=monthLabel(val('mes')); revCompare(flashForMonth(val('mes')), 'sheet'); pushCalculado(); });
   }).catch(function(err){ setSync('err','Falha'); console.error(err); });
 }
 
@@ -1716,7 +1733,7 @@ function saveCfg(){
   setSync('busy','Salvando cadastro…');
   apiPost({action:'saveConfig', id:cfgId, config:m}).then(function(res){
     if(!res||!res.ok) throw new Error(res&&res.error?res.error:'falha');
-    adopt(res.data); render(); setSync('ok','Salvo '+nowLabel());
+    adopt(res.data); render(); pushCalculado(); setSync('ok','Salvo '+nowLabel());
   }).catch(function(err){ setSync('err','Falha'); recarregar(); console.error(err); });
   closeCfg();
 }
@@ -1905,7 +1922,7 @@ function doImport(){
   setSync('busy','Importando…');
   apiPost({action:'saveConfigBatch', items:payload}).then(function(res){
     if(!res||!res.ok) throw new Error(res&&res.error?res.error:'falha');
-    adopt(res.data); render();
+    adopt(res.data); render(); pushCalculado();
     var s=res.summary||{};
     var box=document.getElementById('impPrev'); box.style.display='block';
     var msg='<b>'+(s.upd||0)+'</b> cadastros gravados na planilha.';
@@ -1927,6 +1944,35 @@ function checkBackend(){
   if(cEl) cEl.textContent = cols || '?';
   w.style.display = (cols!==18) ? 'block' : 'none';
 }
+var _calcT = null;
+// Espelha a tabela calculada (com nome) para a aba Beneficios_Calculado. Debounced para juntar edicoes rapidas.
+function pushCalculado(){ if(_calcT) clearTimeout(_calcT); _calcT = setTimeout(pushCalculadoNow, 700); }
+function forcarSalvar(){
+  var btn=document.getElementById('btnSalvar');
+  if(!GAS_URL){ setSync('err','Sem conexão com a planilha'); return; }
+  if(!DATA || !DATA.length){ setSync('err','Nada para salvar ainda'); return; }
+  if(_calcT){ clearTimeout(_calcT); _calcT=null; }   // cancela o debounce e grava agora
+  if(btn) btn.disabled=true;
+  setSync('busy','Salvando na planilha…');
+  var p = pushCalculadoNow();
+  function done(){ if(btn) btn.disabled=false; }
+  if(p && p.then){ p.then(done, done); } else { setTimeout(done, 1200); }
+}
+function pushCalculadoNow(){
+  if(!GAS_URL || !DATA || !DATA.length) return;
+  var mes = val('mes')||'';
+  var rows = DATA.map(function(r){
+    var c = calc(r);
+    return { mes:mes, id:r.id, nome:r.nome, cargo:r.cargo||'', dept:r.dept||'', uf:r.uf||'',
+             escala:r.escala_tipo||'', modalidade:r.modalidade||'',
+             dias:c.dias, dias_pres:c.diasPres, vt_dia:r.vt_dia, vt:c.vt, vr:c.vr, total:c.total,
+             ftrab:c.ftrab, fpres:c.fpres };
+  });
+  return apiPost({ action:'setCalculado', mes:mes, rows:rows }).then(function(res){
+    if(res && res.ok) setSync('ok','Planilha atualizada '+nowLabel());
+    else setSync('err','Falha ao gravar cálculo');
+  }).catch(function(e){ setSync('err','Backend sem versão calc'); console.error('setCalculado falhou — publique a versao calc do Codigo.gs', e); });
+}
 function recarregar(){
   if(!GAS_URL){ document.getElementById('setupWarn').style.display='block'; setSync('err','Sem URL'); return; }
   setSync('busy','Sincronizando…');
@@ -1936,9 +1982,10 @@ function recarregar(){
     adopt(res.data);
     document.getElementById('results').style.display='block';
     render();
-    FLASH_LOADED = (res.flash||[]).map(function(f){ return { nome:f.nome, cpf:f.cpf, vrFlash:Number(f.vr)||0, vtFlash:Number(f.vt)||0 }; });
-    if(FLASH_LOADED.length){ revCompare(FLASH_LOADED, 'sheet'); }
+    FLASH_ALL = res.flash||[];
+    revCompare(flashForMonth(val('mes')), 'sheet');
     setSync('ok','Sincronizado '+nowLabel());
+    pushCalculado();
   }).catch(function(err){ setSync('err','Falha ao ler'); console.error(err); });
 }
 
@@ -1963,7 +2010,7 @@ function setFarol(v){
   var r=DATA.find(function(x){return x.id===id;});
   if(r){ r.farol=v; render(); }
   apiPost({action:'saveConfig', id:id, config:{farol:v}}).then(function(res){
-    if(res&&res.ok){ adopt(res.data); render(); setSync('ok','Salvo '+nowLabel()); }
+    if(res&&res.ok){ adopt(res.data); render(); pushCalculado(); setSync('ok','Salvo '+nowLabel()); }
   }).catch(function(err){ setSync('err','Falha'); console.error(err); });
 }
 
@@ -2121,7 +2168,18 @@ function revCpf(s){ return (s||'').toString().replace(/\D/g,''); }
 function revDifCell(dif, ok){
   return '<td class="'+(ok?'ok':'bad')+'">'+(dif>0?'+':'')+money(dif)+'</td>';
 }
-var REV_ROWS=[], REV_FALTAM=[], REV_FILTER='all', FLASH_LOADED=[];
+var REV_ROWS=[], REV_FALTAM=[], REV_FILTER='all', FLASH_ALL=[];
+function mesKeyFront(v){ return String(v||'').slice(0,7); }
+function flashForMonth(mes){
+  var k=mesKeyFront(mes);
+  return FLASH_ALL.filter(function(f){ return mesKeyFront(f.mes)===k; })
+    .map(function(f){ return { nome:f.nome, cpf:f.cpf, vrFlash:Number(f.vr)||0, vtFlash:Number(f.vt)||0 }; });
+}
+function revChangeMes(v){
+  if(!v) return;
+  var mesEl=document.getElementById('mes'); if(mesEl) mesEl.value=v;
+  if(typeof onMonthChange==='function') onMonthChange();
+}
 function revisar(){
   var flash=revParseFlash(document.getElementById('revInput').value);
   if(!flash.length){
@@ -2131,17 +2189,24 @@ function revisar(){
     var n0=document.getElementById('revLoadedNote'); if(n0) n0.style.display='none';
     return;
   }
+  var mes=val('mes');
+  if(!mes){ alert('Selecione a competência (mês) antes de conferir.'); return; }
+  var k=mesKeyFront(mes);
+  if(FLASH_ALL.some(function(f){ return mesKeyFront(f.mes)===k; })){
+    var lbl=(typeof monthLabel==='function')?monthLabel(mes):mes;
+    if(!confirm('Já existem dados do Flash para a competência '+lbl+'.\n\nDeseja sobrescrever os dados anteriores desta competência?')) return;
+  }
   revCompare(flash, 'paste');
-  revSaveFlash(flash);
+  revSaveFlash(flash, mes);
 }
-function revSaveFlash(flash){
+function revSaveFlash(flash, mes){
   if(!GAS_URL) return;
   var rows=(flash||[]).map(function(p){ return { nome:p.nome, cpf:p.cpf, vr:p.vrFlash, vt:p.vtFlash }; });
   setSync('busy','Salvando Flash…');
-  apiPost({action:'setFlash', rows:rows}).then(function(res){
-    if(res && res.ok){ FLASH_LOADED=flash.slice(); setSync('ok','Flash salvo '+nowLabel()); }
+  apiPost({action:'setFlash', mes:mes, rows:rows}).then(function(res){
+    if(res && res.ok){ if(res.flash) FLASH_ALL=res.flash; setSync('ok','Flash salvo '+nowLabel()); }
     else { setSync('err','Falha ao salvar Flash'); }
-  }).catch(function(e){ setSync('err','Backend sem versao Flash'); console.error('setFlash falhou — publique a versao Flash do Codigo.gs', e); });
+  }).catch(function(e){ setSync('err','Backend sem versao Flash/mes'); console.error('setFlash falhou — publique a versao com mes', e); });
 }
 function revCompare(flash, source){
   var res=document.getElementById('revResults');
@@ -2149,7 +2214,7 @@ function revCompare(flash, source){
   var note=document.getElementById('revLoadedNote');
   REV_ROWS=[]; REV_FALTAM=[];
   flash=flash||[];
-  if(!flash.length){ res.innerHTML=''; sum.textContent=''; document.getElementById('revFilters').style.display='none'; if(note) note.style.display='none'; return; }
+  if(!flash.length){ res.innerHTML='<div class="rev-empty">Sem dados do Flash para esta competência. Cole a tabela do Flash acima e clique em <b>Conferir</b>.</div>'; sum.textContent=''; document.getElementById('revFilters').style.display='none'; if(note) note.style.display='none'; return; }
   if(!DATA || !DATA.length){ res.innerHTML='<div class="rev-empty"><b>Sem base ONE carregada.</b> Abra a aba Beneficios uma vez para carregar os colaboradores e o mes de referencia.</div>'; sum.textContent=''; document.getElementById('revFilters').style.display='none'; if(note) note.style.display='none'; return; }
   var byCpf={}, byName={};
   DATA.forEach(function(r){ var c=revCpf(r.cpf); if(c) byCpf[c]=r; byName[revNorm(r.nome)]=r; });
@@ -2230,16 +2295,17 @@ function revRender(){
 }
 function revLimpar(){ document.getElementById('revInput').value=''; document.getElementById('revResults').innerHTML=''; document.getElementById('revSummary').textContent=''; REV_ROWS=[]; REV_FALTAM=[]; REV_FILTER='all'; var s=document.getElementById('revSearch'); if(s) s.value=''; var b=document.getElementById('revFilters'); if(b) b.style.display='none'; var n=document.getElementById('revLoadedNote'); if(n) n.style.display='none'; var cs=document.querySelectorAll('#revFilters .rev-chip'); for(var i=0;i<cs.length;i++){ cs[i].classList.toggle('active', cs[i].getAttribute('data-f')==='all'); } }
 function revLimparDados(){
-  if(!confirm('Apagar os dados do Flash aqui e zerar a aba "Flash" na planilha?\n\nIsto nao volta ao atualizar a pagina.')) return;
+  var mes=val('mes');
+  var lbl=(mes && typeof monthLabel==='function')?monthLabel(mes):(mes||'');
+  if(!confirm('Apagar os dados do Flash da competência '+lbl+' aqui e na planilha?\n\nIsto nao volta ao atualizar a pagina.')) return;
   setSync('busy','Zerando Flash…');
-  apiPost({action:'clearFlash'}).then(function(res){
-    FLASH_LOADED=[]; revLimpar();
-    if(res && res.ok){ setSync('ok','Dados do Flash zerados '+nowLabel()); }
+  apiPost({action:'clearFlash', mes:mes}).then(function(res){
+    if(res && res.flash) FLASH_ALL=res.flash; revLimpar();
+    if(res && res.ok){ setSync('ok','Flash de '+lbl+' zerado '+nowLabel()); }
     else { setSync('err','Falha ao zerar Flash'); }
   }).catch(function(e){
-    FLASH_LOADED=[]; revLimpar();
-    setSync('err','Backend sem versao Flash');
-    alert('Limpei a tela, mas nao consegui zerar a aba Flash na planilha. Publique a versao Flash do Codigo.gs (rode setup() e Nova versao).');
+    revLimpar(); setSync('err','Backend sem versao Flash/mes');
+    alert('Limpei a tela, mas nao consegui zerar na planilha. Publique a versao com mes (setup() e Nova versao).');
     console.error(e);
   });
 }
@@ -2262,9 +2328,12 @@ function revVincularCpf(){
   }).catch(function(err){ setSync('err','Falha ao vincular'); console.error(err); });
 }
 function revisaoOnEnter(){
-  var mesEl=document.getElementById('mes'), lbl=document.getElementById('revMes');
-  if(mesEl && mesEl.value && typeof monthLabel==='function'){ lbl.textContent=monthLabel(mesEl.value); }
-  if(!REV_ROWS.length && FLASH_LOADED.length){ revCompare(FLASH_LOADED, 'sheet'); }
+  var mesEl=document.getElementById('mes'), lbl=document.getElementById('revMes'), inp=document.getElementById('revMesInput');
+  if(mesEl && mesEl.value){
+    if(inp) inp.value=mesEl.value;
+    if(lbl && typeof monthLabel==='function') lbl.textContent=monthLabel(mesEl.value);
+  }
+  revCompare(flashForMonth(val('mes')), 'sheet');
 }
 
 </script>
