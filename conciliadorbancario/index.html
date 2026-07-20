@@ -481,7 +481,8 @@ function parseOFX(text, fileId, fileName){
     }
     if(/\bTED\b/i.test(memo)) modality='TED';
     if(parseFloat(amt) > 0) return; // só saídas
-    out.push({id:uid(), fileId, fileName, name:name||nameTag||'(sem nome)', ident, modality, date, value:val, raw:memo});
+    const isFolha = /folha de pagamento/i.test(memo) || /pagamento de proventos/i.test(memo) || /proventos/i.test(name);
+    out.push({id:uid(), fileId, fileName, name:name||nameTag||'(sem nome)', ident, modality, date, value:val, raw:memo, isFolha});
   });
   return out;
 }
@@ -539,6 +540,28 @@ function ingestFile(name, text, forceType){
 
 /* ============ CONCILIATION ENGINE ============ */
 function recompute(){
+  // ---------- FOLHA CONSOLIDADA (lote) ----------
+  // Linhas de folha no OFX vêm agregadas (um valor = soma de N pessoas). Casamos com o
+  // arquivo CNAB cujo total bate e "explodimos" nas pessoas (status Pago via folha).
+  const folhaLinhas = S.paid.filter(p=>p.isFolha);
+  if(folhaLinhas.length){
+    const totalPorArquivo={};
+    S.sent.forEach(s=>{ totalPorArquivo[s.fileName]=(totalPorArquivo[s.fileName]||0)+s.value; });
+    const usados={}; const explodido=[];
+    folhaLinhas.forEach(fl=>{
+      let alvo=null;
+      Object.keys(totalPorArquivo).forEach(fn=>{ if(!usados[fn] && Math.abs(totalPorArquivo[fn]-fl.value)<0.01) alvo=fn; });
+      if(alvo){
+        usados[alvo]=true; fl._folhaResolvida=true;
+        S.sent.filter(s=>s.fileName===alvo).forEach(s=>{
+          explodido.push({id:uid(), fileId:fl.fileId, fileName:fl.fileName, name:s.name, ident:s.ident,
+            modality:'Folha', date:fl.date||s.date, value:s.value, raw:'Pago via folha (lote '+alvo+')', viaFolha:true});
+        });
+      }
+    });
+    S.paid = S.paid.filter(p=>!p._folhaResolvida).concat(explodido);
+  }
+
   // duplicidade real entre PAGOS (retorno): mesmo nome+valor+data+modalidade
   const seen={};
   S.paid.forEach(p=>{
@@ -664,8 +687,9 @@ function renderConc(){
   else tb.innerHTML=rows.map(r=>{
     const stat = r._status==='dup'?`<span class="pill dup">Duplicado</span>`
       : r._status==='miss'?`<span class="pill miss">Não pago</span>`
+      : r.viaFolha?`<span class="pill ok">Pago (folha)</span>`
       : `<span class="pill ok">Pago</span>`;
-    const mod = `<span class="pill ${r.modality==='Pix'?'pix':r.modality==='TED'?'ted':'reproc'}">${r.modality}</span>`;
+    const mod = `<span class="pill ${r.modality==='Pix'?'pix':r.modality==='TED'?'ted':r.modality==='Folha'?'reproc':'reproc'}">${r.modality}</span>`;
     return `<tr class="${r._status==='dup'?'row-clickable':''}" ${r._status==='dup'?`onclick="go('dup')"`:''}>
       <td><span class="nm">${r.name}</span></td>
       <td><span class="id">${r.ident||'—'}</span></td>
@@ -731,7 +755,7 @@ function readFiles(fileList, forceType){
 }
 
 /* ============ MODO NUVEM (Apps Script /exec) ============ */
-S.cloud = { on:false, url:'https://script.google.com/macros/s/AKfycbw0VWoe6GOOaxiSKFvYxiryeNKvfrl83PbkqWWrda1AJfaV_W83RtL5dfXdG4VKxY05/exec', token:'AKfycbw0VWoe6GOOaxiSKFvYxiryeNKvfrl83PbkqWWrda1AJfaV_W83RtL5dfXdG4VKxY05' };
+S.cloud = { on:false, url:'https://script.google.com/macros/s/AKfycbxG04GILLMCZp687MKycVRUMYV43B5iOaKC862myFXti_Rk0aEETG4TetfirPlmPIpY/exec', token:'conc-2026' };
 
 function cloudStatus(msg, kind){
   const el=document.getElementById('cloudStatus'); if(!el) return;
@@ -784,6 +808,7 @@ async function uploadCloud(fileList){
       aplicarResumoCloud(r.resumo);
       if(r.erros && r.erros.length){ cloudStatus('⚠ Recebidos '+r.recebidos+', salvos '+r.salvos+'. Erros: '+r.erros.join(' | '),'err'); }
       else { cloudStatus('✓ '+ (r.salvos||files.length) +' salvo(s) no Drive e conciliado(s)','ok'); }
+      carregarDetalhesFetch();
       return;
     }catch(e){ console.warn('[cloud] fetch falhou, tentando via iframe:', e); }
   }
@@ -815,6 +840,7 @@ async function reprocCloud(){
     const r = await cloudPost({ token:S.cloud.token, acao:'reprocessar' });
     if(!r.ok) throw new Error(r.erro||'Falha');
     aplicarResumoCloud(r.resumo); cloudStatus('✓ Reprocessado','ok');
+    carregarDetalhesFetch();
   }catch(e){ cloudStatus('Erro: '+(e.message||e),'err'); }
 }
 // Mostra os números retornados pela nuvem nos KPIs do painel (sem detalhar linhas, que ficam no Sheet)
@@ -834,6 +860,28 @@ function aplicarResumoCloud(r){
   document.getElementById('proc-tag').textContent='via nuvem';
   document.querySelector('#procTbl tbody').innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Arquivos e detalhamento completos no Google Sheet / Drive.</td></tr>`;
   go('dash');
+}
+
+// Busca os dados completos do servidor (apiDetalhes) e popula painel + tabela na própria página
+async function carregarDetalhesFetch(){
+  if(!S.cloud.url) return;
+  try{
+    const d = await cloudPost({ token:S.cloud.token, acao:'detalhes' });
+    if(!d || !d.ok) return;
+    S.paid = (d.linhas||[]).filter(x=>x.status!=='Não pago').map(x=>({name:x.name,ident:x.ident,modality:x.modality,date:x.date,value:x.value,dup:x.status==='Duplicado',viaFolha:x.status==='Pago (folha)',fileName:x.file}));
+    S.missing = (d.linhas||[]).filter(x=>x.status==='Não pago').map(x=>({name:x.name,ident:x.ident,modality:x.modality,date:x.date,value:x.value,fileName:x.file}));
+    document.getElementById('dash-empty').style.display='none';
+    document.getElementById('dash-content').style.display='block';
+    document.getElementById('k-paid').textContent=fmtShort(d.pago);
+    document.getElementById('k-paid-n').textContent=d.pagos+' lançamentos · saiu da conta';
+    document.getElementById('k-sent').textContent=fmtShort(d.enviado);
+    document.getElementById('k-sent-n').textContent='registros em remessa';
+    document.getElementById('k-miss').textContent=fmtShort((S.missing).reduce((a,b)=>a+b.value,0));
+    document.getElementById('k-miss-n').textContent=d.naoPagos+' beneficiários sem retorno';
+    document.getElementById('k-dup').textContent=d.duplicidades;
+    document.getElementById('dash-banner').innerHTML=`<div class="banner good"><div class="bi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div><div class="bc"><h4>Sincronizado com o Google Drive</h4><p>${d.pagos} lançamentos · ${d.naoPagos} não pago(s) · ${d.duplicidades} duplicidade(s) · ${d.divergencias} divergência(s). Tudo gravado na sua planilha.</p></div></div>`;
+    recompute(); renderConc(); renderDup(); renderDash();
+  }catch(e){ console.warn('carregarDetalhesFetch:', e); }
 }
 
 /* nav */
@@ -900,7 +948,7 @@ document.getElementById('exportBtn').onclick=()=>{
   document.getElementById('cloudTest').onclick=async()=>{
     cloudStatus('Testando…');
     try{ const r=await fetch(S.cloud.url+(S.cloud.url.indexOf('?')<0?'?':'&')+'ping=1');
-      const j=await r.json(); aplicarResumoCloud(j.resumo||j); cloudStatus('✓ Conexão OK','ok');
+      const j=await r.json(); cloudStatus('✓ Conexão OK','ok'); carregarDetalhesFetch();
     }catch(e){ cloudStatus('Falha na conexão. Verifique a URL e a publicação como "Qualquer pessoa".','err'); }
   };
   document.getElementById('cloudReproc').onclick=reprocCloud;
