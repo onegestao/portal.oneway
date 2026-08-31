@@ -225,25 +225,27 @@ header.top{background:var(--dark);color:#fff;border-bottom:3px solid var(--ow-or
 }
 /* ===== QUADRO ===== */
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-#view-quadro h2.section{font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-soft);font-weight:700;margin:24px 0 12px}
-#view-quadro .intake{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-#view-quadro .col{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;display:flex;flex-direction:column}
-#view-quadro .col-head{display:flex;align-items:flex-start;gap:11px;margin-bottom:12px}
-#view-quadro .badge{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0}
+#view-quadro h2.section{font-size:11.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-soft);font-weight:700;margin:14px 0 8px}
+#view-quadro .intake{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+#view-quadro .col{background:var(--surface);border:1px solid var(--line);border-radius:11px;box-shadow:var(--shadow);padding:9px 11px;display:flex;flex-direction:column}
+#view-quadro .col-head{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+#view-quadro .badge{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0}
 #view-quadro .badge-a{background:var(--ok-bg);color:var(--ok)}
 #view-quadro .badge-b{background:var(--off-bg);color:#6B645D}
 #view-quadro .badge-c{background:var(--proc-bg);color:var(--proc)}
-#view-quadro .col-title{font-weight:700;font-size:15px;line-height:1.2}
-#view-quadro .col-help{font-size:12px;color:var(--ink-soft);margin-top:3px}
-#view-quadro textarea{width:100%;flex:1;min-height:130px;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:12px;font-family:'SFMono-Regular',ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;color:var(--ink);background:#FBFAF9;line-height:1.5}
+#view-quadro .col-title{font-weight:700;font-size:13.5px;line-height:1.2}
+#view-quadro .col-help{font-size:11px;color:var(--ink-soft);line-height:1.35;margin-top:1px}
+#view-quadro textarea{width:100%;flex:1;min-height:72px;height:72px;resize:vertical;border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-family:'SFMono-Regular',ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:var(--ink);background:#FBFAF9;line-height:1.42}
 #view-quadro textarea:focus{outline:none;border-color:var(--ow-orange);box-shadow:0 0 0 3px rgba(200,90,0,.12)}
 #view-quadro textarea::placeholder{color:#b6afa8}
 #view-quadro button{font-family:inherit;cursor:pointer;border:none;border-radius:9px;font-weight:600;transition:.15s}
-#view-quadro .btn-apply{margin-top:11px;background:var(--ow-orange);color:#fff;padding:10px 14px;font-size:13.5px}
+#view-quadro .btn-apply{margin-top:6px;background:var(--ow-orange);color:#fff;padding:6px 13px;font-size:12.5px;border-radius:8px}
 #view-quadro .btn-apply:hover{background:var(--ow-orange-bright)}
 #view-quadro .btn-apply:disabled{opacity:.5;cursor:not-allowed}
-#view-quadro .col-msg{font-size:12px;color:var(--ink-soft);margin-top:9px;min-height:16px}
-#view-quadro .stickyhead{position:sticky;z-index:40;background:var(--bg);padding:16px 0 12px;transition:box-shadow .18s}
+/* a mensagem so ocupa espaco quando tem algo a dizer */
+#view-quadro .col-msg{font-size:11.5px;color:var(--ink-soft);min-height:0;line-height:1.4}
+#view-quadro .col-msg:not(:empty){margin-top:6px}
+#view-quadro .stickyhead{position:sticky;z-index:40;background:var(--bg);padding:12px 0 10px;transition:box-shadow .18s}
 #view-quadro .stickyhead.stuck{box-shadow:0 14px 18px -12px rgba(33,30,27,.22)}
 #view-quadro .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 #view-quadro .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:15px 18px;box-shadow:var(--shadow)}
@@ -326,6 +328,34 @@ header.top{background:var(--dark);color:#fff;border-bottom:3px solid var(--ow-or
 #view-quadro .btn-danger-solid{background:#C0392B;color:#fff;padding:10px 18px;border-radius:9px;font-weight:700;font-size:14px}
 #view-quadro .btn-danger-solid:disabled{background:#e7c4bf;cursor:not-allowed}
 #view-quadro .btn-danger-solid:not(:disabled):hover{background:#a93226}
+/* ===== coluna CPF (Quadro) ===== */
+#view-quadro th.cpf, #view-quadro td.cpf-cell{white-space:nowrap}
+#view-quadro td.cpf-cell{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;letter-spacing:.01em;color:var(--ink);cursor:text;border-radius:6px}
+#view-quadro td.cpf-cell:hover{background:#FBF6F0;box-shadow:inset 0 0 0 1px rgba(200,90,0,.28)}
+#view-quadro select#fCpf.alerta{border-color:var(--ow-orange);color:var(--ow-orange);font-weight:700;background-color:#FDF6EF}
+#view-quadro td.cpf-cell.empty{color:#b8b1aa;font-style:italic;font-family:inherit;font-size:12.5px}
+#view-quadro td.cpf-cell.warn{color:#B4342A;background:#FCEDEB}
+#view-quadro .cpf-flag{display:inline-block;width:15px;height:15px;line-height:15px;text-align:center;border-radius:50%;background:#C0392B;color:#fff;font-size:10px;font-weight:800;font-family:inherit;margin-left:5px;vertical-align:1px}
+#view-quadro .cpf-inp{width:100%;min-width:118px;border:1px solid var(--ow-orange);border-radius:6px;padding:5px 7px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;color:var(--ink);background:#fff;outline:none;box-shadow:0 0 0 3px rgba(200,90,0,.12)}
+#view-quadro .btn-cpf-go{background:var(--ow-orange);color:#fff;padding:10px 18px;font-size:13.5px;font-weight:700}
+#view-quadro .btn-cpf-go:hover:not(:disabled){background:var(--ow-orange-bright)}
+#view-quadro .btn-cpf-go:disabled{opacity:.45;cursor:not-allowed}
+#view-quadro .modal.wide{max-width:640px;max-height:88vh;overflow:auto}
+#view-quadro .cpf-ta{width:100%;min-height:170px;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.55;resize:vertical;background:#fff;color:var(--ink);box-sizing:border-box}
+#view-quadro .cpf-ta:focus{outline:none;border-color:var(--ow-orange);box-shadow:0 0 0 3px rgba(200,90,0,.1)}
+#view-quadro .cpf-prev{margin-top:12px;border:1px solid var(--line);border-radius:10px;max-height:250px;overflow:auto;font-size:12.5px}
+#view-quadro .cpf-prev table{width:100%;border-collapse:collapse}
+#view-quadro .cpf-prev th{position:sticky;top:0;background:#F1EEE9;text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);padding:8px 10px;border-bottom:1px solid var(--line)}
+#view-quadro .cpf-prev td{padding:7px 10px;border-bottom:1px solid var(--line-soft)}
+#view-quadro .cpf-prev tr:last-child td{border-bottom:none}
+#view-quadro .cpf-prev .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+#view-quadro .cpf-tag{display:inline-block;padding:2px 7px;border-radius:999px;font-size:10.5px;font-weight:700;letter-spacing:.02em}
+#view-quadro .cpf-tag.ok{background:var(--ok-bg);color:var(--ok)}
+#view-quadro .cpf-tag.skip{background:var(--off-bg);color:var(--off)}
+#view-quadro .cpf-tag.no{background:#FCEDEB;color:#B4342A}
+#view-quadro .cpf-sum{font-size:12.5px;color:var(--ink-soft);margin-top:10px;line-height:1.6}
+#view-quadro .cpf-chk{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-soft);margin-top:12px;cursor:pointer;user-select:none}
+#view-quadro .cpf-chk input{width:15px;height:15px;accent-color:var(--ow-orange);cursor:pointer}
 @media (max-width:880px){
 #view-quadro .intake{grid-template-columns:1fr}
 #view-quadro .cards{grid-template-columns:repeat(2,1fr)}
@@ -461,25 +491,25 @@ header.top{background:var(--dark);color:#fff;border-bottom:3px solid var(--ow-or
     <div class="intake">
       <div class="col">
         <div class="col-head"><span class="badge badge-a">A</span>
-          <div><div class="col-title">Admissões</div><div class="col-help">Nome novo entra como Ativo. Nome existente é reativado (Ativo).</div></div>
+          <div><div class="col-title">Admissões</div><div class="col-help" title="O intervalo (ex.: 45 + 45) pode ser colado numa linha extra, é opcional.">Novo entra como Ativo; existente é reativado.</div></div>
         </div>
-        <textarea id="boxA" placeholder="Nome&#10;Cargo - Departamento&#10;R$ 1.742,36&#10;Escala&#10;45 + 45  (opcional)&#10;&#10;Cole quantos quiser."></textarea>
+        <textarea id="boxA" placeholder="Nome&#10;Cargo - Departamento&#10;R$ 1.742,36&#10;Escala"></textarea>
         <button class="btn-apply" id="btnA" onclick="aplicar('A')">Aplicar admissões</button>
         <div class="col-msg" id="msgA"></div>
       </div>
       <div class="col">
         <div class="col-head"><span class="badge badge-b">B</span>
-          <div><div class="col-title">Desligamentos</div><div class="col-help">Quem for colado tem o status mudado para Desligado.</div></div>
+          <div><div class="col-title">Desligamentos</div><div class="col-help">Muda o status para Desligado.</div></div>
         </div>
-        <textarea id="boxB" placeholder="Pode colar só os nomes (um por linha)&#10;ou o bloco completo no mesmo formato.&#10;&#10;Ex.:&#10;Fulano de Tal&#10;Ciclano da Silva"></textarea>
+        <textarea id="boxB" placeholder="Só os nomes, um por linha:&#10;Fulano de Tal&#10;Ciclano da Silva"></textarea>
         <button class="btn-apply" id="btnB" onclick="aplicar('B')">Aplicar desligamentos</button>
         <div class="col-msg" id="msgB"></div>
       </div>
       <div class="col">
         <div class="col-head"><span class="badge badge-c">C</span>
-          <div><div class="col-title">Em Processo</div><div class="col-help">Entra com status Em Processo — admissão ainda não concluída.</div></div>
+          <div><div class="col-title">Em Processo</div><div class="col-help">Admissão ainda não concluída.</div></div>
         </div>
-        <textarea id="boxC" placeholder="Nome&#10;Cargo - Departamento&#10;R$ 0.000,00&#10;Escala&#10;&#10;ou apenas os nomes, um por linha."></textarea>
+        <textarea id="boxC" placeholder="Nome&#10;Cargo - Departamento&#10;R$ 0.000,00&#10;Escala"></textarea>
         <button class="btn-apply" id="btnC" onclick="aplicar('C')">Aplicar em processo</button>
         <div class="col-msg" id="msgC"></div>
       </div>
@@ -508,6 +538,12 @@ header.top{background:var(--dark);color:#fff;border-bottom:3px solid var(--ow-or
             <option value="Em Processo">Em processo</option>
             <option value="Desligado">Desligados</option>
           </select>
+          <select id="fCpf" onchange="q_render()" title="Filtrar por preenchimento do CPF">
+            <option value="">CPF: todos</option>
+            <option value="sem">Sem CPF</option>
+            <option value="com">Com CPF</option>
+            <option value="erro">CPF com problema</option>
+          </select>
           <select id="q_fSort" onchange="q_render()">
             <option value="dept">Agrupar por departamento</option>
             <option value="nome">Ordem alfabética</option>
@@ -520,7 +556,8 @@ header.top{background:var(--dark);color:#fff;border-bottom:3px solid var(--ow-or
         <table>
           <thead>
             <tr>
-              <th style="width:32%">Colaborador</th>
+              <th class="cpf" style="width:132px">CPF</th>
+              <th style="width:28%">Colaborador</th>
               <th>Departamento</th>
               <th class="esc">Escala</th>
               <th class="num">Salário</th>
@@ -542,6 +579,9 @@ header.top{background:var(--dark);color:#fff;border-bottom:3px solid var(--ow-or
         <button class="btn-export" onclick="copiarAtivos()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg> Copiar nomes ativos
         </button>
+        <button class="btn-export" onclick="qcpfOpen()" title="Colar a planilha de cadastro (nome + CPF) e preencher os CPFs em massa">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21V9m0 0l-4 4m4-4l4 4M5 3h14"/></svg> Importar CPFs
+        </button>
         <span class="hint right" id="q_exportHint">A exportação respeita os filtros aplicados.</span>
         <button class="btn-danger" onclick="zerar()">Zerar quadro</button>
       </div>
@@ -554,6 +594,25 @@ header.top{background:var(--dark);color:#fff;border-bottom:3px solid var(--ow-or
     <button class="sm-opt" data-v="Ativo"><span class="dot d-ok"></span>Ativo<span class="chk">✓</span></button>
     <button class="sm-opt" data-v="Em Processo"><span class="dot d-proc"></span>Em Processo<span class="chk">✓</span></button>
     <button class="sm-opt" data-v="Desligado"><span class="dot d-off"></span>Desligado<span class="chk">✓</span></button>
+  </div>
+
+  <div id="qcpfOverlay" class="overlay" style="display:none">
+    <div class="modal wide">
+      <div class="modal-title">Importar CPFs da planilha de cadastro</div>
+      <div class="modal-body">
+        Cole abaixo as colunas de <b>nome</b> e <b>CPF</b> (em qualquer ordem). Aceita colunas separadas por tabulação, ponto e vírgula ou vírgula, e também o formato em que o CPF vem na linha logo abaixo do nome.<br>
+        <b>Do CPF só os números são lidos</b> — ponto, hífen e espaço fora de lugar ou faltando não atrapalham, e o zero à esquerda comido pelo Excel é reposto. Tudo é regravado no padrão 000.000.000-00.
+      </div>
+      <textarea id="qcpfText" class="cpf-ta" spellcheck="false" placeholder="Ana Paula de Souza&#9;123.456.789-00&#10;Carlos Eduardo Lima&#9;987.654.321-00"></textarea>
+      <label class="cpf-chk"><input type="checkbox" id="qcpfOverwrite" onchange="qcpfPreview()" /> Sobrescrever CPFs que já estão preenchidos</label>
+      <div id="qcpfPrev" class="cpf-prev" style="display:none"></div>
+      <div id="qcpfSum" class="cpf-sum"></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="qcpfClose()">Cancelar</button>
+        <button class="btn-export" onclick="qcpfPreview()">Conferir</button>
+        <button id="qcpfApply" class="btn-cpf-go" disabled onclick="qcpfApply()">Aplicar</button>
+      </div>
+    </div>
   </div>
 
   <div id="confirmOverlay" class="overlay" style="display:none">
@@ -859,11 +918,80 @@ var q_DATA = [];
 var statusMenuId = null;
 var pendingDeleteId = null;
 var busy = false;
+var q_CPF_DUP = {};      // {digitos: quantas vezes aparece no quadro}
+var QCPF_PLANO = [];     // pre-visualizacao da importacao em lote de CPFs
 
 function q_normKey(s){ return (s||'').toString().trim().toLowerCase().replace(/\s+/g,' '); }
 function normDept(s){ var d=(s||'').toString().trim(); if(!d) d='Sem departamento'; return d.toUpperCase().replace(/\s+/g,' '); }
 function q_money(n){ return 'R$ ' + (n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function q_esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ----------------- CPF: helpers ----------------- */
+// so os digitos
+function q_cpfDigits(v){ return (v||'').toString().replace(/\D/g,'').slice(0,11); }
+// formata 000.000.000-00 conforme vai digitando
+function q_cpfMask(v){
+  var d=q_cpfDigits(v);
+  if(d.length>9)      return d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9);
+  if(d.length>6)      return d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6);
+  if(d.length>3)      return d.slice(0,3)+'.'+d.slice(3);
+  return d;
+}
+// digitos verificadores (nao bloqueia o salvamento, so sinaliza)
+function q_cpfValido(v){
+  var d=q_cpfDigits(v);
+  if(d.length!==11) return false;
+  if(/^(\d)\1{10}$/.test(d)) return false;
+  var i,soma=0,resto;
+  for(i=0;i<9;i++) soma += parseInt(d.charAt(i),10)*(10-i);
+  resto = (soma*10)%11; if(resto===10||resto===11) resto=0;
+  if(resto!==parseInt(d.charAt(9),10)) return false;
+  soma=0;
+  for(i=0;i<10;i++) soma += parseInt(d.charAt(i),10)*(11-i);
+  resto = (soma*10)%11; if(resto===10||resto===11) resto=0;
+  return resto===parseInt(d.charAt(10),10);
+}
+// LEITOR TOLERANTE: le so os numeros e ignora onde a pontuacao caiu.
+// Aceita 000.000.000-00, 00000000000, 000 000 000 00, 000.000.00000, 000-000-000.00 etc.
+// Devolve os 11 digitos, ou '' quando a celula nao da para ser um CPF.
+function q_cpfLer(v){
+  var t=(v||'').toString().trim();
+  if(!t) return '';
+  if(/[^0-9.\-\/\s]/.test(t)) return '';        // tem letra ou simbolo estranho: nao e CPF
+  var d=t.replace(/\D/g,'');
+  if(d.length>11) return '';
+  if(d.length===11) return d;
+  // Excel costuma comer o zero a esquerda ("012.345..." vira 12345...).
+  // So recupera se, com o zero de volta, os digitos verificadores fecharem —
+  // assim uma matricula de 10 digitos nao e confundida com CPF.
+  if(d.length>=9){
+    var comZero=('00000000000'+d).slice(-11);
+    if(q_cpfValido(comZero)) return comZero;
+  }
+  return '';
+}
+// completa zero a esquerda quando isso torna o CPF valido (usado na digitacao)
+function q_cpfAjustaZero(v){
+  var d=q_cpfDigits(v);
+  if(d.length>=9 && d.length<11){
+    var comZero=('00000000000'+d).slice(-11);
+    if(q_cpfValido(comZero)) return comZero;
+  }
+  return d;
+}
+// nome sem acento/pontuacao, para casar a planilha de cadastro com o quadro
+function q_nomeNorm(v){
+  return (v||'').toString().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+}
+// mantem o CPF em sincronia com a aba Beneficios sem forcar um re-render la
+function q_syncCpfBeneficios(id, cpf){
+  try{
+    if(typeof DATA==='undefined' || !DATA || !DATA.length) return;
+    for(var i=0;i<DATA.length;i++){ if(String(DATA[i].id)===String(id)){ DATA[i].cpf=cpf; return; } }
+  }catch(e){}
+}
 
 /* ----------------- comunicacao com o Apps Script ----------------- */
 function q_setSync(state, label){
@@ -893,6 +1021,7 @@ function adoptData(list){
       id:r.id, nome:r.nome, cargo:r.cargo||'', dept:r.dept||'Sem departamento',
       deptKey:normDept(r.dept), salarioNum:Number(r.salarioNum||0),
       escala:r.escala||'', intervalo:r.intervalo||'', status:r.status||'Ativo',
+      cpf:r.cpf||'',
       atualizadoEm:r.atualizadoEm||''
     };
   });
@@ -1050,10 +1179,23 @@ function q_filtered(){
   var q = q_normKey(document.getElementById('q_search').value);
   var fd = document.getElementById('fDept').value;
   var fs = document.getElementById('fStatus').value;
+  var fc = document.getElementById('fCpf').value;
   return q_DATA.filter(function(r){
     if(fd && r.deptKey !== fd) return false;
     if(fs && r.status !== fs) return false;
-    if(q){ var hay = q_normKey(r.nome+' '+r.cargo+' '+r.dept); if(hay.indexOf(q)===-1) return false; }
+    if(fc){
+      var dg = q_cpfDigits(r.cpf);
+      if(fc==='sem' && dg) return false;
+      if(fc==='com' && !dg) return false;
+      // 'erro' = preenchido mas com digito verificador errado ou repetido em outra pessoa
+      if(fc==='erro' && !(dg && (!q_cpfValido(dg) || (q_CPF_DUP[dg]||0)>1))) return false;
+    }
+    if(q){
+      var hay = q_normKey(r.nome+' '+r.cargo+' '+r.dept);
+      var qd  = q.replace(/\D/g,'');
+      var hit = hay.indexOf(q)!==-1 || (qd.length>=3 && q_cpfDigits(r.cpf).indexOf(qd)!==-1);
+      if(!hit) return false;
+    }
     return true;
   });
 }
@@ -1076,11 +1218,18 @@ function q_render(){
     return '<span class="dept-chip">'+q_esc(d)+'<b>'+counts[d]+'</b></span>';
   }).join('');
 
+  // conta CPFs repetidos no quadro inteiro (nao so no filtro) para sinalizar duplicidade.
+  // precisa vir ANTES de q_filtered(), que usa esse mapa no filtro "CPF com problema".
+  q_CPF_DUP = {};
+  q_DATA.forEach(function(x){ var d=q_cpfDigits(x.cpf); if(d.length===11) q_CPF_DUP[d]=(q_CPF_DUP[d]||0)+1; });
+
+  q_atualizaFiltroCpf();
+
   var rows = q_filtered();
   var sort = document.getElementById('q_fSort').value;
   var tbody = document.getElementById('q_tbody');
   if(rows.length===0){
-    tbody.innerHTML = '<tr><td colspan="6"><div class="empty"><b>Nada para mostrar</b>Ajuste a busca/filtros ou aplique uma admissão.</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><b>Nada para mostrar</b>Ajuste a busca/filtros ou aplique uma admissão.</div></td></tr>';
     computeSticky(); return;
   }
 
@@ -1090,7 +1239,7 @@ function q_render(){
     var cur=null;
     rows.forEach(function(r){
       if(r.dept!==cur){ cur=r.dept; var n=rows.filter(function(x){return x.dept===cur;}).length;
-        html += '<tr class="grp"><td colspan="6">'+q_esc(cur)+'<span class="cnt">'+n+'</span></td></tr>'; }
+        html += '<tr class="grp"><td colspan="7">'+q_esc(cur)+'<span class="cnt">'+n+'</span></td></tr>'; }
       html += q_rowHtml(r);
     });
   } else {
@@ -1102,6 +1251,29 @@ function q_render(){
   computeSticky();
 }
 
+// mostra no proprio seletor quantos estao sem CPF, com CPF e com problema
+function q_atualizaFiltroCpf(){
+  var sel=document.getElementById('fCpf'); if(!sel) return;
+  var sem=0, com=0, erro=0;
+  q_DATA.forEach(function(r){
+    var d=q_cpfDigits(r.cpf);
+    if(!d){ sem++; return; }
+    com++;
+    if(!q_cpfValido(d) || (q_CPF_DUP[d]||0)>1) erro++;
+  });
+  function rotula(v, txt){
+    for(var i=0;i<sel.options.length;i++){ if(sel.options[i].value===v){ sel.options[i].textContent=txt; return; } }
+  }
+  // o proprio seletor fechado ja avisa quantos faltam, sem precisar abrir
+  rotula('',     sem>0 ? ('CPF: '+sem+' sem preencher')
+                       : (com>0 ? 'CPF: todos preenchidos' : 'CPF: todos'));
+  rotula('sem',  'Sem CPF ('+sem+')');
+  rotula('com',  'Com CPF ('+com+')');
+  rotula('erro', 'CPF com problema ('+erro+')');
+  // deixa o seletor em destaque quando ha alguem sem CPF e o filtro esta desligado
+  sel.classList.toggle('alerta', sem>0 && !sel.value);
+}
+
 function q_rowHtml(r){
   var rowCls = r.status===STATUS.OFF ? 'st-off' : '';
   var escTxt = r.escala ? q_esc(r.escala) : '<span style="color:#c9c2bb">—</span>';
@@ -1109,6 +1281,7 @@ function q_rowHtml(r){
   var sal = (r.salarioNum>0) ? q_esc(q_money(r.salarioNum)) : '<span style="color:#c9c2bb">—</span>';
   var cargo = r.cargo ? q_esc(r.cargo) : '<span style="color:#c9c2bb">cargo não informado</span>';
   return '<tr class="'+rowCls+'">'
+    + q_cpfCellHtml(r)
     + '<td><div class="nm">'+q_esc(r.nome)+'</div><div class="role">'+cargo+'</div></td>'
     + '<td>'+q_esc(r.dept)+'</td>'
     + '<td class="esc">'+escTxt+interv+'</td>'
@@ -1116,6 +1289,70 @@ function q_rowHtml(r){
     + '<td><button class="pill '+pillClass(r.status)+'" title="Alterar status" onclick="openStatusMenu(event,\''+r.id+'\')"><span class="dot"></span>'+r.status+'<svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button></td>'
     + '<td><button class="row-del" title="Remover do quadro" onclick="askRemover(\''+r.id+'\')">&times;</button></td>'
     + '</tr>';
+}
+
+/* ----------------- CPF: celula editavel ----------------- */
+function q_cpfCellHtml(r){
+  var d = q_cpfDigits(r.cpf);
+  var attr = ' onclick="q_editCpf(this,\''+r.id+'\')"';
+  if(!d){
+    return '<td class="cpf-cell empty" title="Clique para preencher o CPF"'+attr+'>&mdash; preencher</td>';
+  }
+  var invalido = !q_cpfValido(d);
+  var repetido = (q_CPF_DUP[d]||0) > 1;
+  var tip = invalido ? 'CPF com digitos verificadores invalidos — confira o cadastro'
+          : repetido ? 'Este CPF esta repetido em outro colaborador'
+          : 'Clique para editar';
+  return '<td class="cpf-cell'+((invalido||repetido)?' warn':'')+'" title="'+tip+'"'+attr+'>'
+       + q_esc(q_cpfMask(d))
+       + ((invalido||repetido) ? ' <span class="cpf-flag">!</span>' : '')
+       + '</td>';
+}
+
+function q_findById(id){
+  for(var i=0;i<q_DATA.length;i++){ if(String(q_DATA[i].id)===String(id)) return q_DATA[i]; }
+  return null;
+}
+
+function q_editCpf(td, id){
+  if(td.querySelector('input')) return;          // ja esta em edicao
+  var r = q_findById(id); if(!r) return;
+  var antes = q_cpfMask(r.cpf);
+  td.classList.remove('empty','warn');
+  td.innerHTML = '<input class="cpf-inp" type="text" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" value="'+q_esc(antes)+'" />';
+  var inp = td.querySelector('input');
+  inp.focus(); inp.select();
+  var encerrado = false;
+  function finish(salvar){
+    if(encerrado) return; encerrado = true;
+    var novo = q_cpfMask(q_cpfAjustaZero(inp.value));   // le so os numeros; repoe zero se isso validar
+    if(salvar && novo !== antes) q_saveCpf(id, novo);
+    else q_render();
+  }
+  inp.addEventListener('input',  function(){ inp.value = q_cpfMask(inp.value); });
+  inp.addEventListener('click',  function(e){ e.stopPropagation(); });
+  inp.addEventListener('keydown',function(e){
+    if(e.key==='Enter'){ e.preventDefault(); finish(true); }
+    else if(e.key==='Escape'){ e.preventDefault(); finish(false); }
+  });
+  inp.addEventListener('blur', function(){ finish(true); });
+}
+
+// grava so o CPF (saveConfigBatch nao mexe nas configuracoes de beneficio da pessoa)
+function q_saveCpf(id, cpf){
+  var r = q_findById(id); if(!r) return;
+  r.cpf = cpf;                        // otimista: a tela ja mostra o novo valor
+  q_syncCpfBeneficios(id, cpf);
+  q_render();
+  if(!GAS_URL) return;
+  var d = q_cpfDigits(cpf);
+  if(d && d.length===11 && !q_cpfValido(d)) q_setSync('busy','Salvando CPF (digitos nao conferem)…');
+  else q_setSync('busy','Salvando CPF…');
+  q_apiPost({ action:'saveConfigBatch', items:[{ id:id, cpf:cpf }] }).then(function(res){
+    if(!res || !res.ok) throw new Error(res && res.error ? res.error : 'falha');
+    adoptData(res.data); buildDeptFilter(); q_render();
+    q_setSync('ok', (cpf?'CPF salvo ':'CPF removido ') + q_nowLabel());
+  }).catch(function(err){ q_setSync('err','Falha ao salvar CPF'); q_recarregar(); console.error(err); });
 }
 
 function openStatusMenu(ev, id){
@@ -1168,7 +1405,7 @@ function onScroll(){
 /* ----------------- export ----------------- */
 function q_exportRows(){
   return q_filtered().map(function(r){
-    return { 'Nome':r.nome, 'Cargo':r.cargo, 'Departamento':r.dept, 'Salario':r.salarioNum,
+    return { 'CPF':q_cpfMask(r.cpf), 'Nome':r.nome, 'Cargo':r.cargo, 'Departamento':r.dept, 'Salario':r.salarioNum,
              'Escala':r.escala, 'Intervalo':r.intervalo, 'Status':r.status, 'Atualizado_em':r.atualizadoEm };
   });
 }
@@ -1176,7 +1413,12 @@ function q_exportXLSX(){
   var rows = q_exportRows();
   if(rows.length===0){ alert('Nenhum registro para exportar com os filtros atuais.'); return; }
   var ws = XLSX.utils.json_to_sheet(rows);
-  ws['!cols'] = [{wch:34},{wch:34},{wch:24},{wch:12},{wch:40},{wch:12},{wch:13},{wch:16}];
+  ws['!cols'] = [{wch:16},{wch:34},{wch:34},{wch:24},{wch:12},{wch:40},{wch:12},{wch:13},{wch:16}];
+  // forca o CPF como texto, senao o Excel come o zero a esquerda e vira numero
+  for(var i=0;i<rows.length;i++){
+    var cel = ws[XLSX.utils.encode_cell({c:0, r:i+1})];
+    if(cel){ cel.t='s'; cel.z='@'; }
+  }
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Colaboradores');
   XLSX.writeFile(wb, 'quadro_colaboradores_oneway.xlsx');
@@ -1204,7 +1446,176 @@ function copiarAtivos(){
   });
 }
 
+/* ================= IMPORTACAO DE CPFs EM LOTE ================= */
+/* Aceita, em qualquer ordem:
+     Nome<TAB>CPF        |  CPF<TAB>Nome        (tambem com ; ou , como separador)
+     Nome                                       (CPF na linha de baixo)
+     CPF                                                                        */
+function qcpfParse(texto){
+  var linhas = (texto||'').split(/\r?\n/).map(function(l){ return l.replace(/\u00a0/g,' ').trim(); })
+                          .filter(function(l){ return l.length>0; });
+  // quebra a linha em colunas; NAO descarta celula vazia, senao as colunas saem do lugar
+  function celulas(l){
+    var c = l.split(/\t|;|\|/);
+    if(c.length===1) c = l.split(/,(?=\s*\S)/);
+    return c.map(function(x){ return x.trim(); });
+  }
+  // celula que parece nome de pessoa
+  function pareceNome(c){
+    if(!c) return false;
+    if(q_cpfDigits(c).length>=8) return false;                       // matricula, telefone, PIS...
+    var letras=(c.match(/[A-Za-zÀ-ÿ]/g)||[]).length;
+    if(letras<3) return false;
+    if(/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}$/.test(c)) return false;    // data
+    if(/^R\$/.test(c)) return false;                                  // salario
+    return letras / c.length > .55;
+  }
+  // le a celula como CPF e avisa se precisou repor o zero a esquerda
+  function lerCel(c){
+    var d=q_cpfLer(c);
+    return d ? { dig:d, zero:(q_cpfDigits(c).length < 11) } : null;
+  }
+
+  var matriz = linhas.map(celulas);
+
+  // se a primeira linha for cabecalho, usa as colunas declaradas (mais seguro que adivinhar)
+  var colCpf=-1, colNome=-1;
+  if(matriz.length){
+    var l0=matriz[0];
+    var jaTemDados=false;
+    for(var i=0;i<l0.length;i++){ if(lerCel(l0[i])){ jaTemDados=true; break; } }
+    if(!jaTemDados){
+      for(var j=0;j<l0.length;j++){
+        var k=q_nomeNorm(l0[j]);
+        if(colCpf<0  && k.indexOf('cpf')>=0) colCpf=j;
+        if(colNome<0 && (k.indexOf('nome')>=0 || k==='colaborador' || k==='funcionario' || k==='empregado')) colNome=j;
+      }
+      if(colCpf>=0 || colNome>=0) matriz.shift();
+    }
+  }
+
+  var regs = [], pendentes = [];
+  matriz.forEach(function(cels){
+    // --- acha o CPF da linha ---
+    var achado = null;
+    if(colCpf>=0 && cels[colCpf]) achado = lerCel(cels[colCpf]);   // coluna declarada no cabecalho
+    if(!achado){
+      // varre a linha; prefere o numero cujos digitos verificadores fecham,
+      // para nao confundir com telefone (que tambem tem 11 digitos)
+      var achados=[];
+      cels.forEach(function(c){ var a=lerCel(c); if(a) achados.push(a); });
+      for(var i=0;i<achados.length;i++){ if(q_cpfValido(achados[i].dig)){ achado=achados[i]; break; } }
+      if(!achado && achados.length) achado=achados[0];
+    }
+    // --- acha os textos que podem ser o nome ---
+    var candidatos=[];
+    if(colNome>=0 && cels[colNome]) candidatos.push(cels[colNome]);
+    cels.forEach(function(c){
+      if(!c || q_cpfLer(c)) return;
+      if(pareceNome(c) && candidatos.indexOf(c)<0) candidatos.push(c);
+    });
+
+    if(achado){
+      if(!candidatos.length && pendentes.length) candidatos = pendentes;
+      if(candidatos.length) regs.push({ nomes:candidatos, cpf:q_cpfMask(achado.dig), zeroReposto:achado.zero });
+      pendentes = [];
+      return;
+    }
+    if(candidatos.length) pendentes = candidatos;   // linha sem CPF: pode ser o nome da linha de cima
+  });
+  return regs;
+}
+
+function qcpfOpen(){
+  document.getElementById('qcpfText').value='';
+  document.getElementById('qcpfPrev').style.display='none';
+  document.getElementById('qcpfPrev').innerHTML='';
+  document.getElementById('qcpfSum').textContent='';
+  document.getElementById('qcpfOverwrite').checked=false;
+  document.getElementById('qcpfApply').disabled=true;
+  QCPF_PLANO=[];
+  document.getElementById('qcpfOverlay').style.display='flex';
+  setTimeout(function(){ document.getElementById('qcpfText').focus(); }, 40);
+}
+function qcpfClose(){ document.getElementById('qcpfOverlay').style.display='none'; QCPF_PLANO=[]; }
+
+function qcpfPreview(){
+  var pares = qcpfParse(document.getElementById('qcpfText').value);
+  var sobrescrever = document.getElementById('qcpfOverwrite').checked;
+  var prev = document.getElementById('qcpfPrev'), sum = document.getElementById('qcpfSum');
+  var btn  = document.getElementById('qcpfApply');
+  QCPF_PLANO = [];
+  if(!pares.length){
+    prev.style.display='none'; prev.innerHTML='';
+    sum.innerHTML='<b>Nada reconhecido.</b> Confira se colou pelo menos uma coluna de nome e uma de CPF.';
+    btn.disabled=true; return;
+  }
+  // indice de nomes do quadro; nome repetido vira ambiguo e nao e preenchido sozinho
+  var porNome = {};
+  q_DATA.forEach(function(r){
+    var k=q_nomeNorm(r.nome); if(!k) return;
+    if(porNome[k]) porNome[k].amb=true; else porNome[k]={ r:r, amb:false };
+  });
+  var linhas = [], nOk=0, nPula=0, nNao=0;
+  pares.forEach(function(p){
+    // a linha pode ter varias colunas de texto (nome, cargo, setor...):
+    // vale a primeira que bater com alguem do quadro
+    var achou = null, usado = p.nomes[0];
+    for(var i=0;i<p.nomes.length;i++){
+      var cand = porNome[q_nomeNorm(p.nomes[i])];
+      if(cand){ achou = cand; usado = p.nomes[i]; break; }
+    }
+    p.nome = usado;
+    var digitos = q_cpfDigits(p.cpf);
+    var invalido = !q_cpfValido(digitos);
+    var tag, obs;
+    if(!achou){                        tag='no';   obs='Nome nao encontrado no quadro'; nNao++; }
+    else if(achou.amb){                tag='no';   obs='Ha mais de um colaborador com este nome'; nNao++; }
+    else if(q_cpfDigits(achou.r.cpf) && !sobrescrever){ tag='skip'; obs='Ja tem CPF preenchido'; nPula++; }
+    else if(q_cpfDigits(achou.r.cpf)===digitos){       tag='skip'; obs='CPF ja e este'; nPula++; }
+    else {                             tag='ok';   obs= invalido ? 'Sera preenchido (digitos nao conferem)'
+                                                            : (p.zeroReposto ? 'Sera preenchido (zero a esquerda reposto)' : 'Sera preenchido'); nOk++;
+                                       QCPF_PLANO.push({ id:achou.r.id, cpf:q_cpfMask(digitos) }); }
+    linhas.push('<tr><td>'+q_esc(p.nome)+'</td><td class="mono">'+q_esc(q_cpfMask(digitos))+'</td>'
+              + '<td><span class="cpf-tag '+tag+'">'+(tag==='ok'?'preencher':tag==='skip'?'manter':'sem par')+'</span> '
+              + '<span style="color:#8A837C">'+q_esc(obs)+'</span></td></tr>');
+  });
+  prev.innerHTML = '<table><thead><tr><th>Nome na planilha</th><th>CPF</th><th>O que vai acontecer</th></tr></thead><tbody>'
+                 + linhas.join('') + '</tbody></table>';
+  prev.style.display='block';
+  sum.innerHTML = '<b>'+pares.length+'</b> registro(s) lido(s): <b style="color:#1E8E5A">'+nOk+'</b> a preencher · '
+                + '<b>'+nPula+'</b> mantido(s) como esta' + (nNao? ' · <b style="color:#B4342A">'+nNao+'</b> sem correspondencia':'')
+                + (nPula && !sobrescrever ? '<br>Marque a caixa acima se quiser substituir os CPFs ja preenchidos.' : '');
+  btn.disabled = (nOk===0);
+}
+
+function qcpfApply(){
+  if(!QCPF_PLANO.length) return;
+  if(!GAS_URL){ q_setSync('err','Sem conexao com a planilha'); return; }
+  var itens = QCPF_PLANO.slice();
+  var btn = document.getElementById('qcpfApply');
+  btn.disabled = true;
+  q_setSync('busy','Gravando '+itens.length+' CPF(s)…');
+  // pinta na hora, mesmo antes da planilha responder
+  itens.forEach(function(it){
+    var r=q_findById(it.id); if(r){ r.cpf=it.cpf; q_syncCpfBeneficios(it.id, it.cpf); }
+  });
+  q_render();
+  q_apiPost({ action:'saveConfigBatch', items:itens }).then(function(res){
+    if(!res || !res.ok) throw new Error(res && res.error ? res.error : 'falha');
+    adoptData(res.data); buildDeptFilter(); q_render();
+    q_setSync('ok', itens.length+' CPF(s) importado(s) '+q_nowLabel());
+    qcpfClose();
+    document.getElementById('q_exportHint').textContent = itens.length+' CPF(s) importado(s) da planilha de cadastro.';
+  }).catch(function(err){
+    q_setSync('err','Falha ao importar CPFs'); console.error(err);
+    alert('Nao consegui gravar os CPFs na planilha. Nada foi salvo — confira a conexao e tente de novo.');
+    btn.disabled=false; q_recarregar();
+  });
+}
+
 /* ----------------- listeners ----------------- */
+document.getElementById('qcpfOverlay').addEventListener('click', function(e){ if(e.target===this) qcpfClose(); });
 document.querySelectorAll('#statusMenu .sm-opt').forEach(function(o){
   o.addEventListener('click', function(e){ e.stopPropagation(); setStatus(o.getAttribute('data-v')); });
 });
@@ -1221,7 +1632,7 @@ document.getElementById('delInput').addEventListener('keydown', function(e){
   if(e.key==='Enter' && !document.getElementById('delBtn').disabled) doRemove();
 });
 document.getElementById('confirmOverlay').addEventListener('click', function(e){ if(e.target===this) closeConfirm(); });
-document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ closeStatusMenu(); closeConfirm(); } });
+document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ closeStatusMenu(); closeConfirm(); qcpfClose(); } });
 
 /* ----------------- init ----------------- */
 (function init(){
@@ -1710,7 +2121,11 @@ function cfgReadModel(){
     vr_fixo: parseFloat(document.getElementById('cfgVrFixo').value)||0,
     pres_dias: parseInt(document.getElementById('cfgPres').value,10)||0,
     uf: document.getElementById('cfgUf').value||'',
-    cpf: (document.getElementById('cfgCpf').value||'').trim()
+    cpf: (function(){
+      var v=(document.getElementById('cfgCpf').value||'').trim();
+      if(!v) return '';
+      return q_cpfMask(q_cpfAjustaZero(v));            // le so os numeros, ignora onde caiu a pontuacao
+    })()
   };
 }
 function cfgPreview(){
