@@ -84,6 +84,10 @@
                 <i class="fas fa-file-invoice-dollar w-5 text-center"></i>
                 CNAB Inter
             </button>
+            <button onclick="switchView('rescisao')" id="nav-rescisao" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 transition">
+                <i class="fas fa-file-contract w-5 text-center"></i>
+                Rescisões
+            </button>
         </nav>
 
         <div class="p-4 border-t border-gray-100">
@@ -2136,6 +2140,183 @@
                 </div>
             </div>
 
+            <!-- ================ VIEW: RESCISÕES ================ -->
+            <!-- ================ VIEW: RESCISÕES ================ -->
+            <div id="view-rescisao" class="view-section space-y-6 hidden">
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <!-- Painel Config -->
+                    <div class="w-full lg:w-1/3 space-y-6">
+                        <div class="glass-panel p-6 rounded-xl border-t-4 border-orange-500">
+                            <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                <i class="fas fa-file-contract text-orange-500"></i> Gerar Pagamento
+                            </h3>
+
+                            <div class="space-y-4">
+                                <!-- No lugar do Seletor de Folha: importação dos TRCTs -->
+                                <div class="bg-orange-50 p-3 rounded-lg border border-orange-100">
+                                    <label class="block text-xs font-bold text-orange-800 uppercase mb-1">Importar Termos de Rescisão</label>
+                                    <button onclick="document.getElementById('rescisaoFileInput').click()"
+                                            class="w-full border-2 border-dashed border-orange-300 rounded-lg p-4 text-center hover:border-orange-500 hover:bg-orange-100 transition bg-white">
+                                        <i class="fas fa-cloud-upload-alt text-2xl text-orange-400 mb-1"></i>
+                                        <p class="text-xs text-gray-600 font-medium">Selecionar PDFs do TRCT</p>
+                                        <p class="text-[10px] text-gray-400 mt-0.5">Aceita vários arquivos de uma vez</p>
+                                    </button>
+                                    <input type="file" id="rescisaoFileInput" accept=".pdf" multiple class="hidden" onchange="handleRescisaoUpload(this.files)">
+                                    <div id="rescisaoParseStatus" class="mt-2 text-xs hidden"></div>
+                                </div>
+
+                                <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Data de Pagamento</label>
+                                    <p class="text-[11px] text-gray-500 leading-snug">
+                                        <i class="fas fa-calendar-check text-green-600 mr-1"></i>
+                                        Cada rescisão leva a <strong>sua própria data de vencimento</strong> (afastamento + 10 dias), editável na tabela ao lado. O arquivo CNAB grava a data individual de cada lançamento.
+                                    </p>
+                                </div>
+
+                                <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                    <label class="block text-xs font-bold text-blue-800 uppercase mb-1">Modalidade Pix</label>
+                                    <select id="rescisaoPixMode" class="w-full border border-gray-300 rounded-lg p-2 text-sm bg-white" onchange="updateRescPixModeHint()">
+                                        <option value="05">Pix por Dados Bancários (padrão)</option>
+                                        <option value="03">Pix por Chave CPF (fallback)</option>
+                                    </select>
+                                    <p id="rescPixModeHint" class="text-[11px] text-blue-700 mt-2 leading-snug">
+                                        Usa banco / agência / conta cadastrados. Mais controlado, ideal para o lote principal.
+                                    </p>
+                                </div>
+
+                                <div class="pt-4 border-t border-gray-100">
+                                    <h4 class="text-sm font-bold text-gray-700 mb-2">Dados do Pagador</h4>
+                                    <p class="text-[11px] text-gray-500 leading-snug">
+                                        <i class="fas fa-info-circle mr-1"></i>Usa CNPJ, agência e conta configurados na aba <strong>CNAB Inter</strong>.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <button onclick="rescisaoGenerateFiles()" class="w-full mt-6 bg-orange-600 text-white font-bold py-3 rounded-lg hover:bg-orange-700 transition shadow-md flex items-center justify-center gap-2">
+                                <i class="fas fa-download"></i> Baixar CNAB .REM
+                            </button>
+                            <button onclick="rescisaoClearAll()" class="w-full mt-2 border border-gray-300 text-gray-600 py-2 rounded-lg text-sm hover:bg-gray-50 transition">
+                                <i class="fas fa-trash-alt mr-1"></i> Limpar lista
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Preview -->
+                    <div class="w-full lg:w-2/3">
+                        <div class="glass-panel p-6 rounded-xl h-full flex flex-col">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="font-bold text-gray-800">Rescisões do Lote</h3>
+                                    <p class="text-xs text-gray-500 mt-0.5">
+                                        <span id="rescisaoRowCounter">0 de 0 incluído(s)</span>
+                                        <span class="text-gray-300 mx-1">•</span>
+                                        <button onclick="toggleAllResc(true)" class="text-orange-600 hover:underline">Marcar todos</button>
+                                        <span class="text-gray-300 mx-1">/</span>
+                                        <button onclick="toggleAllResc(false)" class="text-gray-500 hover:underline">Desmarcar todos</button>
+                                        <span class="text-gray-300 mx-1">/</span>
+                                        <button onclick="deselectRescZerados()" class="text-blue-600 hover:underline" title="Desmarca as rescisões cujo valor líquido não foi lido (0,00). Útil para gerar só as que estão completas.">Desmarcar 0,00</button>
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-gray-400 uppercase">Total</p>
+                                    <span id="rescisaoTotal" class="text-xl font-bold text-green-600">R$&nbsp;0,00</span>
+                                </div>
+                            </div>
+
+                            <div class="flex-1 overflow-auto bg-gray-50 rounded-lg border border-gray-200 p-0">
+                                <table class="w-full text-left">
+                                    <thead class="text-xs text-gray-500 uppercase bg-gray-100 border-b border-gray-200 sticky top-0">
+                                        <tr>
+                                            <th class="p-3 text-center w-10">
+                                                <input type="checkbox" id="rescisaoMasterCheck" class="w-4 h-4 accent-orange-600 cursor-pointer" onchange="toggleAllResc(this.checked)" title="Marcar/Desmarcar todos">
+                                            </th>
+                                            <th class="p-3 w-1/4">Nome</th>
+                                            <th class="p-3">CPF</th>
+                                            <th class="p-3 text-center">Vencimento</th>
+                                            <th class="p-3 text-right">Líquido (Editável)</th>
+                                            <th class="p-3 text-center">Status</th>
+                                            <th class="p-3 text-center">Ação</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="rescisaoListBody" class="text-sm text-gray-600 divide-y divide-gray-200" style="font-family: Calibri, Carlito, 'Segoe UI', system-ui, sans-serif;">
+                                        <tr><td colspan="7" class="p-8 text-center text-gray-400 text-sm italic">Nenhuma rescisão importada. Use o botão ao lado para enviar os PDFs.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Modal: visualizar PDF da rescisão -->
+            <div id="pdfViewerModal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4" onclick="if(event.target===this) closePdfViewer()">
+                <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col">
+                    <div class="flex justify-between items-center p-4 border-b border-gray-200">
+                        <div class="min-w-0">
+                            <h3 class="text-sm font-bold text-gray-800 truncate" id="pdfViewerTitle">Termo de Rescisão</h3>
+                            <p class="text-[11px] text-gray-400 truncate" id="pdfViewerSubtitle"></p>
+                        </div>
+                        <div class="flex items-center gap-2 flex-shrink-0 ml-4">
+                            <a id="pdfViewerOpenTab" href="#" target="_blank" class="text-xs px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition">
+                                <i class="fas fa-external-link-alt mr-1"></i>Abrir em nova aba
+                            </a>
+                            <button onclick="closePdfViewer()" class="text-gray-400 hover:text-gray-600 px-2"><i class="fas fa-times text-lg"></i></button>
+                        </div>
+                    </div>
+                    <div class="flex-1 bg-gray-100 rounded-b-xl overflow-hidden">
+                        <iframe id="pdfViewerFrame" class="w-full h-full border-0" title="Visualização do PDF"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal: cadastrar trabalhador vindo da rescisão -->
+            <div id="rescBenefModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+                <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-lg font-bold text-gray-800">Cadastrar Dados Bancários</h3>
+                        <button onclick="closeRescBenefModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-4">Esta pessoa será adicionada aos "Dados Bancários" e ficará disponível para as próximas folhas e pagamentos.</p>
+                    <input type="hidden" id="rescBenefId">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs text-gray-500 mb-1">Nome completo *</label>
+                            <input type="text" id="rescBenefName" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs text-gray-500 mb-1">CPF *</label>
+                            <input type="text" id="rescBenefCpf" readonly class="w-full border border-gray-300 rounded-lg p-2 text-sm font-mono bg-gray-100 text-gray-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">Banco (3 dígitos)</label>
+                            <input type="text" id="rescBenefBank" placeholder="Ex: 077" maxlength="3" class="w-full border border-gray-300 rounded-lg p-2 text-sm font-mono">
+                            <p class="text-[10px] text-gray-400 mt-1">Opcional se for pagar por Chave CPF.</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">Agência</label>
+                            <input type="text" id="rescBenefAgency" placeholder="Ex: 0001" class="w-full border border-gray-300 rounded-lg p-2 text-sm font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">Conta c/ Dígito</label>
+                            <input type="text" id="rescBenefAccount" placeholder="Ex: 12345-6" class="w-full border border-gray-300 rounded-lg p-2 text-sm font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">Tipo de Conta</label>
+                            <select id="rescBenefType" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+                                <option value="01">Corrente</option>
+                                <option value="02">Pagamento</option>
+                                <option value="03">Poupança</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-5 flex gap-2 justify-end">
+                        <button onclick="closeRescBenefModal()" class="px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition">Cancelar</button>
+                        <button onclick="saveRescBenef()" class="px-5 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition">Salvar cadastro</button>
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 
@@ -2227,7 +2408,8 @@
                 'overview': ['Visão Geral', 'Resumo financeiro da folha selecionada'],
                 'files': ['Arquivos da Folha', 'Selecione o mês para importar (inclui 13º)'],
                 'bank': ['Dados Bancários', 'Cadastro de contas para CNAB'],
-                'cnab': ['CNAB Inter', 'Gerar arquivo de remessa']
+                'cnab': ['CNAB Inter', 'Gerar arquivo de remessa'],
+                'rescisao': ['Rescisões', 'Leitura automática do Termo de Rescisão (TRCT)']
             };
             document.getElementById('pageTitle').innerText = titles[viewId][0];
             document.getElementById('pageSubtitle').innerText = titles[viewId][1];
@@ -2250,6 +2432,9 @@
                         renderCnabPreview(candidate);
                     }
                 }
+            }
+            if(viewId === 'rescisao') {
+                renderRescisaoList();
             }
         }
 
@@ -3836,6 +4021,681 @@ if (admLabelMatch) {
             const reader = new FileReader();
             reader.onload = function(e) { document.getElementById('companyLogoSidebar').src = e.target.result; document.getElementById('companyLogoSidebar').classList.remove('hidden'); };
             reader.readAsDataURL(file);
+        }
+
+        // ================================================================
+        // MÓDULO: RESCISÕES — leitura automática de TRCT em PDF
+        // Autocontido: não altera nenhuma função existente do app.
+        // Gera sempre arquivo de remessa CNAB 240 Inter (.REM), nas
+        // modalidades Pix por Dados Bancários (05) ou Pix por Chave CPF (03).
+        // ================================================================
+        const RescisaoState = {
+            items: JSON.parse(localStorage.getItem('rescisaoItems') || '[]'),
+            pdfs: {}   // id -> objectURL (apenas na sessão atual)
+        };
+
+        function rescisaoSave() {
+            localStorage.setItem('rescisaoItems', JSON.stringify(RescisaoState.items));
+        }
+
+        function rescFormatCpf(cpf) {
+            const c = String(cpf == null ? '' : cpf).replace(/\D/g, '');
+            if (c.length === 11) return c.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+            if (c.length === 14) return c.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+            return cpf || '';
+        }
+
+        // ---------- Leitura do PDF ----------
+        async function handleRescisaoUpload(files) {
+            if (!files || files.length === 0) return;
+            const status = document.getElementById('rescisaoParseStatus');
+            status.classList.remove('hidden');
+            if (typeof pdfjsLib === 'undefined') {
+                status.innerHTML = '<span class="text-red-600">❌ PDF.js não carregou. Verifique a conexão e recarregue a página.</span>';
+                return;
+            }
+            let ok = 0, parcial = 0, fail = 0;
+            const avisos = [], debugs = [];
+            for (const file of files) {
+                status.innerHTML = `<span class="text-gray-500">⏳ Lendo ${file.name}...</span>`;
+                try {
+                    const extraido = await rescExtractPdf(file);
+                    const dados = parseTrct(extraido.text, extraido.lines);
+                    debugs.push(`--- ${file.name} ---\n${dados.debug}`);
+                    if (!dados.cpf) {
+                        fail++;
+                        avisos.push(`❌ ${file.name}: não encontrei CPF (PDF escaneado como imagem?)`);
+                        continue;
+                    }
+                    if (RescisaoState.items.find(i => i.cpf === dados.cpf)) {
+                        fail++;
+                        avisos.push(`⚠ ${file.name}: já existe rescisão de ${dados.nome || dados.cpf} na lista`);
+                        continue;
+                    }
+                    const faltando = [];
+                    if (!dados.nome) faltando.push('nome');
+                    if (!dados.valor) faltando.push('valor');
+                    if (!dados.vencimento) faltando.push('vencimento');
+                    const itemId = 'rc_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+                    RescisaoState.items.push({
+                        id: itemId,
+                        cpf: dados.cpf,
+                        nome: dados.nome || '',
+                        valor: dados.valor || 0,
+                        admissao: dados.admissao || '',
+                        afastamento: dados.afastamento || '',
+                        vencimento: dados.vencimento || '',
+                        arquivo: file.name,
+                        removido: false     // nasce marcado (incluído no lote)
+                    });
+                    try { RescisaoState.pdfs[itemId] = URL.createObjectURL(file); } catch (e) {}
+                    if (faltando.length === 0) ok++;
+                    else { parcial++; avisos.push(`⚠ ${file.name}: preencha manualmente: ${faltando.join(', ')}`); }
+                    if (dados.avisoValor) avisos.push(`⚠ ${file.name}: ${dados.avisoValor}`);
+                } catch (err) {
+                    console.error('Erro ao ler PDF:', err);
+                    fail++;
+                    avisos.push(`❌ ${file.name}: ${err.message}`);
+                }
+            }
+            rescisaoSave();
+            renderRescisaoList();
+            let msg = '';
+            if (ok > 0) msg += `<span class="text-green-700">✅ ${ok} rescisão(ões) lida(s) completamente.</span><br>`;
+            if (parcial > 0) msg += `<span class="text-yellow-700">⚠ ${parcial} lida(s) parcialmente — campos em vermelho precisam ser preenchidos.</span><br>`;
+            if (fail > 0) msg += `<span class="text-red-600">❌ ${fail} falha(s).</span><br>`;
+            // Detalhes e diagnóstico ficam colapsados por padrão (evita poluir o painel)
+            if (avisos.length || debugs.length) {
+                const listaAvisos = avisos.length
+                    ? avisos.map(a => `<div class="text-[11px] text-gray-600 leading-relaxed break-all">• ${a}</div>`).join('')
+                    : '<div class="text-[11px] text-gray-400 italic">Sem ocorrências.</div>';
+                msg += `
+                <details class="mt-2 group">
+                    <summary class="cursor-pointer text-[11px] text-orange-600 hover:text-orange-700 select-none list-none">
+                        <i class="fas fa-chevron-right text-[9px] mr-1 transition-transform group-open:rotate-90"></i><span class="group-open:hidden">Mostrar mais</span><span class="hidden group-open:inline">Mostrar menos</span>
+                        ${avisos.length ? `<span class="text-gray-400">(${avisos.length} ocorrência${avisos.length > 1 ? 's' : ''})</span>` : ''}
+                    </summary>
+                    <div class="mt-2 p-2 bg-gray-50 border border-gray-200 rounded max-h-56 overflow-auto">
+                        ${listaAvisos}
+                        <details class="mt-2">
+                            <summary class="cursor-pointer text-[11px] text-gray-500 hover:text-gray-700">🔍 Diagnóstico da leitura</summary>
+                            <pre class="mt-1 p-2 bg-gray-900 text-green-300 text-[10px] rounded overflow-auto max-h-48 whitespace-pre-wrap">${debugs.join('\n\n').replace(/</g, '&lt;')}</pre>
+                        </details>
+                    </div>
+                </details>`;
+            }
+            status.innerHTML = msg;
+            document.getElementById('rescisaoFileInput').value = '';
+        }
+
+        // Extrai texto do PDF agrupando por coordenada Y (imune à ordem de emissão)
+        async function rescExtractPdf(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            let fullText = '';
+            const allLines = [];
+            for (let p = 1; p <= pdf.numPages; p++) {
+                const page = await pdf.getPage(p);
+                const content = await page.getTextContent();
+                const items = content.items
+                    .filter(it => it.str && it.str.trim())
+                    .map(it => ({ str: it.str, x: it.transform[4], y: it.transform[5] }));
+                const sorted = items.slice().sort((a, b) => (b.y - a.y) || (a.x - b.x));
+                const lines = [];
+                sorted.forEach(it => {
+                    const ln = lines.find(L => Math.abs(L.y - it.y) < 4);
+                    if (ln) ln.items.push(it); else lines.push({ y: it.y, items: [it] });
+                });
+                lines.forEach(L => {
+                    L.items.sort((a, b) => a.x - b.x);
+                    L.text = L.items.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim();
+                    L.page = p;
+                });
+                allLines.push(...lines);
+                fullText += lines.map(L => L.text).join('\n') + '\n';
+            }
+            return { text: fullText, lines: allLines };
+        }
+
+        // Valor monetário mais à direita da linha que contém o rótulo
+        function posMoney(lines, labelRegex) {
+            if (!lines) return null;
+            const norm = s => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+            for (const L of lines) {
+                if (!labelRegex.test(norm(L.text))) continue;
+                const m = L.items
+                    .filter(it => /\d{1,3}(?:\.\d{3})*,\d{2}/.test(it.str))
+                    .sort((a, b) => b.x - a.x)[0];
+                if (m) {
+                    const v = m.str.match(/(\d{1,3}(?:\.\d{3})*,\d{2})/);
+                    if (v) return parseFloat(v[1].replace(/\./g, '').replace(',', '.'));
+                }
+            }
+            return null;
+        }
+
+        // Valor monetário mais abaixo da última página (no TRCT o líquido é o último campo)
+        function posMoneyBottom(lines) {
+            if (!lines || !lines.length) return null;
+            const ultima = Math.max(...lines.map(L => L.page || 1));
+            const money = [];
+            lines.filter(L => (L.page || 1) === ultima).forEach(L => {
+                L.items.forEach(it => {
+                    const m = it.str.match(/(\d{1,3}(?:\.\d{3})*,\d{2})/);
+                    if (m) money.push({ y: it.y, x: it.x, val: parseFloat(m[1].replace(/\./g, '').replace(',', '.')) });
+                });
+            });
+            if (!money.length) return null;
+            money.sort((a, b) => a.y - b.y || b.x - a.x);
+            return money[0].val;
+        }
+
+        // Parser do TRCT usando a técnica da "string esmagada" (rótulo cola no valor)
+        function parseTrct(txtRaw, lines) {
+            const result = { cpf: null, nome: null, valor: null, admissao: null, afastamento: null, vencimento: null, debug: '' };
+            const txt = (txtRaw || '').normalize('NFC').replace(/\u00A0/g, ' ')
+                .split('\n').map(l => l.replace(/[ \t]+/g, ' ').trim()).join('\n');
+            const flat = txt.replace(/\n/g, ' ');
+            const semAcento = flat.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+            const semEspaco = semAcento.replace(/[\s|:_]/g, '');
+
+            // ---- CPF ----
+            const cpfMatch = txt.match(/\b(\d{3}\.\d{3}\.\d{3}-\d{2})\b/);
+            if (cpfMatch) result.cpf = cpfMatch[1].replace(/\D/g, '');
+            if (!result.cpf) {
+                let m = semEspaco.match(/CPF(\d{3}\.\d{3}\.\d{3}-\d{2})/) || semEspaco.match(/CPF(\d{11})(?!\d)/);
+                if (m) result.cpf = m[1].replace(/\D/g, '');
+            }
+
+            // ---- Nome ----
+            let nomeMatch = txt.match(/11\s+Nome\s*\n\s*([A-ZÀ-Ú][A-ZÀ-Ú'\s]{4,}?)\s*\n/);
+            if (!nomeMatch) nomeMatch = txt.match(/PIS\/PASEP[^\n]*\n\s*[\d.\-]+\s+([A-ZÀ-Ú][A-ZÀ-Ú'\s]{4,}?)\s*\n/);
+            if (!nomeMatch) nomeMatch = flat.match(/11\s+Nome\s+(?:\d{2}\s+[A-Za-zÀ-ú\/]+\s+)*([A-ZÀ-Ú]{2,}(?:\s+[A-ZÀ-Ú]{2,}){1,6})/);
+            if (nomeMatch) result.nome = nomeMatch[1].trim().replace(/\s+/g, ' ');
+
+            // ---- Valor líquido (string esmagada + matemática do documento) ----
+            const parseBR = s => parseFloat(String(s).replace(/\./g, '').replace(',', '.'));
+            const reValor = '(?:R\\$)?(\\d{1,3}(?:\\.\\d{3})*,\\d{2})';
+            const reValorAntes = '(\\d{1,3}(?:\\.\\d{3})*,\\d{2})(?:R\\$)?';
+            function achaEsmagado(rotulos) {
+                for (const rot of rotulos) {
+                    let m = semEspaco.match(new RegExp(rot + reValor));
+                    if (m) return parseBR(m[1]);
+                    m = semEspaco.match(new RegExp(reValorAntes + rot));
+                    if (m) return parseBR(m[1]);
+                }
+                return null;
+            }
+            const bruto    = achaEsmagado(['TOTALBRUTO', 'TOTALDEVERBAS', 'TOTALVENCIMENTOS', 'TOTALPROVENTOS']);
+            const deducoes = achaEsmagado(['TOTALDEDUCOES', 'TOTALDESCONTOS', 'TOTALDASDEDUCOES']);
+            const vRotulo  = achaEsmagado(['VALORLIQUIDO', 'TOTALLIQUIDO', 'LIQUIDOARECEBER', 'LIQUIDOAPAGAR']);
+            const esperado = (bruto !== null && deducoes !== null) ? Math.round((bruto - deducoes) * 100) / 100 : null;
+            const vPosRotulo = posMoney(lines, /VALOR\s+LIQUIDO/);
+            const vPosUltimo = posMoneyBottom(lines);
+
+            let escolhido = null, estrategia = null;
+            if (esperado !== null && vRotulo !== null && Math.abs(esperado - vRotulo) <= 0.011) {
+                escolhido = esperado; estrategia = 'esmagada: rotulo + matematica (conferem)';
+            } else if (esperado !== null) {
+                escolhido = esperado; estrategia = 'esmagada: matematica (bruto - deducoes)';
+                if (vRotulo !== null) result.avisoValor = `Rótulo lia ${vRotulo.toFixed(2)}, mas Bruto−Deduções dá ${esperado.toFixed(2)}. Usei o cálculo — confira.`;
+            } else if (vRotulo !== null) {
+                escolhido = vRotulo; estrategia = 'esmagada: rotulo VALOR LIQUIDO';
+            } else if (vPosRotulo !== null) {
+                escolhido = vPosRotulo; estrategia = 'posicional: rotulo na mesma linha';
+            } else if (vPosUltimo !== null) {
+                escolhido = vPosUltimo; estrategia = 'posicional: ultimo campo da pagina';
+            }
+            result.valor = escolhido;
+            result.debug += `[estrategia: ${estrategia || 'nenhuma'}] [bruto=${bruto} deducoes=${deducoes} rotulo=${vRotulo} esperado=${esperado} pos-rotulo=${vPosRotulo} pos-ultimo=${vPosUltimo}] `;
+
+            // ---- Datas: quadrante do contrato; mais antiga = admissão, mais recente = afastamento ----
+            const toDate = s => { const [d, m, y] = s.split('/').map(Number); return new Date(y, m - 1, d); };
+            const inicios = ['DATADEADMISSAO', 'CAUSADOAFASTAMENTO', 'DADOSDOCONTRATO', 'REMUNERACAOMESANT'];
+            const fins    = ['CATEGORIADOTRABALHADOR', 'PENSAOALIM', 'CODIGOSINDICAL', 'DISCRIMINACAO'];
+            let bloco = null;
+            for (const ini of inicios) {
+                const pi = semEspaco.indexOf(ini);
+                if (pi === -1) continue;
+                let pf = -1;
+                for (const fim of fins) {
+                    const p = semEspaco.indexOf(fim, pi);
+                    if (p !== -1 && (pf === -1 || p < pf)) pf = p;
+                }
+                const trecho = (pf === -1) ? semEspaco.substring(pi) : semEspaco.substring(pi, pf);
+                const datas = [...trecho.matchAll(/(\d{2}\/\d{2}\/\d{4})/g)].map(m => m[1]);
+                if (datas.length >= 1) { bloco = { rotulo: ini, datas }; break; }
+            }
+            if (bloco) {
+                const ord = bloco.datas.slice().sort((a, b) => toDate(a) - toDate(b));
+                result.admissao = ord[0];
+                result.afastamento = ord[ord.length - 1];
+                result.debug += `[datas ${bloco.rotulo}: ${bloco.datas.join(' ')} -> adm=${result.admissao} afast=${result.afastamento}] `;
+            }
+            if (!result.afastamento) {
+                let dm = flat.match(/(\d{2}\/\d{2}\/\d{4})\s+(\d{2}\/\d{2}\/\d{4})\s+(\d{2}\/\d{2}\/\d{4})/)
+                      || flat.match(/(\d{2}\/\d{2}\/\d{4})\s+(\d{2}\/\d{2}\/\d{4})/);
+                if (dm) {
+                    const ds = dm.slice(1).filter(Boolean).sort((a, b) => toDate(a) - toDate(b));
+                    result.afastamento = ds[ds.length - 1];
+                }
+            }
+            if (!result.afastamento) {
+                const dm = semAcento.match(/AFASTAMENTO[^0-9]{0,60}(\d{2}\/\d{2}\/\d{4})/);
+                if (dm) result.afastamento = dm[1];
+            }
+
+            // ---- Vencimento = afastamento + 10 dias corridos (CLT art. 477) ----
+            if (result.afastamento) {
+                const [d, m, y] = result.afastamento.split('/').map(Number);
+                const dt = new Date(y, m - 1, d);
+                dt.setDate(dt.getDate() + 10);
+                result.vencimento = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+            }
+            return result;
+        }
+
+        // ---------- Tabela ----------
+        function renderRescisaoList() {
+            const tbody = document.getElementById('rescisaoListBody');
+            if (!tbody) return;
+            if (RescisaoState.items.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-gray-400 text-sm italic">Nenhuma rescisão importada. Use o botão ao lado para enviar os PDFs.</td></tr>';
+                document.getElementById('rescisaoTotal').innerText = 'R$ 0,00';
+                updateRescHeader(0, 0);
+                return;
+            }
+            const modoGlobal = document.getElementById('rescisaoPixMode').value;   // '05' ou '03'
+            const isPixKey = (modoGlobal === '03');
+            let total = 0, incluidos = 0;
+            const rows = RescisaoState.items.map(item => {
+                const data = AppState.masterBankData[item.cpf] || {};
+                const isRemovido = !!item.removido;
+                if (!isRemovido) { total += item.valor; incluidos++; }
+
+                // Status: no modo Dados Bancários exige banco/ag/conta; no modo Chave CPF basta o CPF
+                const temBanco = !!(String(data.bank || '').trim() && String(data.agency || '').trim() && String(data.account || '').trim());
+                const cpfLimpo = String(item.cpf || '').replace(/\D/g, '');
+                const pronto = isPixKey ? (cpfLimpo.length >= 11) : temBanco;
+                const cadastrado = !!(data.name || data.bank);
+                let statusCell;
+                if (!cadastrado) {
+                    statusCell = `<button onclick="rescisaoCadastrar('${item.id}')" class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded hover:bg-orange-200 transition" title="Cadastrar dados bancários"><i class="fas fa-user-plus mr-1"></i>Cadastrar</button>`;
+                } else if (pronto) {
+                    statusCell = '<span class="text-green-600 text-xs"><i class="fas fa-check"></i></span>';
+                } else {
+                    statusCell = `<button onclick="rescisaoCadastrar('${item.id}')" class="text-red-500 text-xs font-bold hover:underline" title="Sem banco/agência/conta — cadastre ou use Pix por Chave CPF">Incompleto</button>`;
+                }
+
+                const nomeVal = String(data.name || item.nome || '').toUpperCase();
+                const nomeFalta = !nomeVal, valorFalta = !item.valor || item.valor <= 0, vencFalta = !item.vencimento;
+                const alerta = (nomeFalta || valorFalta || vencFalta);
+
+                return `<tr class="border-b border-gray-100 ${isRemovido ? 'bg-gray-50 opacity-60' : (alerta ? 'bg-red-50' : '')}">
+                    <td class="p-3 text-center">
+                        <input type="checkbox" class="w-4 h-4 accent-orange-600 cursor-pointer" ${isRemovido ? '' : 'checked'}
+                               onchange="toggleRescRow('${item.id}', this.checked)" title="Incluir/Excluir do arquivo">
+                    </td>
+                    <td class="p-3 text-sm font-medium ${isRemovido ? 'line-through text-gray-400' : ''}">
+                        <input type="text" value="${nomeVal.replace(/"/g, '&quot;')}" placeholder="Nome do trabalhador"
+                               onchange="rescisaoUpdate('${item.id}','nome',this.value)" ${isRemovido ? 'disabled' : ''}
+                               class="w-full border rounded p-1 text-xs ${nomeFalta ? 'border-red-400 bg-red-50' : 'border-gray-200'} ${isRemovido ? 'bg-gray-100' : ''}">
+                    </td>
+                    <td class="p-3 text-xs text-gray-500">${rescFormatCpf(item.cpf)}</td>
+                    <td class="p-3 text-center">
+                        <input type="date" value="${item.vencimento || ''}"
+                               onchange="rescisaoUpdate('${item.id}','vencimento',this.value)" ${isRemovido ? 'disabled' : ''}
+                               class="border rounded p-1 text-xs ${vencFalta ? 'border-red-400 bg-red-50' : ''} ${isRemovido ? 'bg-gray-100' : ''}">
+                        ${item.afastamento ? `<div class="text-[10px] text-gray-400 mt-0.5">${item.admissao ? 'adm. ' + item.admissao + ' • ' : ''}afast. ${item.afastamento}</div>` : ''}
+                    </td>
+                    <td class="p-3 text-right">
+                        <input type="number" step="0.01" value="${item.valor ? item.valor.toFixed(2) : ''}" placeholder="0,00"
+                               onchange="rescisaoUpdate('${item.id}','valor',this.value)" onfocus="this.select()" ${isRemovido ? 'disabled' : ''}
+                               class="text-right border rounded p-1 text-xs w-24 ${valorFalta ? 'border-red-400 bg-red-50' : ''} ${isRemovido ? 'bg-gray-100' : ''}">
+                    </td>
+                    <td class="p-3 text-center">${statusCell}</td>
+                    <td class="p-3 text-center whitespace-nowrap">
+                        ${RescisaoState.pdfs[item.id]
+                            ? `<button onclick="rescisaoVerPdf('${item.id}')" title="Visualizar PDF" class="text-blue-500 hover:text-blue-700 mr-2"><i class="fas fa-eye"></i></button>`
+                            : `<span title="PDF não disponível nesta sessão — reenvie para visualizar" class="text-gray-300 mr-2 cursor-not-allowed"><i class="fas fa-eye-slash"></i></span>`}
+                        <button onclick="rescisaoRemove('${item.id}')" title="Remover" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`;
+            }).join('');
+            tbody.innerHTML = rows;
+            rescisaoSave();
+            document.getElementById('rescisaoTotal').innerText = formatMoney(total);
+            updateRescHeader(incluidos, RescisaoState.items.length);
+        }
+
+        // Atualiza checkbox master + contador "X de Y incluído(s)"
+        function updateRescHeader(incluidos, total) {
+            const master = document.getElementById('rescisaoMasterCheck');
+            const counter = document.getElementById('rescisaoRowCounter');
+            if (counter) counter.innerText = `${incluidos} de ${total} incluído(s)`;
+            if (master) {
+                if (incluidos === 0) { master.checked = false; master.indeterminate = false; }
+                else if (incluidos === total) { master.checked = true; master.indeterminate = false; }
+                else { master.checked = false; master.indeterminate = true; }
+            }
+        }
+
+        // Marca/desmarca uma linha
+        function toggleRescRow(id, incluir) {
+            const item = RescisaoState.items.find(i => i.id === id);
+            if (!item) return;
+            item.removido = !incluir;
+            rescisaoSave();
+            renderRescisaoList();
+        }
+
+        // Marca/desmarca todos
+        function toggleAllResc(incluir) {
+            RescisaoState.items.forEach(i => { i.removido = !incluir; });
+            rescisaoSave();
+            renderRescisaoList();
+        }
+
+        // Desmarca as rescisões sem valor lido (0,00) — permite gerar só as completas
+        function deselectRescZerados() {
+            let n = 0;
+            RescisaoState.items.forEach(i => {
+                if (!i.valor || i.valor <= 0) { i.removido = true; n++; }
+            });
+            rescisaoSave();
+            renderRescisaoList();
+            if (n === 0) alert('Nenhuma rescisão com valor zerado — todas já têm valor preenchido.');
+        }
+
+        // Atualiza o texto de ajuda da modalidade Pix (aplica a TODO o lote)
+        function updateRescPixModeHint() {
+            const sel = document.getElementById('rescisaoPixMode');
+            const hint = document.getElementById('rescPixModeHint');
+            if (!sel || !hint) return;
+            const box = sel.closest('div');
+            if (sel.value === '03') {
+                hint.innerText = 'Usa apenas o CPF como chave Pix. Útil quando o banco do trabalhador não aceita Pix por dados bancários (erro PIXUI02). Aplica-se a todo o lote.';
+                if (box) { box.classList.remove('bg-blue-50', 'border-blue-100'); box.classList.add('bg-yellow-50', 'border-yellow-200'); }
+                hint.classList.remove('text-blue-700'); hint.classList.add('text-yellow-800');
+            } else {
+                hint.innerText = 'Usa banco / agência / conta cadastrados. Mais controlado, ideal para o lote principal.';
+                if (box) { box.classList.remove('bg-yellow-50', 'border-yellow-200'); box.classList.add('bg-blue-50', 'border-blue-100'); }
+                hint.classList.remove('text-yellow-800'); hint.classList.add('text-blue-700');
+            }
+            renderRescisaoList();   // status das linhas depende da modalidade
+        }
+
+        function rescisaoUpdate(id, campo, valor) {
+            const item = RescisaoState.items.find(i => i.id === id);
+            if (!item) return;
+            if (campo === 'valor') {
+                const v = parseFloat((valor || '').toString().replace(',', '.'));
+                if (!v || v <= 0) return;
+                item.valor = v;
+            } else if (campo === 'nome') {
+                item.nome = String(valor == null ? '' : valor).trim().toUpperCase();
+            } else {
+                item[campo] = valor;
+            }
+            rescisaoSave();
+            renderRescisaoList();
+        }
+
+        function rescisaoRemove(id) {
+            if (RescisaoState.pdfs[id]) {
+                try { URL.revokeObjectURL(RescisaoState.pdfs[id]); } catch (e) {}
+                delete RescisaoState.pdfs[id];
+            }
+            RescisaoState.items = RescisaoState.items.filter(i => i.id !== id);
+            rescisaoSave();
+            renderRescisaoList();
+        }
+
+        function rescisaoClearAll() {
+            if (RescisaoState.items.length === 0) return;
+            if (!confirm(`Remover todas as ${RescisaoState.items.length} rescisões da lista?`)) return;
+            Object.values(RescisaoState.pdfs).forEach(u => { try { URL.revokeObjectURL(u); } catch (e) {} });
+            RescisaoState.pdfs = {};
+            RescisaoState.items = [];
+            rescisaoSave();
+            renderRescisaoList();
+        }
+
+        // ---------- Visualizador de PDF ----------
+        function rescisaoVerPdf(id) {
+            const url = RescisaoState.pdfs[id];
+            if (!url) { alert('O PDF não está mais disponível nesta sessão. Reenvie o arquivo para visualizá-lo.'); return; }
+            const item = RescisaoState.items.find(i => i.id === id) || {};
+            const data = AppState.masterBankData[item.cpf] || {};
+            document.getElementById('pdfViewerTitle').innerText = String(data.name || item.nome || item.cpf || '').toUpperCase() || 'Termo de Rescisão';
+            document.getElementById('pdfViewerSubtitle').innerText = [item.arquivo, item.valor ? formatMoney(item.valor) : null].filter(Boolean).join('  •  ');
+            document.getElementById('pdfViewerFrame').src = url;
+            document.getElementById('pdfViewerOpenTab').href = url;
+            const m = document.getElementById('pdfViewerModal');
+            m.classList.remove('hidden'); m.classList.add('flex');
+        }
+        function closePdfViewer() {
+            const m = document.getElementById('pdfViewerModal');
+            m.classList.add('hidden'); m.classList.remove('flex');
+            document.getElementById('pdfViewerFrame').src = 'about:blank';
+        }
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                const m = document.getElementById('pdfViewerModal');
+                if (m && !m.classList.contains('hidden')) closePdfViewer();
+            }
+        });
+
+        // ---------- Cadastro de trabalhador a partir da rescisão ----------
+        function rescisaoCadastrar(id) {
+            const item = RescisaoState.items.find(i => i.id === id);
+            if (!item) return;
+            const existente = AppState.masterBankData[item.cpf] || {};
+            document.getElementById('rescBenefId').value = id;
+            document.getElementById('rescBenefName').value = String(existente.name || item.nome || '').toUpperCase();
+            document.getElementById('rescBenefCpf').value = rescFormatCpf(item.cpf);
+            document.getElementById('rescBenefBank').value = String(existente.bank == null ? '' : existente.bank);
+            document.getElementById('rescBenefAgency').value = String(existente.agency == null ? '' : existente.agency);
+            document.getElementById('rescBenefAccount').value = String(existente.account == null ? '' : existente.account);
+            document.getElementById('rescBenefType').value = String(existente.type == null ? '01' : existente.type);
+            const m = document.getElementById('rescBenefModal');
+            m.classList.remove('hidden'); m.classList.add('flex');
+            setTimeout(() => document.getElementById('rescBenefName').focus(), 50);
+        }
+        function closeRescBenefModal() {
+            const m = document.getElementById('rescBenefModal');
+            m.classList.add('hidden'); m.classList.remove('flex');
+        }
+        function saveRescBenef() {
+            const id = document.getElementById('rescBenefId').value;
+            const item = RescisaoState.items.find(i => i.id === id);
+            if (!item) { closeRescBenefModal(); return; }
+            const nome = document.getElementById('rescBenefName').value.trim();
+            if (!nome) { alert('Informe o nome do trabalhador.'); return; }
+            const anterior = AppState.masterBankData[item.cpf] || {};
+            AppState.masterBankData[item.cpf] = {
+                ...anterior,
+                name: nome.toUpperCase(),
+                cpfDisplay: rescFormatCpf(item.cpf),
+                bank: document.getElementById('rescBenefBank').value.replace(/\D/g, ''),
+                agency: document.getElementById('rescBenefAgency').value.trim(),
+                account: document.getElementById('rescBenefAccount').value.trim(),
+                type: document.getElementById('rescBenefType').value
+            };
+            item.nome = nome.toUpperCase();
+            if (typeof saveProject === 'function') { try { saveProject(); } catch (e) {} }
+            rescisaoSave();
+            closeRescBenefModal();
+            renderRescisaoList();
+        }
+
+        // ---------- Geração do arquivo de remessa CNAB 240 Inter ----------
+        function rescisaoGenerateFiles() {
+            try {
+                // Considera apenas as linhas marcadas (checkbox)
+                const selecionados = RescisaoState.items.filter(i => !i.removido);
+                if (selecionados.length === 0) { alert('Nenhuma rescisão marcada. Marque ao menos uma linha.'); return; }
+
+                const modoGlobal = document.getElementById('rescisaoPixMode').value;  // '05' ou '03'
+                const isPixKey = (modoGlobal === '03');
+
+                // Validações
+                const semNome = selecionados.filter(i => {
+                    const d = AppState.masterBankData[i.cpf] || {};
+                    return !(d.name || i.nome);
+                });
+                if (semNome.length) { alert(`${semNome.length} rescisão(ões) sem nome do trabalhador. Preencha a coluna Nome.`); return; }
+
+                const semValor = selecionados.filter(i => !i.valor || i.valor <= 0);
+                if (semValor.length) { alert(`${semValor.length} rescisão(ões) sem valor. Preencha a coluna Líquido.`); return; }
+
+                // No modo Dados Bancários, exige banco/agência/conta
+                if (!isPixKey) {
+                    const semBanco = selecionados.filter(i => {
+                        const d = AppState.masterBankData[i.cpf] || {};
+                        return !(String(d.bank || '').trim() && String(d.agency || '').trim() && String(d.account || '').trim());
+                    });
+                    if (semBanco.length) {
+                        const nomes = semBanco.map(i => (AppState.masterBankData[i.cpf] || {}).name || i.nome || i.cpf).join(', ');
+                        alert(`${semBanco.length} trabalhador(es) sem dados bancários completos:\n\n${nomes}\n\nCadastre os dados, desmarque estas linhas, ou troque a Modalidade para "Pix por Chave CPF".`);
+                        return;
+                    }
+                }
+
+                // Vencimento é obrigatório em todas as linhas (cada lançamento leva a sua data)
+                const semVenc = selecionados.filter(i => !i.vencimento);
+                if (semVenc.length) {
+                    alert(`${semVenc.length} rescisão(ões) sem data de vencimento. Preencha a coluna Vencimento.`);
+                    return;
+                }
+
+                // Dados do pagador (aba CNAB Inter)
+                const compCnpjEl = document.getElementById('compCnpj');
+                const compCcEl = document.getElementById('compCc');
+                const compCnpj = compCnpjEl ? compCnpjEl.value.replace(/\D/g, '') : '';
+                const compCcRaw = compCcEl ? compCcEl.value.replace(/\D/g, '') : '';
+                if (!compCnpj || compCnpj.length < 11) { alert('CNPJ da empresa não configurado (aba CNAB Inter).'); return; }
+                if (!compCcRaw || compCcRaw.length < 2) { alert('Conta corrente não configurada (aba CNAB Inter).'); return; }
+                const compName = (AppState.companyInfo && AppState.companyInfo.name && AppState.companyInfo.name.trim())
+                    ? AppState.companyInfo.name : 'ONE WAY ADMINISTRADORA DE MAO DE OBRA LTDA';
+
+                // Um único arquivo: a data de pagamento fica no Segmento A de cada lançamento
+                // (Manual Inter v1.21, seção 6.2, item 17 — posições 94 a 101), então datas
+                // diferentes convivem no mesmo lote sem problema.
+                const fileName = rescBuildCnab(selecionados, compName, compCnpj, compCcRaw, modoGlobal);
+
+                const modoLabel = isPixKey ? 'Pix por Chave CPF' : 'Pix por Dados Bancários';
+                const totalValor = selecionados.reduce((s, i) => s + i.valor, 0);
+                const datas = [...new Set(selecionados.map(i => i.vencimento))].sort();
+                const faixaDatas = datas.length === 1
+                    ? datas[0].split('-').reverse().join('/')
+                    : `${datas.length} datas (${datas[0].split('-').reverse().join('/')} a ${datas[datas.length-1].split('-').reverse().join('/')})`;
+                alert(`Arquivo de remessa gerado:\n\n✅ ${fileName}\n\nModalidade: ${modoLabel}\nLançamentos: ${selecionados.length}\nVencimentos: ${faixaDatas}\nTotal: ${formatMoney(totalValor)}`);
+            } catch (err) {
+                console.error('Erro ao gerar remessa de rescisões:', err);
+                alert('Erro ao gerar arquivos:\n\n' + (err && err.message ? err.message : String(err)));
+            }
+        }
+
+        // Monta o arquivo CNAB 240 Inter conforme Manual v1.21 (tipo de serviço 30 = Salários, forma 45 = Pix).
+        // A data de pagamento é gravada por lançamento no Segmento A (posições 94-101),
+        // então cada rescisão leva o seu próprio vencimento dentro do mesmo arquivo.
+        function rescBuildCnab(items, compName, compCnpj, compCc, pixMode) {
+            const compAg = '00001', compAgDv = '9';                 // fixos para Inter Empresas
+            const ccPad = compCc.slice(0, -1).padStart(12, '0');
+            const ccDv = compCc.slice(-1) || '0';
+            const cnpjPad = compCnpj.padStart(14, '0');
+            const namePad = (compName || 'EMPRESA').toUpperCase().padEnd(30, ' ').substring(0, 30);
+            const now = new Date();
+            const dateStr = `${String(now.getDate()).padStart(2,'0')}${String(now.getMonth()+1).padStart(2,'0')}${now.getFullYear()}`;
+            const timeStr = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
+            const nsa = parseInt(localStorage.getItem('cnabSeq') || '1', 10);
+            const isPixByKey = (pixMode === '03');
+
+            const lines = [];
+            // Header do arquivo
+            let h = '077' + '0000' + '0' + ' '.repeat(9);
+            h += '2' + cnpjPad + ' '.repeat(20);
+            h += compAg + compAgDv + ccPad + ccDv + ' ';
+            h += namePad + 'BANCO INTER'.padEnd(30, ' ') + ' '.repeat(10);
+            h += '1' + dateStr + timeStr + String(nsa).padStart(6, '0') + '107' + '01600';
+            h += ' '.repeat(20) + ' '.repeat(20) + ' '.repeat(29);
+            lines.push(h);
+
+            // Header do lote
+            let lot = '077' + '0001' + '1' + 'C' + '30' + '45' + '046' + ' ';
+            lot += '2' + cnpjPad + ' '.repeat(20);
+            lot += compAg + compAgDv + ccPad + ccDv + ' ';
+            lot += namePad + 'PAGAMENTO RESCISAO'.padEnd(40, ' ').substring(0, 40);
+            lot += ' '.repeat(30) + '00000' + ' '.repeat(15) + ' '.repeat(20);
+            lot += '00000000' + 'SP' + ' '.repeat(8) + ' '.repeat(10);
+            lines.push(lot);
+
+            // Segmentos A e B
+            let seq = 0, totalCents = 0;
+            items.forEach(item => {
+                const d = AppState.masterBankData[item.cpf] || {};
+                const cpfClean = String(item.cpf == null ? '' : item.cpf).replace(/\D/g, '');
+                const cents = Math.round(item.valor * 100);
+                totalCents += cents;
+                const empName = String(d.name || item.nome || '').toUpperCase().padEnd(30, ' ').substring(0, 30);
+
+                let empBank = '000', favAg = '00000', favAgDv = '0', favAcc = '000000000000', favAccDv = '0';
+                let ispb = '00000000', accType = '00';
+                if (!isPixByKey && d.bank) {
+                    empBank = String(d.bank).replace(/\D/g, '').padStart(3, '0');
+                    // String() em tudo: os campos do cadastro podem vir como número
+                    const agIn = String(d.agency == null ? '' : d.agency);
+                    if (/[^0-9]/.test(agIn)) {
+                        const p = agIn.split(/[^0-9]+/);
+                        favAg = String(p[0] || '').replace(/\D/g, '').padStart(5, '0');
+                        favAgDv = String(p[1] || '').replace(/\D/g, '').charAt(0) || '0';
+                    } else {
+                        const ag = agIn.replace(/\D/g, '');
+                        if (ag.length > 4) { favAg = ag.slice(0, -1).padStart(5, '0'); favAgDv = ag.slice(-1); }
+                        else { favAg = ag.padStart(5, '0'); favAgDv = '0'; }
+                    }
+                    const accRaw = String(d.account == null ? '' : d.account).replace(/\D/g, '');
+                    favAcc = accRaw.slice(0, -1).padStart(12, '0');
+                    favAccDv = accRaw.slice(-1) || '0';
+                    ispb = String(d.ispb == null ? '' : d.ispb).replace(/\D/g, '').padStart(8, '0');
+                    accType = String(d.type == null ? '01' : d.type).replace(/\D/g, '').padStart(2, '0');
+                    if (!['01', '02', '03'].includes(accType)) accType = '01';
+                }
+
+                seq++;
+                // Data de pagamento individual desta rescisão (yyyy-mm-dd -> DDMMAAAA)
+                const payDateItem = (item.vencimento || '').split('-').reverse().join('');
+                let segA = '077' + '0001' + '3' + String(seq).padStart(5, '0') + 'A' + '0' + '00' + '000';
+                segA += empBank + favAg + favAgDv + favAcc + favAccDv + ' ';
+                segA += empName + ' '.repeat(20) + payDateItem + 'BRL' + '0'.repeat(15) + String(cents).padStart(15, '0');
+                segA += ' '.repeat(20) + '0'.repeat(8) + '0'.repeat(15);
+                segA += cpfClean.padStart(14, '0') + ispb + accType + ' '.repeat(29) + ' '.repeat(10);
+                lines.push(segA);
+
+                seq++;
+                let segB = '077' + '0001' + '3' + String(seq).padStart(5, '0') + 'B';
+                segB += (isPixByKey ? '03 ' : '05 ');
+                segB += (cpfClean.length === 14 ? '2' : '1') + cpfClean.padStart(14, '0');
+                segB += ' '.repeat(35) + ' '.repeat(60) + ' '.repeat(99) + ' '.repeat(6) + ispb;
+                lines.push(segB);
+            });
+
+            // Trailer do lote
+            let tl = '077' + '0001' + '5' + ' '.repeat(9);
+            tl += String(items.length * 2 + 2).padStart(6, '0');
+            tl += String(totalCents).padStart(18, '0') + '0'.repeat(18) + '0'.repeat(6) + ' '.repeat(165) + ' '.repeat(10);
+            lines.push(tl);
+
+            // Trailer do arquivo
+            let ta = '077' + '9999' + '9' + ' '.repeat(9) + '000001';
+            ta += String(2 + items.length * 2 + 2).padStart(6, '0') + ' '.repeat(211);
+            lines.push(ta);
+
+            localStorage.setItem('cnabSeq', String(nsa + 1));
+            const fileName = `CI240_001_${String(nsa).padStart(7, '0')}${isPixByKey ? '_CPF' : '_DB'}.REM`;
+            downloadFile(lines.join('\r\n'), fileName, 'text/plain');
+            return fileName;
         }
     </script>
 
