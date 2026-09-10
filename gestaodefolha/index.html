@@ -4115,7 +4115,10 @@ if (admLabelMatch) {
                             id: itemId, tipo: 'boleto',
                             cpf: '', nome: b.beneficiario || b.nomeRef || 'BOLETO',
                             beneficiario: b.beneficiario || '',
-                            barras: b.barras, valor: b.valor || 0,
+                            competencia: b.competencia || '',
+                            codigoReceita: b.codigoReceita || '',
+                            vencimentoOriginal: b.vencimentoOriginal || '',
+                            barras: b.barras, valor: b.valor || 0, valorLido: (b.valor != null && !isNaN(b.valor)),
                             vencimento: b.vencimento || '',
                             arquivo: file.name, removido: false
                         });
@@ -4126,6 +4129,11 @@ if (admLabelMatch) {
                         if (falta.length === 0) ok++;
                         else { parcial++; avisos.push(`⚠ ${file.name}: boleto lido, preencha: ${falta.join(', ')}`); }
                         if (b.avisoValor) avisos.push(`⚠ ${file.name}: ${b.avisoValor}`);
+                        if (b.vencimentoOriginal) {
+                            const vo = b.vencimentoOriginal.split('-').reverse().join('/');
+                            const vl = (b.vencimento || '').split('-').reverse().join('/');
+                            avisos.push(`⚠ ${file.name}: guia vencida em ${vo} — valor inclui multa/juros até ${vl}. Pagar nessa data.`);
+                        }
 
                     // ---------- 3) Guia só com QR Code Pix (FGTS Digital etc.) ----------
                     } else if (tipoDoc === 'pixqr') {
@@ -4313,6 +4321,51 @@ if (admLabelMatch) {
             return n.toUpperCase();
         }
 
+        // Lê uma data associada a um rótulo usando a POSIÇÃO na página.
+        // Em documentos com layout de colunas (DARF, DAS), os rótulos ficam numa linha
+        // e os respectivos valores na linha imediatamente abaixo, alinhados pelo X.
+        // Percorre os rótulos na ordem de prioridade informada.
+        function dataPorColuna(lines, rotulosPrioridade) {
+            if (!lines || !lines.length) return null;
+            const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+            const toISO = s => { const p = s.split('/'); return `${p[2]}-${p[1]}-${p[0]}`; };
+            for (const rotulo of rotulosPrioridade) {
+                for (let k = 0; k < lines.length; k++) {
+                    const txtLinha = norm(lines[k].text);
+                    const pos = txtLinha.indexOf(rotulo);
+                    if (pos === -1) continue;
+                    // X aproximado onde o rótulo começa: usa o item cujo texto inicia o rótulo
+                    let xRotulo = null;
+                    const primeiraPalavra = rotulo.split(' ')[0];
+                    for (const it of lines[k].items) {
+                        if (norm(it.str).indexOf(primeiraPalavra) !== -1) { xRotulo = it.x; break; }
+                    }
+                    if (xRotulo === null) xRotulo = lines[k].items[0] ? lines[k].items[0].x : 0;
+
+                    // 1) data na própria linha, à direita do rótulo
+                    let melhor = null, menorDist = Infinity;
+                    const avaliar = (itens) => {
+                        itens.forEach(it => {
+                            const dm = String(it.str).match(/(\d{2}\/\d{2}\/\d{4})/);
+                            if (!dm) return;
+                            const dist = Math.abs(it.x - xRotulo);
+                            if (dist < menorDist) { menorDist = dist; melhor = dm[1]; }
+                        });
+                    };
+                    avaliar(lines[k].items);
+                    // 2) linhas seguintes (valores abaixo dos rótulos)
+                    for (let n = 1; n <= 2 && k + n < lines.length; n++) {
+                        const prox = norm(lines[k + n].text);
+                        if (/PERIODO DE APURACAO|COMPETENCIA/.test(prox)) continue;
+                        avaliar(lines[k + n].items);
+                    }
+                    // aceita só se a data está razoavelmente alinhada com o rótulo
+                    if (melhor && menorDist < 120) return toISO(melhor);
+                }
+            }
+            return null;
+        }
+
         // Boleto / tributo com código de barras
         function parseBoleto(txt, nomeArquivo, lines) {
             const r = { tipo: 'boleto', barras: null, beneficiario: null, valor: null, vencimento: null, debug: '' };
@@ -4346,14 +4399,39 @@ if (admLabelMatch) {
             }
 
             // ---- VENCIMENTO ----
-            // (a) textual: rótulo seguido da data
-            m = semAcento.match(/(?:DATA\s*DE\s*VENCIMENTO|VENCIMENTO|PAGAR\s*ESTE\s*DOCUMENTO\s*ATE|PAGAR\s*ATE)[^0-9]{0,60}(\d{2}\/\d{2}\/\d{4})/);
-            if (m) { const p = m[1].split('/'); r.vencimento = `${p[2]}-${p[1]}-${p[0]}`; }
+            // Ordem de prioridade IMPORTA em guias de arrecadação (DARF/DAS):
+            //   "Pagar este documento até" > "Data de Vencimento" > outras.
+            // O valor do documento já inclui multa e juros calculados até a data de "Pagar até";
+            // pagar em outra data altera o valor devido. Também evita confundir com
+            // "Período de Apuração", que NÃO é data de pagamento.
+            const toISO = s => { const p = s.split('/'); return `${p[2]}-${p[1]}-${p[0]}`; };
+            const rotulosData = [
+                /PAGAR\s*ESTE\s*DOCUMENTO\s*ATE[^0-9]{0,40}(\d{2}\/\d{2}\/\d{4})/,
+                /PAGAR\s*ATE[^0-9]{0,40}(\d{2}\/\d{2}\/\d{4})/,
+                /DATA\s*DE\s*VENCIMENTO[^0-9]{0,40}(\d{2}\/\d{2}\/\d{4})/,
+                /\bVENCIMENTO\b[^0-9]{0,40}(\d{2}\/\d{2}\/\d{4})/
+            ];
+            // (a) POSICIONAL: em guias de arrecadação os rótulos ficam numa linha e os
+            // valores na linha de baixo, alinhados por coluna (X). Comparar a posição
+            // horizontal evita pegar a data do rótulo vizinho (ex.: Período de Apuração).
+            r.vencimento = dataPorColuna(lines, ['PAGAR ESTE DOCUMENTO ATE', 'PAGAR ATE', 'DATA DE VENCIMENTO', 'VENCIMENTO']);
+            // (b) textual: só quando o posicional não resolveu
+            if (!r.vencimento) {
+                for (const re of rotulosData) {
+                    const mm = semAcento.match(re);
+                    if (mm) { r.vencimento = toISO(mm[1]); break; }
+                }
+            }
+            // Guarda a data de vencimento original quando ela é diferente da data limite de pagamento
+            const vOrig = dataPorColuna(lines, ['DATA DE VENCIMENTO']);
+            if (vOrig && r.vencimento && vOrig !== r.vencimento) r.vencimentoOriginal = vOrig;
             // (b) posicional: rótulo numa linha e a data na linha seguinte (layout em caixas)
             if (!r.vencimento && lines && lines.length) {
                 const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
                 for (let k = 0; k < lines.length; k++) {
-                    if (!/VENCIMENTO|PAGAR ATE/.test(norm(lines[k].text))) continue;
+                    const tl = norm(lines[k].text);
+                    if (/PERIODO DE APURACAO|COMPETENCIA|DATA DO DOCUMENTO|DATA PROCESSAMENTO/.test(tl)) continue;
+                    if (!/VENCIMENTO|PAGAR ATE/.test(tl)) continue;
                     for (let n = 0; n <= 2 && k + n < lines.length; n++) {
                         const dm = lines[k + n].text.match(/(\d{2}\/\d{2}\/\d{4})/);
                         if (dm) { const p = dm[1].split('/'); r.vencimento = `${p[2]}-${p[1]}-${p[0]}`; break; }
@@ -4375,12 +4453,41 @@ if (admLabelMatch) {
             if (ehTributo) {
                 // Em guias de arrecadação o "beneficiário" é o órgão arrecadador,
                 // não a razão social do topo (que é a própria empresa pagadora).
-                if (/SIMPLESNACIONAL|DOCUMENTODEARRECADACAODOSIMPLES/.test(esm)) r.beneficiario = 'DAS - SIMPLES NACIONAL';
-                else if (/DARF|RECEITAFEDERAL/.test(esm)) r.beneficiario = 'DARF - RECEITA FEDERAL';
-                else if (/\bGPS\b|PREVIDENCIASOCIAL/.test(esm)) r.beneficiario = 'GPS - PREVIDENCIA SOCIAL';
-                else if (/FGTS/.test(esm)) r.beneficiario = 'FGTS - CAIXA';
-                else if (/GARE|ICMS/.test(esm)) r.beneficiario = 'GARE / ICMS';
-                else r.beneficiario = 'TRIBUTO / CONVENIO';
+                // Código da receita + denominação (ex.: "1082 CONTR PREV DESCONTA SEGURADO...")
+                const mCod = txt.match(/(?:^|\n)\s*(\d{4})\s+([A-ZÀ-Ú][A-ZÀ-Ú0-9 \-\/.]{8,60})/m);
+                const codReceita = mCod ? mCod[1] : null;
+                const denom = mCod ? mCod[2].trim() : null;
+                r.codigoReceita = codReceita;
+
+                // Apelidos dos códigos que a empresa usa com frequência
+                const APELIDOS = {
+                    '1082': 'INSS CP - SEGURADOS',
+                    '1099': 'INSS CP - PATRONAL',
+                    '2100': 'INSS CP',
+                    '0561': 'IRRF TRABALHO',
+                    '1708': 'IRRF SERVICOS PJ',
+                    '5952': 'CSRF (PIS/COFINS/CSLL)',
+                    '5629': 'PIS/COFINS/CSLL',
+                    '8109': 'PIS FOLHA',
+                    '2172': 'COFINS',
+                    '6912': 'IRPJ',
+                    '2362': 'IRPJ ESTIMATIVA'
+                };
+                if (/SIMPLESNACIONAL|DOCUMENTODEARRECADACAODOSIMPLES/.test(esm)) {
+                    r.beneficiario = 'DAS - SIMPLES NACIONAL';
+                } else if (/RECEITASFEDERAIS|RECEITAFEDERAL|\bDARF\b/.test(esm)) {
+                    if (codReceita && APELIDOS[codReceita]) r.beneficiario = `DARF ${codReceita} - ${APELIDOS[codReceita]}`;
+                    else if (codReceita && denom) r.beneficiario = `DARF ${codReceita} - ${denom.substring(0, 28)}`;
+                    else r.beneficiario = 'DARF - RECEITA FEDERAL';
+                } else if (/\bGPS\b|GUIADAPREVIDENCIA/.test(esm)) {
+                    r.beneficiario = 'GPS - PREVIDENCIA SOCIAL';
+                } else if (/FGTS/.test(esm)) {
+                    r.beneficiario = 'FGTS - CAIXA';
+                } else if (codReceita && denom) {
+                    r.beneficiario = `${codReceita} - ${denom.substring(0, 30)}`;
+                } else {
+                    r.beneficiario = 'TRIBUTO / CONVENIO';
+                }
                 // Complementa com a competência quando existir (ex.: agosto/2026)
                 const comp = flat.match(/(?:Per[ií]odo de Apura[çc][ãa]o|Compet[êe]ncia)[:\s]*([A-Za-zç]+\/\d{4}|\d{2}\/\d{4})/i);
                 if (comp) r.competencia = comp[1];
@@ -4649,7 +4756,14 @@ if (admLabelMatch) {
                 if (tipo === 'rescisao' && item.afastamento) sub = `${item.admissao ? 'adm. ' + item.admissao + ' • ' : ''}afast. ${item.afastamento}`;
                 if (zerada) sub = (sub ? sub + ' • ' : '') + '<span class="text-gray-500 font-semibold">líquido zerado</span>';
                 else if (tipo === 'pixqr') sub = [item.beneficiario, item.competencia ? 'comp. ' + item.competencia : ''].filter(Boolean).join(' • ');
-                else if (tipo === 'boleto') sub = item.beneficiario || '';
+                else if (tipo === 'boleto') {
+                    const partes = [];
+                    if (item.competencia) partes.push('comp. ' + item.competencia);
+                    if (item.vencimentoOriginal) {
+                        partes.push(`<span class="text-orange-600 font-semibold">venceu ${item.vencimentoOriginal.split('-').reverse().join('/')} — c/ juros</span>`);
+                    }
+                    sub = partes.join(' • ');
+                }
 
                 return `<tr class="border-b border-gray-100 ${ehManual ? 'bg-purple-50/40' : (isRemovido ? 'bg-gray-50 opacity-60' : (alerta ? 'bg-red-50' : ''))}">
                     <td class="p-3 text-center">${checkCell}</td>
