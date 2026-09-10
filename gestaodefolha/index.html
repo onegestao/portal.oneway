@@ -2218,8 +2218,10 @@
                                     </p>
                                 </div>
                                 <div class="text-right">
-                                    <p class="text-xs text-gray-400 uppercase">Total</p>
+                                    <p class="text-xs text-gray-400 uppercase">Total no CNAB</p>
                                     <span id="rescisaoTotal" class="text-xl font-bold text-green-600">R$&nbsp;0,00</span>
+                                    <p id="rescisaoTotalManual" class="text-[11px] mt-0.5 hidden"></p>
+                                    <p id="rescisaoTotalGeral" class="text-xs mt-1 pt-1 border-t border-gray-200 hidden"></p>
                                 </div>
                             </div>
 
@@ -4060,38 +4062,101 @@ if (admLabelMatch) {
                 status.innerHTML = `<span class="text-gray-500">⏳ Lendo ${file.name}...</span>`;
                 try {
                     const extraido = await rescExtractPdf(file);
-                    const dados = parseTrct(extraido.text, extraido.lines);
-                    debugs.push(`--- ${file.name} ---\n${dados.debug}`);
-                    if (!dados.cpf) {
-                        fail++;
-                        avisos.push(`❌ ${file.name}: não encontrei CPF (PDF escaneado como imagem?)`);
-                        continue;
-                    }
-                    if (RescisaoState.items.find(i => i.cpf === dados.cpf)) {
-                        fail++;
-                        avisos.push(`⚠ ${file.name}: já existe rescisão de ${dados.nome || dados.cpf} na lista`);
-                        continue;
-                    }
-                    const faltando = [];
-                    if (!dados.nome) faltando.push('nome');
-                    if (!dados.valor) faltando.push('valor');
-                    if (!dados.vencimento) faltando.push('vencimento');
+                    const tipoDoc = detectDocType(extraido.text);
                     const itemId = 'rc_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-                    RescisaoState.items.push({
-                        id: itemId,
-                        cpf: dados.cpf,
-                        nome: dados.nome || '',
-                        valor: dados.valor || 0,
-                        admissao: dados.admissao || '',
-                        afastamento: dados.afastamento || '',
-                        vencimento: dados.vencimento || '',
-                        arquivo: file.name,
-                        removido: false     // nasce marcado (incluído no lote)
-                    });
-                    try { RescisaoState.pdfs[itemId] = URL.createObjectURL(file); } catch (e) {}
-                    if (faltando.length === 0) ok++;
-                    else { parcial++; avisos.push(`⚠ ${file.name}: preencha manualmente: ${faltando.join(', ')}`); }
-                    if (dados.avisoValor) avisos.push(`⚠ ${file.name}: ${dados.avisoValor}`);
+
+                    // ---------- 1) TRCT (rescisão do trabalhador) ----------
+                    if (tipoDoc === 'rescisao') {
+                        const dados = parseTrct(extraido.text, extraido.lines);
+                        debugs.push(`--- ${file.name} [RESCISAO] ---\n${dados.debug}`);
+                        if (!dados.cpf) {
+                            fail++;
+                            avisos.push(`❌ ${file.name}: não encontrei CPF (PDF escaneado como imagem?)`);
+                            continue;
+                        }
+                        if (RescisaoState.items.find(i => i.tipo !== 'pixqr' && i.tipo !== 'boleto' && i.cpf === dados.cpf)) {
+                            fail++;
+                            avisos.push(`⚠ ${file.name}: já existe rescisão de ${dados.nome || dados.cpf} na lista`);
+                            continue;
+                        }
+                        // Zero é um valor LEGÍTIMO (rescisão zerada: descontos consomem os proventos).
+                        // Só consideramos "faltando" quando o parser não conseguiu ler nada.
+                        const valorLido = (dados.valor !== null && dados.valor !== undefined && !isNaN(dados.valor));
+                        const ehZerada = valorLido && Math.abs(dados.valor) < 0.005;
+                        const faltando = [];
+                        if (!dados.nome) faltando.push('nome');
+                        if (!valorLido) faltando.push('valor');
+                        if (!dados.vencimento) faltando.push('vencimento');
+                        RescisaoState.items.push({
+                            id: itemId, tipo: 'rescisao',
+                            cpf: dados.cpf, nome: dados.nome || '',
+                            valor: valorLido ? dados.valor : 0,
+                            valorLido: valorLido,          // true = número veio do documento (mesmo que 0)
+                            admissao: dados.admissao || '', afastamento: dados.afastamento || '',
+                            vencimento: dados.vencimento || '',
+                            arquivo: file.name,
+                            // Rescisão zerada não gera pagamento: entra desmarcada
+                            removido: ehZerada
+                        });
+                        if (ehZerada) avisos.push(`ℹ ${file.name}: rescisão zerada (líquido R$ 0,00) — fora do CNAB, mantida para controle`);
+                        try { RescisaoState.pdfs[itemId] = URL.createObjectURL(file); } catch (e) {}
+                        if (faltando.length === 0) ok++;
+                        else { parcial++; avisos.push(`⚠ ${file.name}: preencha manualmente: ${faltando.join(', ')}`); }
+                        if (dados.avisoValor) avisos.push(`⚠ ${file.name}: ${dados.avisoValor}`);
+
+                    // ---------- 2) Boleto / tributo com código de barras ----------
+                    } else if (tipoDoc === 'boleto') {
+                        const b = parseBoleto(extraido.text, file.name, extraido.lines);
+                        debugs.push(`--- ${file.name} [BOLETO] ---\n${b.debug}`);
+                        if (RescisaoState.items.find(i => i.tipo === 'boleto' && i.barras === b.barras)) {
+                            fail++; avisos.push(`⚠ ${file.name}: este boleto já está na lista`); continue;
+                        }
+                        RescisaoState.items.push({
+                            id: itemId, tipo: 'boleto',
+                            cpf: '', nome: b.beneficiario || b.nomeRef || 'BOLETO',
+                            beneficiario: b.beneficiario || '',
+                            barras: b.barras, valor: b.valor || 0,
+                            vencimento: b.vencimento || '',
+                            arquivo: file.name, removido: false
+                        });
+                        try { RescisaoState.pdfs[itemId] = URL.createObjectURL(file); } catch (e) {}
+                        const falta = [];
+                        if (!b.valor) falta.push('valor');
+                        if (!b.vencimento) falta.push('vencimento');
+                        if (falta.length === 0) ok++;
+                        else { parcial++; avisos.push(`⚠ ${file.name}: boleto lido, preencha: ${falta.join(', ')}`); }
+                        if (b.avisoValor) avisos.push(`⚠ ${file.name}: ${b.avisoValor}`);
+
+                    // ---------- 3) Guia só com QR Code Pix (FGTS Digital etc.) ----------
+                    } else if (tipoDoc === 'pixqr') {
+                        const g = parsePixQr(extraido.text, file.name);
+                        debugs.push(`--- ${file.name} [PIX QR] ---\n${g.debug}`);
+                        RescisaoState.items.push({
+                            id: itemId, tipo: 'pixqr',
+                            cpf: '', nome: g.nomeRef || g.beneficiario || 'GUIA',
+                            beneficiario: g.beneficiario || '',
+                            competencia: g.competencia || '',
+                            pixCopiaCola: g.pixCopiaCola || '',
+                            valor: g.valor || 0,
+                            vencimento: g.vencimento || '',
+                            arquivo: file.name,
+                            removido: true,   // nunca entra no CNAB: pagamento é manual
+                            pago: false
+                        });
+                        try { RescisaoState.pdfs[itemId] = URL.createObjectURL(file); } catch (e) {}
+                        if (g.valor && g.pixCopiaCola) ok++;
+                        else {
+                            parcial++;
+                            const falta = [];
+                            if (!g.valor) falta.push('valor');
+                            if (!g.pixCopiaCola) falta.push('código Pix');
+                            avisos.push(`⚠ ${file.name}: guia lida, mas não extraí: ${falta.join(', ')}`);
+                        }
+
+                    } else {
+                        fail++;
+                        avisos.push(`❌ ${file.name}: não reconheci o documento (não é TRCT, boleto nem guia Pix)`);
+                    }
                 } catch (err) {
                     console.error('Erro ao ler PDF:', err);
                     fail++;
@@ -4188,6 +4253,226 @@ if (admLabelMatch) {
             if (!money.length) return null;
             money.sort((a, b) => a.y - b.y || b.x - a.x);
             return money[0].val;
+        }
+
+
+        // ================================================================
+        // DETECÇÃO DE TIPO DE DOCUMENTO
+        //   'rescisao' -> TRCT do trabalhador  -> entra no CNAB (lote Pix, forma 45)
+        //   'boleto'   -> tem código de barras -> entra no CNAB (lote cobrança, forma 30/31)
+        //   'pixqr'    -> só QR Code Pix (ex.: guia FGTS Digital) -> NÃO entra no CNAB,
+        //                 fica na tela para pagamento manual (copia e cola)
+        // ================================================================
+        function detectDocType(txt) {
+            const semAcento = txt.replace(/\n/g, ' ').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+            const esm = semAcento.replace(/[\s|:_]/g, '');
+            if (/TERMODERESCISAO|VERBASRESCISORIAS|CAUSADOAFASTAMENTO/.test(esm)) return 'rescisao';
+            if (extrairCodigoBarras(txt)) return 'boleto';
+            if (/000201010212|BR\.GOV\.BCB\.PIX/i.test(semAcento)) return 'pixqr';
+            return 'desconhecido';
+        }
+
+        // Extrai código de barras de 44 dígitos: direto ou convertido da linha digitável
+        function extrairCodigoBarras(txt) {
+            const flat = txt.replace(/\n/g, ' ');
+            const ld = flat.match(/(\d{5}[.\s]?\d{5}\s?\d{5}[.\s]?\d{6}\s?\d{5}[.\s]?\d{6}\s?\d\s?\d{14})/);
+            if (ld) {
+                const d = ld[1].replace(/\D/g, '');
+                if (d.length === 47) return linhaDigitavelParaBarras(d);
+            }
+            const conc = flat.match(/(\d{11}[-\s]?\d\s?\d{11}[-\s]?\d\s?\d{11}[-\s]?\d\s?\d{11}[-\s]?\d)/);
+            if (conc) {
+                const d = conc[1].replace(/\D/g, '');
+                if (d.length === 48) return d.substr(0,11) + d.substr(12,11) + d.substr(24,11) + d.substr(36,11);
+            }
+            const cb = flat.match(/\b(\d{44})\b/);
+            if (cb) return cb[1];
+            return null;
+        }
+
+        // Converte linha digitável de banco (47 dígitos) em código de barras (44)
+        function linhaDigitavelParaBarras(ld) {
+            const campo1 = ld.substr(0, 9);
+            const campo2 = ld.substr(10, 10);
+            const campo3 = ld.substr(21, 10);
+            const dvGeral = ld.substr(32, 1);
+            const fatorEValor = ld.substr(33, 14);
+            return campo1.substr(0,4) + dvGeral + fatorEValor + campo1.substr(4,5) + campo2 + campo3;
+        }
+
+        // Deduz o nome do colaborador pelo nome do arquivo (ex.: "_FGTS_GABRIEL_SANTOS.pdf")
+        function nomeFromFilename(nome) {
+            if (!nome) return '';
+            let n = String(nome).replace(/\.pdf$/i, '');
+            n = n.replace(/\s*\(\d+\)$/, '');
+            n = n.replace(/[_\-]+/g, ' ').replace(/\s+/g, ' ').trim();
+            n = n.replace(/\b[0-9a-f]{8}[0-9a-f\-]{4,}\b/gi, ' ');
+            n = n.replace(/\d{6,}/g, ' ');
+            n = n.replace(/^(GUIA|FGTS|DARF|GPS|BOLETO|TERMO|RESCISAO|DE|DO|DA)\s+/gi, '');
+            n = n.replace(/\s+/g, ' ').trim();
+            return n.toUpperCase();
+        }
+
+        // Boleto / tributo com código de barras
+        function parseBoleto(txt, nomeArquivo, lines) {
+            const r = { tipo: 'boleto', barras: null, beneficiario: null, valor: null, vencimento: null, debug: '' };
+            const flat = txt.replace(/\n/g, ' ');
+            const semAcento = flat.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+            const esm = semAcento.replace(/[\s|:_]/g, '');
+            const parseBR = s => parseFloat(String(s).replace(/\./g, '').replace(',', '.'));
+
+            r.barras = extrairCodigoBarras(txt);
+            const ehTributo = r.barras && r.barras.charAt(0) === '8';   // produto 8 = arrecadação/tributo
+
+            // ---- VALOR ----
+            // 1) Pelo próprio código de barras (fonte mais confiável)
+            if (r.barras) {
+                if (ehTributo) {
+                    // Arrecadação: valor nas posições 5 a 15 (11 dígitos)
+                    const v = parseInt(r.barras.substr(4, 11), 10);
+                    if (v > 0) r.valor = v / 100;
+                } else {
+                    // Boleto bancário: valor nas posições 10 a 19 (10 dígitos)
+                    const v = parseInt(r.barras.substr(9, 10), 10);
+                    if (v > 0) r.valor = v / 100;
+                }
+            }
+            // 2) Confere/completa pelos rótulos do documento
+            let m = esm.match(/(?:\(=\)?VALORDODOCUMENTO|VALORDODOCUMENTO|VALORTOTALDODOCUMENTO|VALORDOCUMENTO|VALORACOBRAR|VALORARECOLHER|VALORTOTAL)(?:R\$)?(\d{1,3}(?:\.\d{3})*,\d{2})/);
+            const valorRotulo = m ? parseBR(m[1]) : null;
+            if (!r.valor && valorRotulo) r.valor = valorRotulo;
+            if (r.valor && valorRotulo && Math.abs(r.valor - valorRotulo) > 0.011) {
+                r.avisoValor = `Valor do código de barras (${r.valor.toFixed(2)}) difere do impresso (${valorRotulo.toFixed(2)}). Confira.`;
+            }
+
+            // ---- VENCIMENTO ----
+            // (a) textual: rótulo seguido da data
+            m = semAcento.match(/(?:DATA\s*DE\s*VENCIMENTO|VENCIMENTO|PAGAR\s*ESTE\s*DOCUMENTO\s*ATE|PAGAR\s*ATE)[^0-9]{0,60}(\d{2}\/\d{2}\/\d{4})/);
+            if (m) { const p = m[1].split('/'); r.vencimento = `${p[2]}-${p[1]}-${p[0]}`; }
+            // (b) posicional: rótulo numa linha e a data na linha seguinte (layout em caixas)
+            if (!r.vencimento && lines && lines.length) {
+                const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+                for (let k = 0; k < lines.length; k++) {
+                    if (!/VENCIMENTO|PAGAR ATE/.test(norm(lines[k].text))) continue;
+                    for (let n = 0; n <= 2 && k + n < lines.length; n++) {
+                        const dm = lines[k + n].text.match(/(\d{2}\/\d{2}\/\d{4})/);
+                        if (dm) { const p = dm[1].split('/'); r.vencimento = `${p[2]}-${p[1]}-${p[0]}`; break; }
+                    }
+                    if (r.vencimento) break;
+                }
+            }
+            // (c) pelo fator de vencimento do código de barras (boleto bancário, base 07/10/1997)
+            if (!r.vencimento && r.barras && !ehTributo) {
+                const fator = parseInt(r.barras.substr(5, 4), 10);
+                if (fator > 0) {
+                    const base = new Date(1997, 9, 7);
+                    base.setDate(base.getDate() + fator);
+                    r.vencimento = `${base.getFullYear()}-${String(base.getMonth()+1).padStart(2,'0')}-${String(base.getDate()).padStart(2,'0')}`;
+                }
+            }
+
+            // ---- BENEFICIÁRIO (razão social impressa no boleto) ----
+            if (ehTributo) {
+                // Em guias de arrecadação o "beneficiário" é o órgão arrecadador,
+                // não a razão social do topo (que é a própria empresa pagadora).
+                if (/SIMPLESNACIONAL|DOCUMENTODEARRECADACAODOSIMPLES/.test(esm)) r.beneficiario = 'DAS - SIMPLES NACIONAL';
+                else if (/DARF|RECEITAFEDERAL/.test(esm)) r.beneficiario = 'DARF - RECEITA FEDERAL';
+                else if (/\bGPS\b|PREVIDENCIASOCIAL/.test(esm)) r.beneficiario = 'GPS - PREVIDENCIA SOCIAL';
+                else if (/FGTS/.test(esm)) r.beneficiario = 'FGTS - CAIXA';
+                else if (/GARE|ICMS/.test(esm)) r.beneficiario = 'GARE / ICMS';
+                else r.beneficiario = 'TRIBUTO / CONVENIO';
+                // Complementa com a competência quando existir (ex.: agosto/2026)
+                const comp = flat.match(/(?:Per[ií]odo de Apura[çc][ãa]o|Compet[êe]ncia)[:\s]*([A-Za-zç]+\/\d{4}|\d{2}\/\d{4})/i);
+                if (comp) r.competencia = comp[1];
+            } else {
+                r.beneficiario = extrairBeneficiario(lines, semAcento);
+            }
+
+            r.nomeRef = nomeFromFilename(nomeArquivo);
+            r.debug = `[boleto${ehTributo ? '/tributo' : ''}] barras=${r.barras} valor=${r.valor} rotulo=${valorRotulo} venc=${r.vencimento} benef=${r.beneficiario}`;
+            return r;
+        }
+
+        // Extrai a razão social do beneficiário/cedente usando as linhas do PDF.
+        // Estratégia: acha a linha do rótulo e procura o nome nela mesma ou na linha seguinte,
+        // ignorando textos que são apenas cabeçalhos de campos.
+        function extrairBeneficiario(lines, semAcentoFlat) {
+            const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+            const ehCabecalho = t => {
+                const n = norm(t).replace(/[^A-Z ]/g, ' ').replace(/\s+/g, ' ').trim();
+                if (!n || n.length < 5) return true;
+                // linhas que são só nomes de campos do boleto
+                return /^(CNPJ|ENDERECO|AGENCIA|CODIGO|ESPECIE|QUANTIDADE|VALOR|DATA|NOSSO|USO DO BANCO|CARTEIRA|MOEDA|ACEITE|INSTRUCOES|LOCAL|VENCIMENTO|SACADO|PAGADOR|NUMERO|DOCUMENTO|MORA|MULTA|DESCONTO|ABATIMENTO|RECIBO|FICHA|AUTENTICACAO|NOME DO BENEFICIARIO|BENEFICIARIO|CEDENTE|RAZAO SOCIAL|APOLICE|OBSERVACOES|PERIODO)( |$)/.test(n);
+            };
+            const limpar = t => String(t)
+                .replace(/CNPJ[:\s]*[\d.\/\-]+/gi, ' ')
+                .replace(/\b\d{14}\b/g, ' ')
+                .replace(/\b\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}\b/g, ' ')
+                .replace(/\b\d{4}-?\d?\/\d{4,}-?\d?\b/g, ' ')     // agência/código cedente
+                .replace(/\s{2,}/g, ' ')
+                .trim();
+            const rotulos = ['NOME DO BENEFICIARIO', 'BENEFICIARIO', 'CEDENTE', 'RAZAO SOCIAL'];
+
+            if (lines && lines.length) {
+                for (const rot of rotulos) {
+                    for (let k = 0; k < lines.length; k++) {
+                        const t = norm(lines[k].text);
+                        if (t.indexOf(rot) === -1) continue;
+                        // (a) o nome pode estar na própria linha, depois do rótulo
+                        const resto = limpar(lines[k].text.substring(lines[k].text.toUpperCase().indexOf(rot.substring(0, 8)) + rot.length));
+                        if (resto && !ehCabecalho(resto) && /[A-Za-z]{4}/.test(resto)) {
+                            return resto.replace(/^[:\-\s]+/, '').substring(0, 40).trim().toUpperCase();
+                        }
+                        // (b) senão, procura nas 2 linhas seguintes
+                        for (let n = 1; n <= 2 && k + n < lines.length; n++) {
+                            const cand = limpar(lines[k + n].text);
+                            if (cand && !ehCabecalho(cand) && /[A-Za-z]{4}/.test(cand)) {
+                                return cand.substring(0, 40).trim().toUpperCase();
+                            }
+                        }
+                    }
+                }
+                // (c) DAS/tributos: a razão social costuma vir logo após o CNPJ no topo
+                for (const L of lines.slice(0, 12)) {
+                    const mm = L.text.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}\s+([A-Za-zÀ-ú][A-Za-zÀ-ú0-9 .,&\-]{6,50})/);
+                    if (mm) return mm[1].trim().substring(0, 40).toUpperCase();
+                }
+                // (d) primeira linha "de gente": empresa emissora no topo do documento
+                for (const L of lines.slice(0, 4)) {
+                    const c = limpar(L.text);
+                    if (c && !ehCabecalho(c) && /[A-Za-z]{4}/.test(c) && !/BANCO|ITAU|BRADESCO|SANTANDER|CAIXA/i.test(c)) {
+                        return c.substring(0, 40).trim().toUpperCase();
+                    }
+                }
+            }
+            // (e) fallback textual
+            const m = semAcentoFlat.match(/(?:BENEFICIARIO|CEDENTE)[^A-Z0-9]{0,20}([A-Z][A-Z0-9 .,&\-]{5,40})/);
+            if (m && !ehCabecalho(m[1])) return m[1].trim();
+            return null;
+        }
+
+        // Guia paga apenas por QR Code Pix (ex.: FGTS Digital) — pagamento manual
+        function parsePixQr(txt, nomeArquivo) {
+            const r = { tipo: 'pixqr', pixCopiaCola: null, beneficiario: null, valor: null, vencimento: null, competencia: null, debug: '' };
+            const flat = txt.replace(/\n/g, ' ');
+            const semAcento = flat.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+            const esm = semAcento.replace(/[\s|:_]/g, '');
+            const parseBR = s => parseFloat(String(s).replace(/\./g, '').replace(',', '.'));
+            let m = flat.replace(/\s+/g, ' ').match(/(000201[0-9A-Za-z.\/\-\*: ]{60,500}?6304[0-9A-Fa-f]{4})/);
+            if (m) r.pixCopiaCola = m[1].replace(/\s+/g, '').replace(/CAIXAECONOMICAFEDERAL/, 'CAIXA ECONOMICA FEDERAL');
+            let v = esm.match(/(?:VALORARECOLHER|TOTALDAGUIA|VALORTOTAL|VALORDODOCUMENTO)(?:R\$)?(\d{1,3}(?:\.\d{3})*,\d{2})/);
+            if (v) r.valor = parseBR(v[1]);
+            let dm = semAcento.match(/(?:PAGAR\s*ESTE\s*DOCUMENTO\s*ATE|VENCIMENTO|DATA\s*LIMITE)[^0-9]{0,30}(\d{2}\/\d{2}\/\d{4})/);
+            if (!dm) dm = flat.match(/(\d{2}\/\d{2}\/\d{4})/);
+            if (dm) { const p = dm[1].split('/'); r.vencimento = `${p[2]}-${p[1]}-${p[0]}`; }
+            const comp = flat.match(/\b(\d{2}\/\d{4})\b/);
+            if (comp) r.competencia = comp[1];
+            if (/FGTS/i.test(flat)) r.beneficiario = 'FGTS - CAIXA ECONOMICA FEDERAL';
+            else if (/DARF|RECEITA FEDERAL/i.test(flat)) r.beneficiario = 'RECEITA FEDERAL';
+            else if (/GPS|INSS|PREVIDENCIA/i.test(flat)) r.beneficiario = 'INSS / PREVIDENCIA';
+            r.nomeRef = nomeFromFilename(nomeArquivo);
+            r.debug = `[pixqr] valor=${r.valor} venc=${r.vencimento} comp=${r.competencia} pix=${r.pixCopiaCola ? r.pixCopiaCola.length + ' chars' : 'NAO ACHOU'}`;
+            return r;
         }
 
         // Parser do TRCT usando a técnica da "string esmagada" (rótulo cola no valor)
@@ -4300,72 +4585,155 @@ if (admLabelMatch) {
             const tbody = document.getElementById('rescisaoListBody');
             if (!tbody) return;
             if (RescisaoState.items.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-gray-400 text-sm italic">Nenhuma rescisão importada. Use o botão ao lado para enviar os PDFs.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-gray-400 text-sm italic">Nenhum documento importado. Use o botão ao lado para enviar os PDFs.</td></tr>';
                 document.getElementById('rescisaoTotal').innerText = 'R$ 0,00';
                 updateRescHeader(0, 0);
                 return;
             }
-            const modoGlobal = document.getElementById('rescisaoPixMode').value;   // '05' ou '03'
+            const modoGlobal = document.getElementById('rescisaoPixMode').value;
             const isPixKey = (modoGlobal === '03');
-            let total = 0, incluidos = 0;
+            let totalCnab = 0, totalManual = 0, incluidos = 0, elegiveis = 0;
+
             const rows = RescisaoState.items.map(item => {
+                const tipo = item.tipo || 'rescisao';
+                const ehManual = (tipo === 'pixqr');
                 const data = AppState.masterBankData[item.cpf] || {};
                 const isRemovido = !!item.removido;
-                if (!isRemovido) { total += item.valor; incluidos++; }
+                if (ehManual) totalManual += item.valor;
+                else {
+                    elegiveis++;
+                    if (!isRemovido) { totalCnab += item.valor; incluidos++; }
+                }
 
-                // Status: no modo Dados Bancários exige banco/ag/conta; no modo Chave CPF basta o CPF
-                const temBanco = !!(String(data.bank || '').trim() && String(data.agency || '').trim() && String(data.account || '').trim());
-                const cpfLimpo = String(item.cpf || '').replace(/\D/g, '');
-                const pronto = isPixKey ? (cpfLimpo.length >= 11) : temBanco;
-                const cadastrado = !!(data.name || data.bank);
+                // Etiqueta do tipo de documento
+                const badge = {
+                    rescisao: '<span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-bold">TRCT</span>',
+                    boleto:   '<span class="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-bold">BOLETO</span>',
+                    pixqr:    '<span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 font-bold">GUIA PIX</span>'
+                }[tipo] || '';
+
+                // Coluna Status
                 let statusCell;
-                if (!cadastrado) {
-                    statusCell = `<button onclick="rescisaoCadastrar('${item.id}')" class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded hover:bg-orange-200 transition" title="Cadastrar dados bancários"><i class="fas fa-user-plus mr-1"></i>Cadastrar</button>`;
-                } else if (pronto) {
-                    statusCell = '<span class="text-green-600 text-xs"><i class="fas fa-check"></i></span>';
+                if (ehManual) {
+                    statusCell = item.pago
+                        ? `<button onclick="rescTogglePago('${item.id}')" class="text-[11px] px-2 py-1 rounded bg-green-100 text-green-700 font-bold hover:bg-green-200" title="Marcar como não pago"><i class="fas fa-check-circle mr-1"></i>Pago</button>`
+                        : `<button onclick="rescTogglePago('${item.id}')" class="text-[11px] px-2 py-1 rounded bg-gray-100 text-gray-500 hover:bg-gray-200" title="Marcar como pago">Pendente</button>`;
+                } else if (tipo === 'boleto') {
+                    statusCell = item.barras
+                        ? '<span class="text-green-600 text-xs" title="Código de barras lido"><i class="fas fa-barcode"></i></span>'
+                        : '<span class="text-red-500 text-[11px] font-bold" title="Sem código de barras">Sem barras</span>';
                 } else {
-                    statusCell = `<button onclick="rescisaoCadastrar('${item.id}')" class="text-red-500 text-xs font-bold hover:underline" title="Sem banco/agência/conta — cadastre ou use Pix por Chave CPF">Incompleto</button>`;
+                    const temBanco = !!(String(data.bank || '').trim() && String(data.agency || '').trim() && String(data.account || '').trim());
+                    const cpfLimpo = String(item.cpf || '').replace(/\D/g, '');
+                    const cadastrado = !!(data.name || data.bank);
+                    const pronto = isPixKey ? (cpfLimpo.length >= 11) : temBanco;
+                    if (!cadastrado) statusCell = `<button onclick="rescisaoCadastrar('${item.id}')" class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded hover:bg-orange-200 transition"><i class="fas fa-user-plus mr-1"></i>Cadastrar</button>`;
+                    else if (pronto) statusCell = '<span class="text-green-600 text-xs"><i class="fas fa-check"></i></span>';
+                    else statusCell = `<button onclick="rescisaoCadastrar('${item.id}')" class="text-red-500 text-xs font-bold hover:underline" title="Sem banco/agência/conta">Incompleto</button>`;
                 }
 
                 const nomeVal = String(data.name || item.nome || '').toUpperCase();
-                const nomeFalta = !nomeVal, valorFalta = !item.valor || item.valor <= 0, vencFalta = !item.vencimento;
+                const zerada = (item.valorLido === true) && Math.abs(item.valor || 0) < 0.005;
+                const nomeFalta = !nomeVal;
+                const valorFalta = !zerada && (item.valorLido !== true) && (!item.valor || item.valor <= 0);
+                const vencFalta = !item.vencimento;
                 const alerta = (nomeFalta || valorFalta || vencFalta);
 
-                return `<tr class="border-b border-gray-100 ${isRemovido ? 'bg-gray-50 opacity-60' : (alerta ? 'bg-red-50' : '')}">
-                    <td class="p-3 text-center">
-                        <input type="checkbox" class="w-4 h-4 accent-orange-600 cursor-pointer" ${isRemovido ? '' : 'checked'}
-                               onchange="toggleRescRow('${item.id}', this.checked)" title="Incluir/Excluir do arquivo">
+                // Checkbox: guias Pix nunca entram no CNAB
+                const checkCell = ehManual
+                    ? '<span title="Pagamento manual — não entra no arquivo CNAB" class="text-gray-300"><i class="fas fa-ban"></i></span>'
+                    : `<input type="checkbox" class="w-4 h-4 accent-orange-600 cursor-pointer" ${isRemovido ? '' : 'checked'} onchange="toggleRescRow('${item.id}', this.checked)" title="Incluir/Excluir do arquivo">`;
+
+                // Subtítulo do nome
+                let sub = '';
+                if (tipo === 'rescisao' && item.afastamento) sub = `${item.admissao ? 'adm. ' + item.admissao + ' • ' : ''}afast. ${item.afastamento}`;
+                if (zerada) sub = (sub ? sub + ' • ' : '') + '<span class="text-gray-500 font-semibold">líquido zerado</span>';
+                else if (tipo === 'pixqr') sub = [item.beneficiario, item.competencia ? 'comp. ' + item.competencia : ''].filter(Boolean).join(' • ');
+                else if (tipo === 'boleto') sub = item.beneficiario || '';
+
+                return `<tr class="border-b border-gray-100 ${ehManual ? 'bg-purple-50/40' : (isRemovido ? 'bg-gray-50 opacity-60' : (alerta ? 'bg-red-50' : ''))}">
+                    <td class="p-3 text-center">${checkCell}</td>
+                    <td class="p-3 text-sm font-medium ${isRemovido && !ehManual ? 'line-through text-gray-400' : ''}">
+                        <div class="flex items-center gap-1 mb-0.5">${badge}</div>
+                        <input type="text" value="${nomeVal.replace(/"/g, '&quot;')}" placeholder="Identificação"
+                               onchange="rescisaoUpdate('${item.id}','nome',this.value)"
+                               class="w-full border rounded p-1 text-xs ${nomeFalta ? 'border-red-400 bg-red-50' : 'border-gray-200'}">
+                        ${sub ? `<div class="text-[10px] text-gray-400 mt-0.5">${sub}</div>` : ''}
                     </td>
-                    <td class="p-3 text-sm font-medium ${isRemovido ? 'line-through text-gray-400' : ''}">
-                        <input type="text" value="${nomeVal.replace(/"/g, '&quot;')}" placeholder="Nome do trabalhador"
-                               onchange="rescisaoUpdate('${item.id}','nome',this.value)" ${isRemovido ? 'disabled' : ''}
-                               class="w-full border rounded p-1 text-xs ${nomeFalta ? 'border-red-400 bg-red-50' : 'border-gray-200'} ${isRemovido ? 'bg-gray-100' : ''}">
-                    </td>
-                    <td class="p-3 text-xs text-gray-500">${rescFormatCpf(item.cpf)}</td>
+                    <td class="p-3 text-xs text-gray-500">${item.cpf ? rescFormatCpf(item.cpf) : '<span class="text-gray-300">—</span>'}</td>
                     <td class="p-3 text-center">
                         <input type="date" value="${item.vencimento || ''}"
-                               onchange="rescisaoUpdate('${item.id}','vencimento',this.value)" ${isRemovido ? 'disabled' : ''}
-                               class="border rounded p-1 text-xs ${vencFalta ? 'border-red-400 bg-red-50' : ''} ${isRemovido ? 'bg-gray-100' : ''}">
-                        ${item.afastamento ? `<div class="text-[10px] text-gray-400 mt-0.5">${item.admissao ? 'adm. ' + item.admissao + ' • ' : ''}afast. ${item.afastamento}</div>` : ''}
+                               onchange="rescisaoUpdate('${item.id}','vencimento',this.value)"
+                               class="border rounded p-1 text-xs ${vencFalta ? 'border-red-400 bg-red-50' : ''}">
                     </td>
                     <td class="p-3 text-right">
-                        <input type="number" step="0.01" value="${item.valor ? item.valor.toFixed(2) : ''}" placeholder="0,00"
-                               onchange="rescisaoUpdate('${item.id}','valor',this.value)" onfocus="this.select()" ${isRemovido ? 'disabled' : ''}
-                               class="text-right border rounded p-1 text-xs w-24 ${valorFalta ? 'border-red-400 bg-red-50' : ''} ${isRemovido ? 'bg-gray-100' : ''}">
+                        <input type="text" inputmode="decimal" value="${item.valor ? formatValorBR(item.valor) : ''}" placeholder="0,00"
+                               onchange="rescisaoUpdate('${item.id}','valor',this.value)" onfocus="this.select()"
+                               class="text-right border rounded p-1 text-xs w-28 ${valorFalta ? 'border-red-400 bg-red-50' : ''}">
                     </td>
                     <td class="p-3 text-center">${statusCell}</td>
                     <td class="p-3 text-center whitespace-nowrap">
+                        ${ehManual && item.pixCopiaCola
+                            ? `<button onclick="rescCopiarPix('${item.id}')" title="Copiar código Pix copia e cola" class="text-purple-600 hover:text-purple-800 mr-2"><i class="fas fa-copy"></i></button>`
+                            : ''}
                         ${RescisaoState.pdfs[item.id]
                             ? `<button onclick="rescisaoVerPdf('${item.id}')" title="Visualizar PDF" class="text-blue-500 hover:text-blue-700 mr-2"><i class="fas fa-eye"></i></button>`
-                            : `<span title="PDF não disponível nesta sessão — reenvie para visualizar" class="text-gray-300 mr-2 cursor-not-allowed"><i class="fas fa-eye-slash"></i></span>`}
+                            : `<span title="PDF não disponível nesta sessão" class="text-gray-300 mr-2 cursor-not-allowed"><i class="fas fa-eye-slash"></i></span>`}
                         <button onclick="rescisaoRemove('${item.id}')" title="Remover" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>`;
             }).join('');
             tbody.innerHTML = rows;
             rescisaoSave();
-            document.getElementById('rescisaoTotal').innerText = formatMoney(total);
-            updateRescHeader(incluidos, RescisaoState.items.length);
+            // Total exibido = o que vai no CNAB; manual aparece em destaque separado
+            document.getElementById('rescisaoTotal').innerText = formatMoney(totalCnab);
+            const manualBox = document.getElementById('rescisaoTotalManual');
+            if (manualBox) {
+                if (totalManual > 0) {
+                    manualBox.classList.remove('hidden');
+                    manualBox.innerHTML = `<span class="text-purple-700">+ ${formatMoney(totalManual)} em guias Pix (pagamento manual)</span>`;
+                } else manualBox.classList.add('hidden');
+            }
+            // Total geral: o que efetivamente sai do caixa (CNAB + guias manuais)
+            const geralBox = document.getElementById('rescisaoTotalGeral');
+            if (geralBox) {
+                if (totalManual > 0) {
+                    geralBox.classList.remove('hidden');
+                    geralBox.innerHTML = `<span class="text-gray-400 uppercase text-[10px]">Total geral</span> <span class="font-bold text-gray-700">${formatMoney(totalCnab + totalManual)}</span>`;
+                } else geralBox.classList.add('hidden');
+            }
+            updateRescHeader(incluidos, elegiveis);
+        }
+
+        // Copia o código Pix copia e cola da guia para a área de transferência
+        function rescCopiarPix(id) {
+            const item = RescisaoState.items.find(i => i.id === id);
+            if (!item || !item.pixCopiaCola) { alert('Código Pix não disponível nesta guia.'); return; }
+            const txt = item.pixCopiaCola;
+            const feedback = () => {
+                const nome = (item.nome || '').toUpperCase();
+                alert(`Código Pix copiado!\n\n${nome}\nValor: ${formatMoney(item.valor)}\nVencimento: ${(item.vencimento || '').split('-').reverse().join('/')}\n\nCole em: Inter Empresas → Pagar ou Transferir → Pagar Pix → Pix Copia e Cola`);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(txt).then(feedback).catch(() => rescCopiaFallback(txt, feedback));
+            } else rescCopiaFallback(txt, feedback);
+        }
+        function rescCopiaFallback(txt, cb) {
+            const ta = document.createElement('textarea');
+            ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta); ta.select();
+            try { document.execCommand('copy'); cb(); }
+            catch (e) { prompt('Copie o código Pix abaixo:', txt); }
+            document.body.removeChild(ta);
+        }
+
+        // Marca/desmarca uma guia manual como paga
+        function rescTogglePago(id) {
+            const item = RescisaoState.items.find(i => i.id === id);
+            if (!item) return;
+            item.pago = !item.pago;
+            rescisaoSave();
+            renderRescisaoList();
         }
 
         // Atualiza checkbox master + contador "X de Y incluído(s)"
@@ -4400,11 +4768,12 @@ if (admLabelMatch) {
         function deselectRescZerados() {
             let n = 0;
             RescisaoState.items.forEach(i => {
-                if (!i.valor || i.valor <= 0) { i.removido = true; n++; }
+                if (i.tipo === 'pixqr') return;
+                if (!i.valor || i.valor <= 0) { if (!i.removido) n++; i.removido = true; }
             });
             rescisaoSave();
             renderRescisaoList();
-            if (n === 0) alert('Nenhuma rescisão com valor zerado — todas já têm valor preenchido.');
+            if (n === 0) alert('Nenhum item marcado com valor zerado.');
         }
 
         // Atualiza o texto de ajuda da modalidade Pix (aplica a TODO o lote)
@@ -4425,13 +4794,37 @@ if (admLabelMatch) {
             renderRescisaoList();   // status das linhas depende da modalidade
         }
 
+        // Formata número para o padrão brasileiro: 13253.57 -> "13.253,57"
+        function formatValorBR(v) {
+            const n = Number(v);
+            if (!isFinite(n)) return '';
+            return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        // Converte texto digitado em número, aceitando "13.253,57", "13253,57" e "13253.57"
+        function parseValorBR(txt) {
+            let s = String(txt == null ? '' : txt).replace(/[^\d.,\-]/g, '').trim();
+            if (!s) return NaN;
+            const temVirgula = s.indexOf(',') !== -1;
+            const temPonto = s.indexOf('.') !== -1;
+            if (temVirgula && temPonto) s = s.replace(/\./g, '').replace(',', '.');       // 13.253,57
+            else if (temVirgula) s = s.replace(',', '.');                                  // 13253,57
+            else if (temPonto) {
+                // "13.253" (milhar) vs "13253.57" (decimal): decide pelo tamanho após o ponto
+                const partes = s.split('.');
+                if (partes.length > 2 || (partes[1] && partes[1].length === 3)) s = s.replace(/\./g, '');
+            }
+            return parseFloat(s);
+        }
+
         function rescisaoUpdate(id, campo, valor) {
             const item = RescisaoState.items.find(i => i.id === id);
             if (!item) return;
             if (campo === 'valor') {
-                const v = parseFloat((valor || '').toString().replace(',', '.'));
-                if (!v || v <= 0) return;
-                item.valor = v;
+                const v = parseValorBR(valor);
+                if (isNaN(v) || v < 0) { renderRescisaoList(); return; }   // 0 é aceito (rescisão zerada)
+                item.valor = Math.round(v * 100) / 100;
+                item.valorLido = true;
+                if (item.valor < 0.005) item.removido = true;              // zerada não gera pagamento
             } else if (campo === 'nome') {
                 item.nome = String(valor == null ? '' : valor).trim().toUpperCase();
             } else {
@@ -4532,40 +4925,54 @@ if (admLabelMatch) {
         // ---------- Geração do arquivo de remessa CNAB 240 Inter ----------
         function rescisaoGenerateFiles() {
             try {
-                // Considera apenas as linhas marcadas (checkbox)
-                const selecionados = RescisaoState.items.filter(i => !i.removido);
-                if (selecionados.length === 0) { alert('Nenhuma rescisão marcada. Marque ao menos uma linha.'); return; }
+                // Guias Pix (pagamento manual) nunca entram no arquivo
+                const selecionados = RescisaoState.items.filter(i => i.tipo !== 'pixqr' && !i.removido);
+                const manuais = RescisaoState.items.filter(i => i.tipo === 'pixqr' && !i.pago);
+                if (selecionados.length === 0) {
+                    let m = 'Nenhum item marcado para o CNAB.';
+                    if (manuais.length) m += `\n\n(${manuais.length} guia(s) Pix na lista são de pagamento manual — use o botão de copiar o código Pix.)`;
+                    alert(m); return;
+                }
 
-                const modoGlobal = document.getElementById('rescisaoPixMode').value;  // '05' ou '03'
+                const modoGlobal = document.getElementById('rescisaoPixMode').value;
                 const isPixKey = (modoGlobal === '03');
+                const rescisoes = selecionados.filter(i => (i.tipo || 'rescisao') === 'rescisao');
+                const boletos   = selecionados.filter(i => i.tipo === 'boleto');
 
-                // Validações
-                const semNome = selecionados.filter(i => {
+                // Validações comuns
+                // Zeradas (líquido R$ 0,00) não podem ir no CNAB — o banco rejeita valor zero.
+                const zeradas = selecionados.filter(i => Math.abs(i.valor || 0) < 0.005 && i.valorLido === true);
+                if (zeradas.length) {
+                    const nomes = zeradas.map(i => (AppState.masterBankData[i.cpf] || {}).name || i.nome || i.cpf).join(', ');
+                    alert(`${zeradas.length} item(ns) com líquido R$ 0,00 estão marcados:\n\n${nomes}\n\nRescisão zerada não gera pagamento — desmarque essas linhas (ou use "Desmarcar 0,00") para continuar.`);
+                    return;
+                }
+                const semValor = selecionados.filter(i => (!i.valor || i.valor <= 0) && i.valorLido !== true);
+                if (semValor.length) { alert(`${semValor.length} item(ns) sem valor lido. Preencha a coluna Valor.`); return; }
+                const semVenc = selecionados.filter(i => !i.vencimento);
+                if (semVenc.length) { alert(`${semVenc.length} item(ns) sem data de vencimento.`); return; }
+
+                // Validações das rescisões
+                const semNome = rescisoes.filter(i => {
                     const d = AppState.masterBankData[i.cpf] || {};
                     return !(d.name || i.nome);
                 });
-                if (semNome.length) { alert(`${semNome.length} rescisão(ões) sem nome do trabalhador. Preencha a coluna Nome.`); return; }
-
-                const semValor = selecionados.filter(i => !i.valor || i.valor <= 0);
-                if (semValor.length) { alert(`${semValor.length} rescisão(ões) sem valor. Preencha a coluna Líquido.`); return; }
-
-                // No modo Dados Bancários, exige banco/agência/conta
+                if (semNome.length) { alert(`${semNome.length} rescisão(ões) sem nome do trabalhador.`); return; }
                 if (!isPixKey) {
-                    const semBanco = selecionados.filter(i => {
+                    const semBanco = rescisoes.filter(i => {
                         const d = AppState.masterBankData[i.cpf] || {};
                         return !(String(d.bank || '').trim() && String(d.agency || '').trim() && String(d.account || '').trim());
                     });
                     if (semBanco.length) {
                         const nomes = semBanco.map(i => (AppState.masterBankData[i.cpf] || {}).name || i.nome || i.cpf).join(', ');
-                        alert(`${semBanco.length} trabalhador(es) sem dados bancários completos:\n\n${nomes}\n\nCadastre os dados, desmarque estas linhas, ou troque a Modalidade para "Pix por Chave CPF".`);
+                        alert(`${semBanco.length} trabalhador(es) sem dados bancários completos:\n\n${nomes}\n\nCadastre, desmarque a linha, ou troque a Modalidade para "Pix por Chave CPF".`);
                         return;
                     }
                 }
-
-                // Vencimento é obrigatório em todas as linhas (cada lançamento leva a sua data)
-                const semVenc = selecionados.filter(i => !i.vencimento);
-                if (semVenc.length) {
-                    alert(`${semVenc.length} rescisão(ões) sem data de vencimento. Preencha a coluna Vencimento.`);
+                // Validação dos boletos
+                const semBarras = boletos.filter(i => !i.barras || String(i.barras).replace(/\D/g,'').length !== 44);
+                if (semBarras.length) {
+                    alert(`${semBarras.length} boleto(s) sem código de barras válido. Remova ou desmarque essas linhas.`);
                     return;
                 }
 
@@ -4579,121 +4986,178 @@ if (admLabelMatch) {
                 const compName = (AppState.companyInfo && AppState.companyInfo.name && AppState.companyInfo.name.trim())
                     ? AppState.companyInfo.name : 'ONE WAY ADMINISTRADORA DE MAO DE OBRA LTDA';
 
-                // Um único arquivo: a data de pagamento fica no Segmento A de cada lançamento
-                // (Manual Inter v1.21, seção 6.2, item 17 — posições 94 a 101), então datas
-                // diferentes convivem no mesmo lote sem problema.
-                const fileName = rescBuildCnab(selecionados, compName, compCnpj, compCcRaw, modoGlobal);
+                // Um arquivo com até dois lotes: 0001 = Pix (rescisões), 0002 = cobranças (boletos)
+                const fileName = rescBuildCnab(rescisoes, boletos, compName, compCnpj, compCcRaw, modoGlobal);
 
                 const modoLabel = isPixKey ? 'Pix por Chave CPF' : 'Pix por Dados Bancários';
                 const totalValor = selecionados.reduce((s, i) => s + i.valor, 0);
-                const datas = [...new Set(selecionados.map(i => i.vencimento))].sort();
-                const faixaDatas = datas.length === 1
-                    ? datas[0].split('-').reverse().join('/')
-                    : `${datas.length} datas (${datas[0].split('-').reverse().join('/')} a ${datas[datas.length-1].split('-').reverse().join('/')})`;
-                alert(`Arquivo de remessa gerado:\n\n✅ ${fileName}\n\nModalidade: ${modoLabel}\nLançamentos: ${selecionados.length}\nVencimentos: ${faixaDatas}\nTotal: ${formatMoney(totalValor)}`);
+                let msg = `Arquivo de remessa gerado:\n\n✅ ${fileName}\n`;
+                if (rescisoes.length) msg += `\nRescisões: ${rescisoes.length} (${modoLabel})`;
+                if (boletos.length)   msg += `\nBoletos/tributos: ${boletos.length} (código de barras)`;
+                msg += `\nTotal no arquivo: ${formatMoney(totalValor)}`;
+                if (manuais.length) {
+                    const totManual = manuais.reduce((s, i) => s + i.valor, 0);
+                    msg += `\n\n⚠ ${manuais.length} guia(s) Pix NÃO entraram no arquivo (${formatMoney(totManual)}).\nPague pelo código copia e cola — botão roxo na lista.`;
+                }
+                alert(msg);
             } catch (err) {
-                console.error('Erro ao gerar remessa de rescisões:', err);
+                console.error('Erro ao gerar remessa:', err);
                 alert('Erro ao gerar arquivos:\n\n' + (err && err.message ? err.message : String(err)));
             }
         }
 
-        // Monta o arquivo CNAB 240 Inter conforme Manual v1.21 (tipo de serviço 30 = Salários, forma 45 = Pix).
-        // A data de pagamento é gravada por lançamento no Segmento A (posições 94-101),
-        // então cada rescisão leva o seu próprio vencimento dentro do mesmo arquivo.
-        function rescBuildCnab(items, compName, compCnpj, compCc, pixMode) {
-            const compAg = '00001', compAgDv = '9';                 // fixos para Inter Empresas
-            const ccPad = compCc.slice(0, -1).padStart(12, '0');
-            const ccDv = compCc.slice(-1) || '0';
-            const cnpjPad = compCnpj.padStart(14, '0');
-            const namePad = (compName || 'EMPRESA').toUpperCase().padEnd(30, ' ').substring(0, 30);
+        // Monta o arquivo CNAB 240 Inter conforme Manual v1.21.
+        // Pode conter dois lotes:
+        //   Lote 0001 = Transferências Pix (rescisões)      -> forma 45, segmentos A + B  (seção 6)
+        //   Lote 0002 = Cobranças com código de barras      -> forma 31, segmentos J + J-52 (seção 7)
+        // A data de pagamento é gravada por lançamento, então cada item leva o seu vencimento.
+        function rescBuildCnab(rescisoes, boletos, compName, compCnpj, compCc, pixMode) {
+            const N = (v, n) => String(v == null ? '' : v).replace(/\D/g, '').padStart(n, '0').slice(-n);
+            const A = (v, n) => String(v == null ? '' : v).toUpperCase().substring(0, n).padEnd(n, ' ');
+            const compAg = '00001', compAgDv = '9';
+            const ccPad = String(compCc).slice(0, -1).padStart(12, '0');
+            const ccDv = String(compCc).slice(-1) || '0';
+            const cnpjPad = N(compCnpj, 14);
+            const namePad = A(compName || 'EMPRESA', 30);
             const now = new Date();
             const dateStr = `${String(now.getDate()).padStart(2,'0')}${String(now.getMonth()+1).padStart(2,'0')}${now.getFullYear()}`;
             const timeStr = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
             const nsa = parseInt(localStorage.getItem('cnabSeq') || '1', 10);
             const isPixByKey = (pixMode === '03');
+            const toDDMMAAAA = iso => String(iso || '').split('-').reverse().join('');
 
             const lines = [];
-            // Header do arquivo
+            // ---------- Header do arquivo ----------
             let h = '077' + '0000' + '0' + ' '.repeat(9);
             h += '2' + cnpjPad + ' '.repeat(20);
             h += compAg + compAgDv + ccPad + ccDv + ' ';
-            h += namePad + 'BANCO INTER'.padEnd(30, ' ') + ' '.repeat(10);
+            h += namePad + A('BANCO INTER', 30) + ' '.repeat(10);
             h += '1' + dateStr + timeStr + String(nsa).padStart(6, '0') + '107' + '01600';
             h += ' '.repeat(20) + ' '.repeat(20) + ' '.repeat(29);
             lines.push(h);
 
-            // Header do lote
-            let lot = '077' + '0001' + '1' + 'C' + '30' + '45' + '046' + ' ';
-            lot += '2' + cnpjPad + ' '.repeat(20);
-            lot += compAg + compAgDv + ccPad + ccDv + ' ';
-            lot += namePad + 'PAGAMENTO RESCISAO'.padEnd(40, ' ').substring(0, 40);
-            lot += ' '.repeat(30) + '00000' + ' '.repeat(15) + ' '.repeat(20);
-            lot += '00000000' + 'SP' + ' '.repeat(8) + ' '.repeat(10);
-            lines.push(lot);
+            let nLotes = 0;
 
-            // Segmentos A e B
-            let seq = 0, totalCents = 0;
-            items.forEach(item => {
-                const d = AppState.masterBankData[item.cpf] || {};
-                const cpfClean = String(item.cpf == null ? '' : item.cpf).replace(/\D/g, '');
-                const cents = Math.round(item.valor * 100);
-                totalCents += cents;
-                const empName = String(d.name || item.nome || '').toUpperCase().padEnd(30, ' ').substring(0, 30);
+            // ================= LOTE Pix (rescisões) =================
+            if (rescisoes && rescisoes.length) {
+                nLotes++;
+                const lote = String(nLotes).padStart(4, '0');
+                let lh = '077' + lote + '1' + 'C' + '30' + '45' + '046' + ' ';
+                lh += '2' + cnpjPad + ' '.repeat(20);
+                lh += compAg + compAgDv + ccPad + ccDv + ' ';
+                lh += namePad + A('PAGAMENTO RESCISAO', 40);
+                lh += ' '.repeat(30) + '00000' + ' '.repeat(15) + ' '.repeat(20);
+                lh += '00000000' + 'SP' + ' '.repeat(8) + ' '.repeat(10);
+                lines.push(lh);
 
-                let empBank = '000', favAg = '00000', favAgDv = '0', favAcc = '000000000000', favAccDv = '0';
-                let ispb = '00000000', accType = '00';
-                if (!isPixByKey && d.bank) {
-                    empBank = String(d.bank).replace(/\D/g, '').padStart(3, '0');
-                    // String() em tudo: os campos do cadastro podem vir como número
-                    const agIn = String(d.agency == null ? '' : d.agency);
-                    if (/[^0-9]/.test(agIn)) {
-                        const p = agIn.split(/[^0-9]+/);
-                        favAg = String(p[0] || '').replace(/\D/g, '').padStart(5, '0');
-                        favAgDv = String(p[1] || '').replace(/\D/g, '').charAt(0) || '0';
-                    } else {
-                        const ag = agIn.replace(/\D/g, '');
-                        if (ag.length > 4) { favAg = ag.slice(0, -1).padStart(5, '0'); favAgDv = ag.slice(-1); }
-                        else { favAg = ag.padStart(5, '0'); favAgDv = '0'; }
+                let seq = 0, total = 0;
+                rescisoes.forEach(item => {
+                    const d = AppState.masterBankData[item.cpf] || {};
+                    const cpfClean = String(item.cpf || '').replace(/\D/g, '');
+                    const cents = Math.round(item.valor * 100);
+                    total += cents;
+                    const empName = A(d.name || item.nome || '', 30);
+                    let empBank = '000', favAg = '00000', favAgDv = '0', favAcc = '000000000000', favAccDv = '0';
+                    let ispb = '00000000', accType = '00';
+                    if (!isPixByKey && d.bank) {
+                        empBank = N(d.bank, 3);
+                        const agIn = String(d.agency == null ? '' : d.agency);
+                        if (/[^0-9]/.test(agIn)) {
+                            const p = agIn.split(/[^0-9]+/);
+                            favAg = N(p[0] || '', 5);
+                            favAgDv = String(p[1] || '').replace(/\D/g, '').charAt(0) || '0';
+                        } else {
+                            const ag = agIn.replace(/\D/g, '');
+                            if (ag.length > 4) { favAg = ag.slice(0, -1).padStart(5, '0'); favAgDv = ag.slice(-1); }
+                            else { favAg = ag.padStart(5, '0'); favAgDv = '0'; }
+                        }
+                        const accRaw = String(d.account == null ? '' : d.account).replace(/\D/g, '');
+                        favAcc = accRaw.slice(0, -1).padStart(12, '0');
+                        favAccDv = accRaw.slice(-1) || '0';
+                        ispb = N(d.ispb || '', 8);
+                        accType = N(d.type || '01', 2);
+                        if (!['01', '02', '03'].includes(accType)) accType = '01';
                     }
-                    const accRaw = String(d.account == null ? '' : d.account).replace(/\D/g, '');
-                    favAcc = accRaw.slice(0, -1).padStart(12, '0');
-                    favAccDv = accRaw.slice(-1) || '0';
-                    ispb = String(d.ispb == null ? '' : d.ispb).replace(/\D/g, '').padStart(8, '0');
-                    accType = String(d.type == null ? '01' : d.type).replace(/\D/g, '').padStart(2, '0');
-                    if (!['01', '02', '03'].includes(accType)) accType = '01';
-                }
+                    seq++;
+                    let segA = '077' + lote + '3' + String(seq).padStart(5, '0') + 'A' + '0' + '00' + '000';
+                    segA += empBank + favAg + favAgDv + favAcc + favAccDv + ' ';
+                    segA += empName + ' '.repeat(20) + toDDMMAAAA(item.vencimento) + 'BRL' + '0'.repeat(15) + String(cents).padStart(15, '0');
+                    segA += ' '.repeat(20) + '0'.repeat(8) + '0'.repeat(15);
+                    segA += cpfClean.padStart(14, '0') + ispb + accType + ' '.repeat(29) + ' '.repeat(10);
+                    lines.push(segA);
 
-                seq++;
-                // Data de pagamento individual desta rescisão (yyyy-mm-dd -> DDMMAAAA)
-                const payDateItem = (item.vencimento || '').split('-').reverse().join('');
-                let segA = '077' + '0001' + '3' + String(seq).padStart(5, '0') + 'A' + '0' + '00' + '000';
-                segA += empBank + favAg + favAgDv + favAcc + favAccDv + ' ';
-                segA += empName + ' '.repeat(20) + payDateItem + 'BRL' + '0'.repeat(15) + String(cents).padStart(15, '0');
-                segA += ' '.repeat(20) + '0'.repeat(8) + '0'.repeat(15);
-                segA += cpfClean.padStart(14, '0') + ispb + accType + ' '.repeat(29) + ' '.repeat(10);
-                lines.push(segA);
+                    seq++;
+                    let segB = '077' + lote + '3' + String(seq).padStart(5, '0') + 'B';
+                    segB += (isPixByKey ? '03 ' : '05 ');
+                    segB += (cpfClean.length === 14 ? '2' : '1') + cpfClean.padStart(14, '0');
+                    segB += ' '.repeat(35) + ' '.repeat(60) + ' '.repeat(99) + ' '.repeat(6) + ispb;
+                    lines.push(segB);
+                });
+                let lt = '077' + lote + '5' + ' '.repeat(9);
+                lt += String(rescisoes.length * 2 + 2).padStart(6, '0');
+                lt += String(total).padStart(18, '0') + '0'.repeat(18) + '0'.repeat(6) + ' '.repeat(165) + ' '.repeat(10);
+                lines.push(lt);
+            }
 
-                seq++;
-                let segB = '077' + '0001' + '3' + String(seq).padStart(5, '0') + 'B';
-                segB += (isPixByKey ? '03 ' : '05 ');
-                segB += (cpfClean.length === 14 ? '2' : '1') + cpfClean.padStart(14, '0');
-                segB += ' '.repeat(35) + ' '.repeat(60) + ' '.repeat(99) + ' '.repeat(6) + ispb;
-                lines.push(segB);
-            });
+            // ============ LOTE Cobrança (boletos/tributos) ============
+            if (boletos && boletos.length) {
+                nLotes++;
+                const lote = String(nLotes).padStart(4, '0');
+                // forma 31 = pagamentos de outros bancos (seção 7.1)
+                let lh = '077' + lote + '1' + 'C' + '98' + '31' + '046' + ' ';
+                lh += '2' + cnpjPad + ' '.repeat(20);
+                lh += compAg + compAgDv + ccPad + ccDv + ' ';
+                lh += namePad + A('PAGAMENTO BOLETOS', 40);
+                lh += ' '.repeat(30) + '00000' + ' '.repeat(15) + ' '.repeat(20);
+                lh += '00000' + '000' + 'SP' + ' '.repeat(8) + ' '.repeat(10);
+                lines.push(lh);
 
-            // Trailer do lote
-            let tl = '077' + '0001' + '5' + ' '.repeat(9);
-            tl += String(items.length * 2 + 2).padStart(6, '0');
-            tl += String(totalCents).padStart(18, '0') + '0'.repeat(18) + '0'.repeat(6) + ' '.repeat(165) + ' '.repeat(10);
-            lines.push(tl);
+                let seq = 0, total = 0;
+                boletos.forEach(item => {
+                    const cents = Math.round(item.valor * 100);
+                    total += cents;
+                    const venc = toDDMMAAAA(item.vencimento);
+                    const barras = N(item.barras, 44);
+                    const benef = A(item.beneficiario || item.nome || '', 30);
+                    // Segmento J (seção 7.2)
+                    seq++;
+                    let j = '077' + lote + '3' + String(seq).padStart(5, '0') + 'J' + '0' + '00';
+                    j += barras;                                   // 18-61
+                    j += benef;                                    // 62-91
+                    j += venc;                                     // 92-99
+                    j += String(cents).padStart(15, '0');          // 100-114 valor nominal
+                    j += '0'.repeat(15);                           // 115-129 desconto
+                    j += '0'.repeat(15);                           // 130-144 mora/multa
+                    j += venc;                                     // 145-152 data pagamento
+                    j += String(cents).padStart(15, '0');          // 153-167 valor pagamento
+                    j += '0'.repeat(15);                           // 168-182 qtd moeda
+                    j += '0'.repeat(20);                           // 183-202 ref pagador
+                    j += '0'.repeat(20);                           // 203-222 nosso número
+                    j += ' '.repeat(8) + ' '.repeat(10);           // 223-230 / 231-240
+                    lines.push(j);
+                    // Segmento J-52 (seção 7.3)
+                    seq++;
+                    let j52 = '077' + lote + '3' + String(seq).padStart(5, '0') + 'J' + ' ' + '00' + '52';
+                    j52 += '2' + N(cnpjPad, 15) + A(compName, 40);          // pagador
+                    j52 += '2' + '0'.repeat(15) + A(item.beneficiario || item.nome || '', 40); // beneficiário
+                    j52 += ' '.repeat(56) + '0'.repeat(53);
+                    lines.push(j52);
+                });
+                let lt = '077' + lote + '5' + ' '.repeat(9);
+                lt += String(boletos.length * 2 + 2).padStart(6, '0');
+                lt += String(total).padStart(18, '0') + '0'.repeat(18) + '0'.repeat(6) + ' '.repeat(165) + ' '.repeat(10);
+                lines.push(lt);
+            }
 
-            // Trailer do arquivo
-            let ta = '077' + '9999' + '9' + ' '.repeat(9) + '000001';
-            ta += String(2 + items.length * 2 + 2).padStart(6, '0') + ' '.repeat(211);
+            // ---------- Trailer do arquivo ----------
+            let ta = '077' + '9999' + '9' + ' '.repeat(9) + String(nLotes).padStart(6, '0');
+            ta += String(lines.length + 1).padStart(6, '0') + ' '.repeat(211);
             lines.push(ta);
 
             localStorage.setItem('cnabSeq', String(nsa + 1));
-            const fileName = `CI240_001_${String(nsa).padStart(7, '0')}${isPixByKey ? '_CPF' : '_DB'}.REM`;
+            const sufixo = (boletos && boletos.length && (!rescisoes || !rescisoes.length))
+                ? '_BOL' : (isPixByKey ? '_CPF' : '_DB');
+            const fileName = `CI240_001_${String(nsa).padStart(7, '0')}${sufixo}.REM`;
             downloadFile(lines.join('\r\n'), fileName, 'text/plain');
             return fileName;
         }
