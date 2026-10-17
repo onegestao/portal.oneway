@@ -82,11 +82,15 @@
             </button>
             <button onclick="switchView('cnab')" id="nav-cnab" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 transition active">
                 <i class="fas fa-file-invoice-dollar w-5 text-center"></i>
-                CNAB Inter
+                CNAB Folha
             </button>
             <button onclick="switchView('rescisao')" id="nav-rescisao" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 transition">
                 <i class="fas fa-file-contract w-5 text-center"></i>
                 Rescisões
+            </button>
+            <button onclick="switchView('spot')" id="nav-spot" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 transition">
+                <i class="fas fa-bolt w-5 text-center"></i>
+                Pagamento Spot
             </button>
         </nav>
 
@@ -113,12 +117,33 @@
     <div class="flex-1 flex flex-col h-screen overflow-hidden bg-gray-50">
         
         <!-- Topbar -->
-        <header class="h-16 bg-white border-b border-gray-200 flex justify-between items-center px-8 shadow-sm z-10">
+        <header id="topHeader" style="border-top:3px solid transparent" class="h-16 bg-white border-b border-gray-200 flex justify-between items-center px-8 shadow-sm z-10">
             <div>
                 <h2 id="pageTitle" class="text-xl font-bold text-gray-800">CNAB Inter</h2>
                 <p id="pageSubtitle" class="text-xs text-gray-500">Gerar arquivo de remessa</p>
             </div>
             <div class="flex items-center gap-4">
+                <!-- EMPRESA ATIVA (trocar empresa) -->
+                <div class="relative" id="empSwitcher">
+                    <button onclick="toggleEmpMenu()" class="flex items-center gap-3 pl-2 pr-3 py-1.5 rounded-xl border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition" title="Trocar empresa">
+                        <span id="empDot" class="w-9 h-9 rounded-lg text-white text-[11px] font-bold flex items-center justify-center" style="background:#ea580c">ADM</span>
+                        <span class="text-left leading-tight">
+                            <span class="block text-[10px] uppercase tracking-wide text-gray-400">Empresa</span>
+                            <span id="empNome" class="block text-sm font-semibold text-gray-800">ONE WAY ADM</span>
+                            <span id="empSub" class="block text-[11px] text-gray-500"></span>
+                        </span>
+                        <i class="fas fa-chevron-down text-xs text-gray-400 ml-1"></i>
+                    </button>
+                    <div id="empMenu" class="hidden absolute right-0 mt-2 w-[26rem] bg-white border border-gray-200 rounded-xl shadow-2xl z-50 py-2">
+                        <div class="px-4 pt-1 pb-2 text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Trocar empresa</div>
+                        <div id="empMenuList" class="max-h-96 overflow-auto space-y-0.5"></div>
+                        <div class="border-t border-gray-100 mt-2 pt-2 px-2">
+                            <button onclick="fecharEmpMenu();abrirPagadorModal(null,'__EMPRESA__')" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-orange-700 hover:bg-orange-50">
+                                <i class="fas fa-plus-circle"></i> Nova empresa (Inter ou Itaú)
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 <div class="flex flex-col items-end">
                     <span class="text-sm font-semibold text-gray-700" id="currentMonthDisplay">Mês 05</span>
                     <span class="text-xs text-gray-400" id="statusDisplay">Visualizando Dados</span>
@@ -1559,7 +1584,9 @@
                                 </div>
 
                                 <div class="pt-4 border-t border-gray-100">
-                                    <h4 class="text-sm font-bold text-gray-700 mb-3">Dados do Pagador (Sua Empresa)</h4>
+                                    <h4 class="text-sm font-bold text-gray-700 mb-1">Dados do Pagador</h4>
+                                    <p id="cnabPagadorNome" class="text-[11px] text-gray-600 mb-1"></p>
+                                    <p class="text-[11px] text-gray-400 mb-3"><i class="fas fa-info-circle mr-1"></i>Definido pela empresa ativa no topo.</p>
                                     <div class="grid grid-cols-2 gap-3">
                                         <div>
                                             <label class="text-xs text-gray-400">Agência</label>
@@ -1572,7 +1599,7 @@
                                             <input type="text" id="compCc" value="49659022-7" class="w-full border rounded p-2 text-sm">
                                         </div>
                                         <div class="col-span-2">
-                                            <label class="text-xs text-gray-400">CNPJ (Extraído do PDF)</label>
+                                            <label class="text-xs text-gray-400">CNPJ</label>
                                             <!-- Pré-preenchido com o CNPJ padrão -->
                                             <input type="text" id="compCnpj" value="63.004.633/0001-98" class="w-full border rounded p-2 text-sm">
                                         </div>
@@ -1580,7 +1607,7 @@
                                 </div>
                             </div>
 
-                            <button onclick="generateCNABFile()" class="w-full mt-6 bg-orange-600 text-white font-bold py-3 rounded-lg hover:bg-orange-700 transition shadow-md flex items-center justify-center gap-2">
+                            <button id="cnabBtnGerar" onclick="generateCNABFile()" class="w-full mt-6 bg-orange-600 text-white font-bold py-3 rounded-lg hover:bg-orange-700 transition shadow-md flex items-center justify-center gap-2">
                                 <i class="fas fa-download"></i> Baixar CNAB .REM
                             </button>
                         </div>
@@ -2185,14 +2212,20 @@
                                 </div>
 
                                 <div class="pt-4 border-t border-gray-100">
-                                    <h4 class="text-sm font-bold text-gray-700 mb-2">Dados do Pagador</h4>
-                                    <p class="text-[11px] text-gray-500 leading-snug">
-                                        <i class="fas fa-info-circle mr-1"></i>Usa CNPJ, agência e conta configurados na aba <strong>CNAB Inter</strong>.
+                                    <h4 class="text-sm font-bold text-gray-700 mb-2">Empresa Pagadora</h4>
+                                    <select id="rescEmpresa" class="w-full border border-gray-300 rounded-lg p-2 text-sm bg-white" onchange="pagadorOnChange('rescEmpresa')">
+                                        <option value="ADM">ONE WAY ADM — 63.004.633/0001-98 — Inter c/c 49659022-7</option>
+                                        <option value="GESTAO">ONE WAY GESTÃO — 69.017.331/0001-30 — Inter c/c 56082136-0</option>
+                                        <option value="CNAB">Outra (usar dados da aba CNAB Inter)</option>
+                                    </select>
+                                    <p id="rescEmpresaInfo" class="text-[11px] text-gray-600 mt-2 leading-snug"></p>
+                                    <p class="text-[11px] text-gray-500 mt-1 leading-snug">
+                                        <i class="fas fa-info-circle mr-1"></i>Define o banco, o CNPJ e a conta de débito gravados no arquivo. Precisa ser a conta em que você vai importar o arquivo.
                                     </p>
                                 </div>
                             </div>
 
-                            <button onclick="rescisaoGenerateFiles()" class="w-full mt-6 bg-orange-600 text-white font-bold py-3 rounded-lg hover:bg-orange-700 transition shadow-md flex items-center justify-center gap-2">
+                            <button id="rescBtnGerar" onclick="rescisaoGenerateFiles()" class="w-full mt-6 bg-orange-600 text-white font-bold py-3 rounded-lg hover:bg-orange-700 transition shadow-md flex items-center justify-center gap-2">
                                 <i class="fas fa-download"></i> Baixar CNAB .REM
                             </button>
                             <button onclick="rescisaoClearAll()" class="w-full mt-2 border border-gray-300 text-gray-600 py-2 rounded-lg text-sm hover:bg-gray-50 transition">
@@ -2250,6 +2283,109 @@
                 </div>
             </div>
 
+
+            <!-- ================ VIEW: PAGAMENTO SPOT ================ -->
+            <div id="view-spot" class="view-section space-y-6 hidden">
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <!-- Painel Config -->
+                    <div class="w-full lg:w-1/3 space-y-6">
+                        <div class="glass-panel p-6 rounded-xl border-t-4 border-orange-500">
+                            <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                <i class="fas fa-bolt text-orange-500"></i> Gerar Pagamento
+                            </h3>
+                            <div class="space-y-4">
+                                <div class="bg-orange-50 p-3 rounded-lg border border-orange-100">
+                                    <label class="block text-xs font-bold text-orange-800 uppercase mb-1">Colar da Planilha</label>
+                                    <textarea id="spotPaste" rows="7" placeholder="Nome&#9;Total a ser pago&#9;PIX&#10;FULANO DE TAL&#9;R$ 440,00&#9;500.951.828-70&#10;CICLANO&#9;R$ 246,84&#9;fulano@email.com"
+                                              class="w-full border border-gray-300 rounded-lg p-2 text-xs font-mono bg-white"></textarea>
+                                    <div class="flex gap-2 mt-2">
+                                        <button onclick="spotProcessPaste()" class="flex-1 bg-orange-600 text-white px-3 py-2 rounded-lg text-xs font-medium hover:bg-orange-700 transition">
+                                            <i class="fas fa-table mr-1"></i>Processar
+                                        </button>
+                                        <button onclick="document.getElementById('spotPaste').value=''" class="px-3 py-2 rounded-lg text-xs border border-gray-300 text-gray-500 hover:bg-gray-50">Limpar</button>
+                                    </div>
+                                    <p class="text-[10px] text-gray-500 mt-2 leading-snug">3 colunas separadas por TAB: <strong>Nome · Valor · Chave Pix</strong>. O tipo da chave (CPF/CNPJ, telefone, e-mail, aleatória) é detectado automaticamente. 4ª coluna opcional: <strong>CPF/CNPJ do favorecido</strong> (recomendado no Itaú quando a chave é telefone, e-mail ou aleatória).</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Data Pagamento</label>
+                                    <input type="date" id="spotDate" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Descrição do Lote</label>
+                                    <input type="text" id="spotDesc" value="PAGAMENTOS DIVERSOS" maxlength="40" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+                                </div>
+
+                                <div class="pt-4 border-t border-gray-100">
+                                    <h4 class="text-sm font-bold text-gray-700 mb-2">Empresa Pagadora</h4>
+                                    <select id="spotEmpresa" class="w-full border border-gray-300 rounded-lg p-2 text-sm bg-white" onchange="pagadorOnChange('spotEmpresa')">
+                                        <option value="ADM">ONE WAY ADM — 63.004.633/0001-98 — Inter c/c 49659022-7</option>
+                                        <option value="GESTAO">ONE WAY GESTÃO — 69.017.331/0001-30 — Inter c/c 56082136-0</option>
+                                        <option value="CNAB">Outra (usar dados da aba CNAB Inter)</option>
+                                    </select>
+                                    <p id="spotEmpresaInfo" class="text-[11px] text-gray-600 mt-2 leading-snug"></p>
+                                    <p class="text-[11px] text-gray-500 mt-1 leading-snug">
+                                        <i class="fas fa-info-circle mr-1"></i>Define o banco, o CNPJ e a conta de débito gravados no arquivo. Precisa ser a conta em que você vai importar o arquivo.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <button id="spotBtnGerar" onclick="spotGenerate()" class="w-full mt-6 bg-orange-600 text-white font-bold py-3 rounded-lg hover:bg-orange-700 transition shadow-md flex items-center justify-center gap-2">
+                                <i class="fas fa-download"></i> Baixar CNAB .REM
+                            </button>
+                            <button onclick="spotClearAll()" class="w-full mt-2 border border-gray-300 text-gray-600 py-2 rounded-lg text-sm hover:bg-gray-50 transition">
+                                <i class="fas fa-trash-alt mr-1"></i> Limpar lista
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Preview -->
+                    <div class="w-full lg:w-2/3">
+                        <div class="glass-panel p-6 rounded-xl h-full flex flex-col">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="font-bold text-gray-800">Itens do Lote</h3>
+                                    <p class="text-xs text-gray-500 mt-0.5">
+                                        <span id="spotRowCounter">0 de 0 incluído(s)</span>
+                                        <span class="text-gray-300 mx-1">•</span>
+                                        <button onclick="toggleAllSpot(true)" class="text-orange-600 hover:underline">Marcar todos</button>
+                                        <span class="text-gray-300 mx-1">/</span>
+                                        <button onclick="toggleAllSpot(false)" class="text-gray-500 hover:underline">Desmarcar todos</button>
+                                        <span class="text-gray-300 mx-1">/</span>
+                                        <button onclick="spotDeselectInvalidos()" class="text-blue-600 hover:underline" title="Desmarca chaves inválidas e valores zerados">Desmarcar inválidos</button>
+                                    </p>
+                                    <p id="spotAlertas" class="text-[11px] mt-1 hidden"></p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-gray-400 uppercase">Total</p>
+                                    <span id="spotTotal" class="text-xl font-bold text-green-600">R$&nbsp;0,00</span>
+                                </div>
+                            </div>
+
+                            <div class="flex-1 overflow-auto bg-gray-50 rounded-lg border border-gray-200 p-0">
+                                <table class="w-full text-left">
+                                    <thead class="text-xs text-gray-500 uppercase bg-gray-100 border-b border-gray-200 sticky top-0">
+                                        <tr>
+                                            <th class="p-3 text-center w-10">
+                                                <input type="checkbox" id="spotMasterCheck" class="w-4 h-4 accent-orange-600 cursor-pointer" onchange="toggleAllSpot(this.checked)" title="Marcar/Desmarcar todos">
+                                            </th>
+                                            <th class="p-3 w-1/4">Nome</th>
+                                            <th class="p-3">Chave Pix</th>
+                                            <th class="p-3 text-center">Tipo</th>
+                                            <th class="p-3 text-right">Valor</th>
+                                            <th class="p-3 text-center">Ação</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="spotListBody" class="text-sm text-gray-600 divide-y divide-gray-200" style="font-family: Calibri, Carlito, 'Segoe UI', system-ui, sans-serif;">
+                                        <tr><td colspan="6" class="p-8 text-center text-gray-400 text-sm italic">Cole a lista no painel ao lado e clique em Processar.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Modal: visualizar PDF da rescisão -->
             <div id="pdfViewerModal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4" onclick="if(event.target===this) closePdfViewer()">
@@ -2319,12 +2455,296 @@
                 </div>
             </div>
 
+            <!-- Modal: cadastro de empresa pagadora (conta de débito em outro banco / outra empresa) -->
+            <div id="pagadorModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+                <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 id="pagadorModalTitulo" class="text-lg font-bold text-gray-800">Cadastrar Empresa Pagadora</h3>
+                        <button onclick="fecharPagadorModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-4">Conta de débito de outra empresa ou de outro banco. O arquivo gerado segue o layout do banco escolhido: <strong>Inter</strong> → CNAB 240 .REM · <strong>Itaú</strong> → Sispag .txt. Fica salvo neste navegador.</p>
+                    <input type="hidden" id="pagId">
+                    <input type="hidden" id="pagSelOrigem">
+                    <div class="grid grid-cols-1 md:grid-cols-6 gap-3">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs text-gray-500 mb-1">Banco *</label>
+                            <select id="pagBanco" class="w-full border border-gray-300 rounded-lg p-2 text-sm bg-white" onchange="pagadorModalBancoChange()">
+                                <option value="341">341 — Itaú (Sispag)</option>
+                                <option value="077">077 — Banco Inter (CNAB)</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-4">
+                            <label class="block text-xs text-gray-500 mb-1">Razão social (como está no banco) *</label>
+                            <input type="text" id="pagNome" maxlength="60" placeholder="Ex: ON TIME EXPRESS LOGISTICA E TRANSPORTE S/A" class="w-full border border-gray-300 rounded-lg p-2 text-sm uppercase">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs text-gray-500 mb-1">Apelido (lista) *</label>
+                            <input type="text" id="pagApelido" maxlength="20" placeholder="Ex: ON TIME" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs text-gray-500 mb-1">CNPJ *</label>
+                            <input type="text" id="pagCnpj" placeholder="00.000.000/0000-00" class="w-full border border-gray-300 rounded-lg p-2 text-sm font-mono">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs text-gray-500 mb-1">Sufixo no nome do arquivo</label>
+                            <input type="text" id="pagSufixo" maxlength="12" placeholder="Ex: ONTIME" class="w-full border border-gray-300 rounded-lg p-2 text-sm font-mono uppercase">
+                        </div>
+                        <div class="md:col-span-2" id="pagAgenciaWrap">
+                            <label class="block text-xs text-gray-500 mb-1">Agência (sem dígito) *</label>
+                            <input type="text" id="pagAgencia" placeholder="Ex: 8145" class="w-full border border-gray-300 rounded-lg p-2 text-sm font-mono">
+                        </div>
+                        <div class="md:col-span-3">
+                            <label class="block text-xs text-gray-500 mb-1">Conta (sem dígito) *</label>
+                            <input type="text" id="pagConta" placeholder="Ex: 1610" class="w-full border border-gray-300 rounded-lg p-2 text-sm font-mono">
+                        </div>
+                        <div class="md:col-span-1">
+                            <label class="block text-xs text-gray-500 mb-1">Dígito *</label>
+                            <input type="text" id="pagDac" maxlength="1" placeholder="4" class="w-full border border-gray-300 rounded-lg p-2 text-sm font-mono text-center">
+                        </div>
+                        <p id="pagInterNota" class="md:col-span-6 text-[11px] text-blue-700 bg-blue-50 border border-blue-100 rounded-lg p-2 hidden">
+                            <i class="fas fa-info-circle mr-1"></i>No Inter a agência é fixa (0001) e o arquivo usa o padrão da aba CNAB Inter. Só CNPJ, razão social e conta são necessários.
+                        </p>
+                    </div>
+
+                    <div id="pagItauBloco" class="mt-4 pt-4 border-t border-gray-100">
+                        <h4 class="text-sm font-bold text-gray-700 mb-1">Dados exigidos pelo Sispag Itaú</h4>
+                        <p class="text-[11px] text-gray-500 mb-3">O header de lote do Itaú grava o endereço da empresa debitada. Preencha como consta no cadastro do banco.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-6 gap-3">
+                            <div class="md:col-span-3">
+                                <label class="block text-xs text-gray-500 mb-1">Tipo de pagamento (lote)</label>
+                                <select id="pagTipoPagto" class="w-full border border-gray-300 rounded-lg p-2 text-sm bg-white">
+                                    <option value="20">20 — Fornecedores (padrão, igual ao arquivo do Protheus)</option>
+                                    <option value="98">98 — Diversos</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="block text-xs text-gray-500 mb-1">Logradouro *</label>
+                                <input type="text" id="pagRua" maxlength="30" placeholder="Ex: AL MADEIRA, 62" class="w-full border border-gray-300 rounded-lg p-2 text-sm uppercase">
+                            </div>
+                            <div class="md:col-span-1">
+                                <label class="block text-xs text-gray-500 mb-1">Número</label>
+                                <input type="text" id="pagNumero" maxlength="5" placeholder="0" class="w-full border border-gray-300 rounded-lg p-2 text-sm font-mono">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs text-gray-500 mb-1">Complemento</label>
+                                <input type="text" id="pagComplemento" maxlength="15" placeholder="Ex: SALA 803" class="w-full border border-gray-300 rounded-lg p-2 text-sm uppercase">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs text-gray-500 mb-1">Cidade *</label>
+                                <input type="text" id="pagCidade" maxlength="20" placeholder="Ex: BARUERI" class="w-full border border-gray-300 rounded-lg p-2 text-sm uppercase">
+                            </div>
+                            <div class="md:col-span-1">
+                                <label class="block text-xs text-gray-500 mb-1">UF *</label>
+                                <input type="text" id="pagUf" maxlength="2" placeholder="SP" class="w-full border border-gray-300 rounded-lg p-2 text-sm uppercase text-center">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-6 gap-3 mt-3">
+                            <div class="md:col-span-2">
+                                <label class="block text-xs text-gray-500 mb-1">CEP *</label>
+                                <input type="text" id="pagCep" placeholder="00000-000" class="w-full border border-gray-300 rounded-lg p-2 text-sm font-mono">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 flex gap-2 justify-between items-center">
+                        <button id="pagBtnExcluir" onclick="excluirPagador()" class="px-3 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50 transition hidden"><i class="fas fa-trash-alt mr-1"></i>Excluir cadastro</button>
+                        <div class="flex gap-2 ml-auto">
+                            <button onclick="fecharPagadorModal()" class="px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition">Cancelar</button>
+                            <button onclick="salvarPagador()" class="px-5 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition">Salvar empresa</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 
     <input type="file" id="monthUploadInput" accept=".pdf" class="hidden">
 
     <script>
+        // ================================================================
+        // EMPRESA ATIVA — seletor global no topo (estilo "trocar filial").
+        // Folhas, dados bancários, rescisões e spot ficam salvos POR EMPRESA:
+        // a chave no navegador vira  <chave>__<ID da empresa>  (ex.: monthsData__GESTAO).
+        // A numeração dos arquivos (cnabSeq / sispagSeq) continua única para todas.
+        // ================================================================
+        const EMP_SCOPED_KEYS = ['monthsData', 'masterBankData', 'currentViewMonth', 'rescisaoItems', 'spotItems'];
+        function empresaAtivaId() {
+            try { return localStorage.getItem('empresaAtiva') || 'ADM'; } catch (e) { return 'ADM'; }
+        }
+        function empKey(k, id) { return k + '__' + (id || empresaAtivaId()); }
+        // Migração única: dados salvos antes desta versão passam a ser da ONE WAY ADM.
+        // Copia (a chave antiga fica como backup). Se faltar espaço no navegador, move.
+        (function migrarDadosParaEmpresas() {
+            try {
+                if (localStorage.getItem('empresasMigrado')) return;
+                EMP_SCOPED_KEYS.forEach(k => {
+                    const v = localStorage.getItem(k);
+                    if (v === null || localStorage.getItem(k + '__ADM') !== null) return;
+                    try { localStorage.setItem(k + '__ADM', v); }
+                    catch (e) {
+                        localStorage.removeItem(k);
+                        try { localStorage.setItem(k + '__ADM', v); }
+                        catch (e2) { localStorage.setItem(k, v); throw e2; }
+                    }
+                });
+                localStorage.setItem('empresasMigrado', '1');
+            } catch (e) { console.warn('Migração por empresa não concluída:', e); }
+        })();
+        const EMP_CORES_FIXAS = { ADM: '#ea580c', GESTAO: '#2563eb' };
+        const EMP_PALETA = ['#16a34a', '#9333ea', '#db2777', '#0891b2', '#ca8a04', '#4f46e5', '#dc2626', '#0d9488'];
+        function empresaCor(p) {
+            if (!p) return '#6b7280';
+            if (EMP_CORES_FIXAS[p.id]) return EMP_CORES_FIXAS[p.id];
+            let h = 0; String(p.id).split('').forEach(c => { h = (h * 31 + c.charCodeAt(0)) >>> 0; });
+            return EMP_PALETA[h % EMP_PALETA.length];
+        }
+        function empresaSigla(p) { return String((p && (p.sufixo || p.id)) || '?').replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 3); }
+        function empEsc(t) { return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+        function empresaAtiva() { return pagadorPorId(empresaAtivaId()); }
+        function trocarEmpresa(id) {
+            if (id === empresaAtivaId()) { fecharEmpMenu(); return; }
+            const atual = document.querySelector('.nav-item.active');
+            try { sessionStorage.setItem('viewAposTroca', atual ? atual.id.replace('nav-', '') : ''); } catch (e) {}
+            localStorage.setItem('empresaAtiva', id);
+            location.reload();
+        }
+        function contaDadosEmpresa(id) {
+            const ler = (k, def) => { try { return JSON.parse(localStorage.getItem(empKey(k, id)) || def); } catch (e) { return JSON.parse(def); } };
+            const m = ler('monthsData', '{}'), b = ler('masterBankData', '{}'), r = ler('rescisaoItems', '[]'), sp = ler('spotItems', '[]');
+            return {
+                folhas: Object.keys(m || {}).length, bancos: Object.keys(b || {}).length,
+                resc: Array.isArray(r) ? r.length : 0, spot: Array.isArray(sp) ? sp.length : 0
+            };
+        }
+        // Caixa da empresa ativa no topo
+        function renderEmpresaSwitcher() {
+            const p = empresaAtiva();
+            if (!p) {
+                if (empresaAtivaId() !== 'ADM') { localStorage.setItem('empresaAtiva', 'ADM'); location.reload(); }
+                return;
+            }
+            const g = x => document.getElementById(x);
+            const cor = empresaCor(p);
+            const banco = BANCOS_SUPORTADOS[p.banco] || { nome: 'Banco ' + p.banco };
+            if (g('empDot')) { g('empDot').textContent = empresaSigla(p); g('empDot').style.background = cor; }
+            if (g('empNome')) g('empNome').textContent = p.apelido || p.nome;
+            if (g('empSub')) g('empSub').textContent = `${fmtCnpjCpf(p.cnpj)} · ${banco.nome}`;
+            if (g('topHeader')) g('topHeader').style.borderTopColor = cor;
+            document.title = `${p.apelido || p.nome} · OneWay - Sistema de Gestão`;
+        }
+        // Lista do menu (montada ao abrir)
+        function renderEmpMenuList() {
+            const ativa = empresaAtivaId();
+            const el = document.getElementById('empMenuList');
+            if (!el) return;
+            el.innerHTML = todosPagadores().map(x => {
+                const c = contaDadosEmpresa(x.id);
+                const b = BANCOS_SUPORTADOS[x.banco] || { nome: 'Banco ' + x.banco };
+                const conta = `${String(x.conta || '').replace(/^0+/, '') || '0'}-${x.dac || ''}`;
+                const ehAtiva = x.id === ativa;
+                return `<div class="flex items-center gap-1 px-2 mx-2 rounded-lg ${ehAtiva ? 'bg-orange-50' : 'hover:bg-gray-50'}">
+                    <button onclick="trocarEmpresa('${x.id}')" class="flex-1 flex items-center gap-3 py-2 text-left min-w-0">
+                        <span class="w-9 h-9 rounded-lg text-white text-[11px] font-bold flex items-center justify-center shrink-0" style="background:${empresaCor(x)}">${empresaSigla(x)}</span>
+                        <span class="leading-tight min-w-0">
+                            <span class="block text-sm font-semibold text-gray-800 truncate">${empEsc(x.apelido || x.nome)}</span>
+                            <span class="block text-[11px] text-gray-500">${fmtCnpjCpf(x.cnpj)} · ${b.nome} c/c ${conta}</span>
+                            <span class="block text-[10px] text-gray-400">${c.folhas} folha(s) · ${c.bancos} cadastro(s) bancário(s)</span>
+                        </span>
+                    </button>
+                    ${ehAtiva ? '<i class="fas fa-check text-orange-600 text-sm px-1" title="Empresa ativa"></i>' : ''}
+                    ${x.fixo ? '<i class="fas fa-lock text-gray-300 text-xs px-2" title="Empresa fixa do grupo"></i>'
+                             : `<button onclick="fecharEmpMenu();abrirPagadorModal('${x.id}','__EMPRESA__')" class="text-gray-400 hover:text-blue-600 px-2 py-2" title="Editar / excluir"><i class="fas fa-pen text-xs"></i></button>`}
+                </div>`;
+            }).join('');
+        }
+        function toggleEmpMenu() {
+            const m = document.getElementById('empMenu');
+            if (!m) return;
+            if (m.classList.contains('hidden')) { renderEmpMenuList(); m.classList.remove('hidden'); }
+            else m.classList.add('hidden');
+        }
+        function fecharEmpMenu() { const m = document.getElementById('empMenu'); if (m) m.classList.add('hidden'); }
+        document.addEventListener('click', e => { if (!e.target.closest('#empSwitcher')) fecharEmpMenu(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharEmpMenu(); });
+        // Aba CNAB: dados do pagador vêm da empresa ativa (somente leitura)
+        function preencheCnabPagador() {
+            const p = empresaAtiva(); if (!p) return;
+            const g = x => document.getElementById(x);
+            const itau = p.banco === '341';
+            const banco = BANCOS_SUPORTADOS[p.banco] || BANCOS_SUPORTADOS['077'];
+            const ro = el => { if (!el) return; el.readOnly = true; el.classList.add('bg-gray-100', 'text-gray-600', 'cursor-not-allowed'); el.title = 'Definido pela empresa ativa (seletor no topo)'; };
+            const ag = g('compAg'), cc = g('compCc'), cn = g('compCnpj');
+            if (ag) {
+                ag.value = itau ? String(p.agencia || '') : '0001'; ro(ag);
+                if (ag.nextElementSibling && ag.nextElementSibling.tagName === 'P') ag.nextElementSibling.classList.toggle('hidden', itau);
+            }
+            if (cc) { cc.value = `${p.conta}-${p.dac}`; ro(cc); }
+            if (cn) { cn.value = fmtCnpjCpf(p.cnpj); ro(cn); }
+            const btn = g('cnabBtnGerar'); if (btn) btn.innerHTML = `<i class="fas fa-download"></i> ${banco.botao}`;
+            const lbl = g('cnabPagadorNome');
+            if (lbl) lbl.innerHTML = `<span class="inline-block px-1.5 py-0.5 rounded text-white text-[10px] font-bold mr-1" style="background:${empresaCor(p)}">${empEsc(p.apelido || p.nome)}</span>${banco.nome} · arquivo <strong>${banco.arquivo}${banco.ext}</strong>`;
+            const mode = g('cnabPixMode');
+            if (mode) {
+                const opt = [...mode.options].find(o => o.value === 'fopag');
+                if (opt) { opt.disabled = itau; opt.textContent = itau ? 'Fopag-Inter — indisponível para Itaú' : 'Fopag-Inter — Folha (só contas Inter)'; }
+                if (itau && mode.value === 'fopag') { mode.value = '05'; if (typeof updatePixModeHint === 'function') updatePixModeHint(); }
+            }
+        }
+        // CNAB da folha para empresa com conta Itaú -> Sispag (Pix)
+        function folhaGerarItau(pag, monthKey, employees) {
+            const pixMode = (document.getElementById('cnabPixMode') || {}).value || '05';
+            if (pixMode === 'fopag') { alert('Fopag-Inter só existe para contas Inter.\n\nEscolha "Pix por Dados Bancários" ou "Pix por Chave CPF".'); return; }
+            const isPixKey = pixMode === '03';
+            const payIso = (document.getElementById('cnabDate') || {}).value;
+            const hoje = new Date();
+            const data = payIso ? payIso.split('-').reverse().join('')
+                : `${String(hoje.getDate()).padStart(2, '0')}${String(hoje.getMonth() + 1).padStart(2, '0')}${hoje.getFullYear()}`;
+            const pagamentos = []; const semDados = []; let zerados = 0;
+            employees.forEach(emp => {
+                const cpf = String(emp.cpf || '').replace(/\D/g, '');
+                const key = cpf.length > 5 ? cpf : emp.name;
+                if (AppState.removedKeys && AppState.removedKeys[key]) return;
+                const d = AppState.masterBankData[key] || {};
+                const ovr = (AppState.paymentOverrides && AppState.paymentOverrides[key] !== undefined) ? AppState.paymentOverrides[key] : undefined;
+                const cents = Math.round(Number(ovr !== undefined ? ovr : emp.net) * 100);
+                if (!(cents > 0)) { zerados++; return; }
+                const nome = (d.name && String(d.name).trim()) || emp.name || '';
+                const base = { nome, doc: cpf, cents, data };
+                if (isPixKey) {
+                    if (cpf.length !== 11 && cpf.length !== 14) { semDados.push(nome); return; }
+                    pagamentos.push(Object.assign(base, { modo: 'chave', chave: cpf, tipoChave: '03' }));
+                } else {
+                    if (!(String(d.bank || '').trim() && String(d.agency || '').trim() && String(d.account || '').trim())) { semDados.push(nome); return; }
+                    const ac = itauAgConta(d.agency, d.account);
+                    pagamentos.push(Object.assign(base, { modo: 'conta', banco: d.bank, agencia: ac.ag, conta: ac.conta, dac: ac.dac, tipoConta: String(d.type || '01') }));
+                }
+            });
+            if (!pagamentos.length) { alert('Nenhum colaborador apto para o arquivo (verifique dados bancários / valores).'); return; }
+            if (semDados.length && !confirm(`${semDados.length} colaborador(es) sem ${isPixKey ? 'CPF válido' : 'dados bancários completos'} ficarão FORA do arquivo:\n\n${semDados.join(', ')}\n\nGerar mesmo assim?`)) return;
+            const fileName = itauBuildSispag(pag, pagamentos, { prefixo: 'FOLHA', sufixoTipo: isPixKey ? 'FOLHA_CPF' : 'FOLHA_DB' });
+            const total = pagamentos.reduce((s, p) => s + p.cents, 0) / 100;
+            let msg = `Arquivo Sispag Itaú gerado:\n\n✅ ${fileName}\n\nFolha: ${monthKey}\nPagamentos: ${pagamentos.length} (${isPixKey ? 'Pix por Chave CPF' : 'Pix por Dados Bancários'})\nTotal: ${formatMoney(total)}`;
+            if (zerados) msg += `\n\n${zerados} colaborador(es) com valor zerado ficaram de fora.`;
+            alert(msg);
+        }
+        // Depois de trocar de empresa, volta para a mesma guia
+        window.addEventListener('load', () => setTimeout(() => {
+            preencheCnabPagador();
+            if (!(AppState.currentViewMonth && AppState.monthsData[AppState.currentViewMonth])) {
+                const g = x => document.getElementById(x);
+                if (g('overviewTableBody')) g('overviewTableBody').innerHTML = '<tr><td colspan="20" class="p-8 text-center text-gray-400 italic">Nenhuma folha importada para esta empresa. Use "Arquivos da Folha".</td></tr>';
+                ['statHeadcount', 'statNetPay', 'statProvisions', 'statTotalCost'].forEach(k => { if (g(k)) g(k).innerText = k === 'statHeadcount' ? '0' : 'R$ 0,00'; });
+                if (g('currentMonthDisplay')) g('currentMonthDisplay').innerText = '—';
+                if (g('statusDisplay')) g('statusDisplay').innerText = 'Sem folha importada';
+                const cs = g('cnabMonthSelector');
+                if (cs && !(cs.value && AppState.monthsData[cs.value]) && typeof renderCnabPreview === 'function') renderCnabPreview('');
+            }
+            let v = null;
+            try { v = sessionStorage.getItem('viewAposTroca'); sessionStorage.removeItem('viewAposTroca'); } catch (e) {}
+            if (v && document.getElementById('view-' + v) && document.getElementById('nav-' + v)) switchView(v);
+        }, 0));
+
         const AppState = {
             masterBankData: {}, 
             monthsData: {},     
@@ -2348,7 +2768,7 @@
 
         window.addEventListener('load', () => {
             // Carrega dados bancários salvos no localStorage, se existirem
-            const savedBank = localStorage.getItem('masterBankData');
+            const savedBank = localStorage.getItem(empKey('masterBankData'));
             if (savedBank) {
                 try {
                     const parsed = JSON.parse(savedBank);
@@ -2358,7 +2778,7 @@
                 } catch(err) {}
             }
             // Carrega folhas (monthsData) e mês em exibição (currentViewMonth) salvos
-            const savedMonths = localStorage.getItem('monthsData');
+            const savedMonths = localStorage.getItem(empKey('monthsData'));
             if (savedMonths) {
                 try {
                     const parsedM = JSON.parse(savedMonths);
@@ -2367,7 +2787,7 @@
                     }
                 } catch(err) {}
             }
-            const savedCurrent = localStorage.getItem('currentViewMonth');
+            const savedCurrent = localStorage.getItem(empKey('currentViewMonth'));
             if (savedCurrent) {
                 AppState.currentViewMonth = savedCurrent;
             }
@@ -2410,8 +2830,9 @@
                 'overview': ['Visão Geral', 'Resumo financeiro da folha selecionada'],
                 'files': ['Arquivos da Folha', 'Selecione o mês para importar (inclui 13º)'],
                 'bank': ['Dados Bancários', 'Cadastro de contas para CNAB'],
-                'cnab': ['CNAB Inter', 'Gerar arquivo de remessa'],
-                'rescisao': ['Rescisões', 'Leitura automática do Termo de Rescisão (TRCT)']
+                'cnab': ['CNAB Folha', 'Gerar arquivo de remessa da folha (Inter ou Itaú, conforme a empresa ativa)'],
+                'rescisao': ['Rescisões', 'Leitura automática do Termo de Rescisão (TRCT)'],
+                'spot': ['Pagamento Spot', 'Cole Nome, Valor e Chave Pix — gera o arquivo de remessa']
             };
             document.getElementById('pageTitle').innerText = titles[viewId][0];
             document.getElementById('pageSubtitle').innerText = titles[viewId][1];
@@ -2437,6 +2858,9 @@
             }
             if(viewId === 'rescisao') {
                 renderRescisaoList();
+            }
+            if(viewId === 'spot') {
+                renderSpotList();
             }
         }
 
@@ -2514,6 +2938,16 @@
                 if (employees.length === 0) {
                     alert("Nenhum funcionário encontrado. Verifique se o PDF está correto.");
                 } else {
+                    // Confere se a folha é da empresa ativa (CNPJ do PDF x empresa do topo)
+                    const _pAt = empresaAtiva();
+                    const _cnpjPdf = String((company && company.cnpj) || '').replace(/\D/g, '');
+                    if (_pAt && _cnpjPdf.length === 14 && _cnpjPdf !== String(_pAt.cnpj).replace(/\D/g, '')) {
+                        const _outra = todosPagadores().find(x => String(x.cnpj).replace(/\D/g, '') === _cnpjPdf);
+                        let _m = `ATENÇÃO: esta folha é de outro CNPJ.\n\nPDF: ${fmtCnpjCpf(_cnpjPdf)}${_outra ? ' (' + (_outra.apelido || _outra.nome) + ')' : ''}\nEmpresa ativa: ${_pAt.apelido || _pAt.nome} — ${fmtCnpjCpf(_pAt.cnpj)}\n\n`;
+                        if (_outra) _m += `Recomendado: Cancelar, trocar para "${_outra.apelido || _outra.nome}" no topo e importar de novo.\n\n`;
+                        _m += 'OK = importar mesmo assim na empresa ativa.';
+                        if (!confirm(_m)) return;
+                    }
                     const processed = calculateProvisions(employees);
                     
                     AppState.monthsData[pendingUploadKey] = { employees: processed, company };
@@ -2527,9 +2961,9 @@
                     // Define o mês atual para o recém importado e persiste
                     AppState.currentViewMonth = pendingUploadKey;
                     // Salva as folhas, mês ativo e dados bancários no localStorage
-                    localStorage.setItem('monthsData', JSON.stringify(AppState.monthsData));
-                    localStorage.setItem('currentViewMonth', AppState.currentViewMonth);
-                    localStorage.setItem('masterBankData', JSON.stringify(AppState.masterBankData || {}));
+                    localStorage.setItem(empKey('monthsData'), JSON.stringify(AppState.monthsData));
+                    localStorage.setItem(empKey('currentViewMonth'), AppState.currentViewMonth);
+                    localStorage.setItem(empKey('masterBankData'), JSON.stringify(AppState.masterBankData || {}));
 
                     initMonthsGrid();
                     loadMonthToOverview(pendingUploadKey);
@@ -2860,7 +3294,7 @@ if (admLabelMatch) {
                 });
             });
             // Atualiza localStorage para persistir novos cadastros bancários
-            localStorage.setItem('masterBankData', JSON.stringify(AppState.masterBankData));
+            localStorage.setItem(empKey('masterBankData'), JSON.stringify(AppState.masterBankData));
             if(force) {
                 renderBankTable();
                 alert(addedCount > 0 ? `${addedCount} novos registros sincronizados.` : "Tudo atualizado.");
@@ -2909,7 +3343,7 @@ if (admLabelMatch) {
             if(AppState.masterBankData[key]) {
                 AppState.masterBankData[key][field] = val;
                 // Persiste alterações no localStorage para manter dados bancários entre sessões
-                localStorage.setItem('masterBankData', JSON.stringify(AppState.masterBankData));
+                localStorage.setItem(empKey('masterBankData'), JSON.stringify(AppState.masterBankData));
                 const sel = document.getElementById('cnabMonthSelector');
                 if(sel.value) renderCnabPreview(sel.value);
             }
@@ -3293,9 +3727,11 @@ if (admLabelMatch) {
         }
 
         function saveProject() {
-            const blob = new Blob([JSON.stringify(AppState)], {type:'application/json'});
+            const _p = empresaAtiva();
+            const blob = new Blob([JSON.stringify(Object.assign({}, AppState, { _empresa: empresaAtivaId() }))], {type:'application/json'});
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = 'OneWay_Backup.json'; a.click();
+            const _suf = String((_p && _p.sufixo) || empresaAtivaId()).replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+            const a = document.createElement('a'); a.href = url; a.download = `OneWay_Backup_${_suf}.json`; a.click();
         }
         // Exports the current page as a standalone HTML backup.
         function backupHTML() {
@@ -3314,14 +3750,21 @@ if (admLabelMatch) {
             if(!input.files[0]) return;
             const r = new FileReader();
             r.onload = e => {
-                Object.assign(AppState, JSON.parse(e.target.result));
+                const _dados = JSON.parse(e.target.result);
+                const _emp = _dados._empresa; delete _dados._empresa;
+                const _pa = empresaAtiva(), _pb = _emp ? pagadorPorId(_emp) : null;
+                const _nA = _pa ? (_pa.apelido || _pa.nome) : empresaAtivaId();
+                let _m = `Carregar este backup na empresa ativa "${_nA}"?\n\nIsso substitui as folhas e os dados bancários dela.`;
+                if (_emp && _emp !== empresaAtivaId()) _m = `ATENÇÃO: este backup é da empresa "${_pb ? (_pb.apelido || _pb.nome) : _emp}", mas a empresa ativa é "${_nA}".\n\n` + _m;
+                if (!confirm(_m)) { input.value = ''; return; }
+                Object.assign(AppState, _dados);
                 // Persiste dados bancários, folhas e mês ativo ao restaurar backup
-                localStorage.setItem('masterBankData', JSON.stringify(AppState.masterBankData || {}));
-                localStorage.setItem('monthsData', JSON.stringify(AppState.monthsData || {}));
+                localStorage.setItem(empKey('masterBankData'), JSON.stringify(AppState.masterBankData || {}));
+                localStorage.setItem(empKey('monthsData'), JSON.stringify(AppState.monthsData || {}));
                 if (AppState.currentViewMonth) {
-                    localStorage.setItem('currentViewMonth', AppState.currentViewMonth);
+                    localStorage.setItem(empKey('currentViewMonth'), AppState.currentViewMonth);
                 } else {
-                    localStorage.removeItem('currentViewMonth');
+                    localStorage.removeItem(empKey('currentViewMonth'));
                 }
                 initMonthsGrid();
                 // Se houver mês em exibição no backup e dados correspondentes, carrega-o na visão geral
@@ -3416,7 +3859,7 @@ if (admLabelMatch) {
                     if(ispb) d.ispb = ispb;
                 }
                 // Atualiza localStorage e tela
-                localStorage.setItem('masterBankData', JSON.stringify(AppState.masterBankData));
+                localStorage.setItem(empKey('masterBankData'), JSON.stringify(AppState.masterBankData));
                 renderBankTable();
                 alert('Dados bancários importados com sucesso.');
             };
@@ -3571,22 +4014,25 @@ if (admLabelMatch) {
                 return;
             }
             const employees = AppState.monthsData[monthKey].employees || [];
+            // Empresa ativa (topo): Itaú gera Sispag; Inter segue o CNAB .REM abaixo
+            const _pagAtivo = empresaAtiva();
+            if (_pagAtivo && _pagAtivo.banco === '341') { folhaGerarItau(_pagAtivo, monthKey, employees); return; }
             // Dados da empresa
             // CNPJ do pagador: prioriza o campo visivel (compCnpj); AppState.companyInfo pode ser
             // poluido por leitura de PDF. companyInfo/padrao servem apenas de fallback.
             const _cnpjEl = document.getElementById('compCnpj');
-            const _cnpjInput = ((_cnpjEl && _cnpjEl.value) || '').replace(/\D/g, '');
+            const _cnpjInput = (_pagAtivo && _pagAtivo.cnpj) ? String(_pagAtivo.cnpj).replace(/\D/g, '') : ((_cnpjEl && _cnpjEl.value) || '').replace(/\D/g, '');
             const _cnpjState = (AppState.companyInfo.cnpj || '').replace(/\D/g, '');
             const compCnpj = (_cnpjInput.length === 14 ? _cnpjInput
                             : (_cnpjState.length === 14 ? _cnpjState
                             : (_cnpjInput || _cnpjState || '63004633000198'))).padStart(14, '0');
-            const compName = (AppState.companyInfo.name || 'EMPRESA').padEnd(30, ' ').substring(0, 30);
+            const compName = cnabTexto((_pagAtivo && _pagAtivo.nome) || AppState.companyInfo.name || 'EMPRESA').toUpperCase().padEnd(30, ' ').substring(0, 30);
             // Agência e conta da empresa
             // CORREÇÃO: Manual Inter v1.21 (seção 4.1, itens 08-09) exige agência FIXA "00001" com DV "9"
             // para todas as contas Inter Empresas. Ignoramos o input do usuário e gravamos o valor literal.
             const compAg = '00001';
             const compAgDv = '9';
-            const compCcRaw = document.getElementById('compCc').value.replace(/[^0-9]/g, '');
+            const compCcRaw = (_pagAtivo ? (String(_pagAtivo.conta || '').replace(/\D/g, '') + String(_pagAtivo.dac || '').replace(/\D/g, '')) : '') || document.getElementById('compCc').value.replace(/[^0-9]/g, '');
             const compCc = compCcRaw.slice(0, -1).padStart(12, '0');
             const compCcDv = compCcRaw.slice(-1) || '0';
             // Datas de geração e pagamento
@@ -3638,7 +4084,7 @@ if (admLabelMatch) {
                     if (amountCentsF <= 0) { zeroCount++; return; }
                     const amountStrF = amountCentsF.toString().padStart(15, '0');
                     totalAmountCents += amountCentsF;
-                    const empNameF = (bankData.name && bankData.name.trim() ? bankData.name : emp.name).padEnd(30, ' ').substring(0, 30);
+                    const empNameF = cnabTexto(bankData.name && String(bankData.name).trim() ? bankData.name : emp.name).toUpperCase().padEnd(30, ' ').substring(0, 30);
                     // Conta corrente Inter do favorecido (12) + DV (1)
                     const accRawF = String(bankData.account || '').replace(/\D/g, '');
                     const favAccF = accRawF.slice(0, -1).padStart(12, '0');
@@ -3760,7 +4206,7 @@ if (admLabelMatch) {
                 // Nome do favorecido: permite que o nome seja ajustado no cadastro bancário. Se houver um nome salvo no
                 // masterBankData, utiliza-o; caso contrário, utiliza o nome importado da folha. O nome é limitado a 30 caracteres.
                 const empNameRaw = (bankData.name && bankData.name.trim() ? bankData.name : emp.name);
-                const empName = empNameRaw.padEnd(30, ' ').substring(0, 30);
+                const empName = cnabTexto(empNameRaw).toUpperCase().padEnd(30, ' ').substring(0, 30);
             // Segmentos A e B para Pix
             // Conforme layout Pix: código do segmento 'A', tipo movimento '0', código instrução '00', câmara centralizadora '000'
             const segANum = `07700013${seq.toString().padStart(5, '0')}`;
@@ -3874,13 +4320,13 @@ if (admLabelMatch) {
             lotHeader += compName;
             lotHeader += 'PAGAMENTO SALARIOS'.padEnd(40, ' ').substring(0, 40);
             // endereço da empresa (nome da rua) - 30 caracteres
-            lotHeader += (AppState.companyInfo.address || '').padEnd(30, ' ').substring(0, 30);
+            lotHeader += cnabTexto(AppState.companyInfo.address || '').toUpperCase().padEnd(30, ' ').substring(0, 30);
             // número do local (5)
             lotHeader += '00000';
             // complemento (15)
             lotHeader += ' '.repeat(15);
             // cidade (20)
-            lotHeader += (AppState.companyInfo.city || '').padEnd(20, ' ').substring(0, 20);
+            lotHeader += cnabTexto(AppState.companyInfo.city || '').toUpperCase().padEnd(20, ' ').substring(0, 20);
             // CEP (8)
             lotHeader += '00000000';
             // UF (2) - assume SP como padrão se não informado
@@ -4032,12 +4478,12 @@ if (admLabelMatch) {
         // modalidades Pix por Dados Bancários (05) ou Pix por Chave CPF (03).
         // ================================================================
         const RescisaoState = {
-            items: JSON.parse(localStorage.getItem('rescisaoItems') || '[]'),
+            items: JSON.parse(localStorage.getItem(empKey('rescisaoItems')) || '[]'),
             pdfs: {}   // id -> objectURL (apenas na sessão atual)
         };
 
         function rescisaoSave() {
-            localStorage.setItem('rescisaoItems', JSON.stringify(RescisaoState.items));
+            localStorage.setItem(empKey('rescisaoItems'), JSON.stringify(RescisaoState.items));
         }
 
         function rescFormatCpf(cpf) {
@@ -5067,11 +5513,6 @@ if (admLabelMatch) {
                 if (semVenc.length) { alert(`${semVenc.length} item(ns) sem data de vencimento.`); return; }
 
                 // Validações das rescisões
-                const semNome = rescisoes.filter(i => {
-                    const d = AppState.masterBankData[i.cpf] || {};
-                    return !(d.name || i.nome);
-                });
-                if (semNome.length) { alert(`${semNome.length} rescisão(ões) sem nome do trabalhador.`); return; }
                 if (!isPixKey) {
                     const semBanco = rescisoes.filter(i => {
                         const d = AppState.masterBankData[i.cpf] || {};
@@ -5090,22 +5531,37 @@ if (admLabelMatch) {
                     return;
                 }
 
-                // Dados do pagador (aba CNAB Inter)
-                const compCnpjEl = document.getElementById('compCnpj');
-                const compCcEl = document.getElementById('compCc');
-                const compCnpj = compCnpjEl ? compCnpjEl.value.replace(/\D/g, '') : '';
-                const compCcRaw = compCcEl ? compCcEl.value.replace(/\D/g, '') : '';
-                if (!compCnpj || compCnpj.length < 11) { alert('CNPJ da empresa não configurado (aba CNAB Inter).'); return; }
-                if (!compCcRaw || compCcRaw.length < 2) { alert('Conta corrente não configurada (aba CNAB Inter).'); return; }
-                const compName = (AppState.companyInfo && AppState.companyInfo.name && AppState.companyInfo.name.trim())
-                    ? AppState.companyInfo.name : 'ONE WAY ADMINISTRADORA DE MAO DE OBRA LTDA';
+                // Empresa pagadora (define banco/layout do arquivo)
+                const pag = getPagador('rescEmpresa');
+                if (!pag) return;
+                const compCnpj = pag.cnpj, compCcRaw = pag.cc, compName = pag.nome;
+                const ehItau = (pag.banco === '341');
 
-                // Um arquivo com até dois lotes: 0001 = Pix (rescisões), 0002 = cobranças (boletos)
-                const fileName = rescBuildCnab(rescisoes, boletos, compName, compCnpj, compCcRaw, modoGlobal);
+                let fileName;
+                if (ehItau) {
+                    // Sispag Itaú: só Pix (rescisões). Boletos/tributos exigem segmentos O/J-52 com CNPJ do cedente — ainda não suportado.
+                    if (boletos.length) {
+                        alert(`${boletos.length} boleto(s)/tributo(s) estão marcados, mas o arquivo Sispag Itaú desta ferramenta gera apenas Pix.\n\nDesmarque os boletos (ou pague-os por uma empresa Inter) e gere novamente.`);
+                        return;
+                    }
+                    const toDDMMAAAA = iso => String(iso || '').split('-').reverse().join('');
+                    const pagamentos = rescisoes.map(item => {
+                        const d = AppState.masterBankData[item.cpf] || {};
+                        const cpf = String(item.cpf || '').replace(/\D/g, '');
+                        const base = { nome: d.name || item.nome || '', doc: cpf, cents: Math.round(item.valor * 100), data: toDDMMAAAA(item.vencimento) };
+                        if (isPixKey) return Object.assign(base, { modo: 'chave', chave: cpf, tipoChave: '03' });
+                        const ac = itauAgConta(d.agency, d.account);
+                        return Object.assign(base, { modo: 'conta', banco: d.bank, agencia: ac.ag, conta: ac.conta, dac: ac.dac, tipoConta: String(d.type || '01') });
+                    });
+                    fileName = itauBuildSispag(pag, pagamentos, { prefixo: 'RESC', sufixoTipo: isPixKey ? 'RESC_CPF' : 'RESC_DB' });
+                } else {
+                    // Inter: um arquivo com até dois lotes: 0001 = Pix (rescisões), 0002 = cobranças (boletos)
+                    fileName = rescBuildCnab(rescisoes, boletos, compName, compCnpj, compCcRaw, modoGlobal);
+                }
 
                 const modoLabel = isPixKey ? 'Pix por Chave CPF' : 'Pix por Dados Bancários';
                 const totalValor = selecionados.reduce((s, i) => s + i.valor, 0);
-                let msg = `Arquivo de remessa gerado:\n\n✅ ${fileName}\n`;
+                let msg = `Arquivo de remessa ${ehItau ? 'Sispag Itaú' : 'CNAB Inter'} gerado:\n\n✅ ${fileName}\n`;
                 if (rescisoes.length) msg += `\nRescisões: ${rescisoes.length} (${modoLabel})`;
                 if (boletos.length)   msg += `\nBoletos/tributos: ${boletos.length} (código de barras)`;
                 msg += `\nTotal no arquivo: ${formatMoney(totalValor)}`;
@@ -5127,7 +5583,7 @@ if (admLabelMatch) {
         // A data de pagamento é gravada por lançamento, então cada item leva o seu vencimento.
         function rescBuildCnab(rescisoes, boletos, compName, compCnpj, compCc, pixMode) {
             const N = (v, n) => String(v == null ? '' : v).replace(/\D/g, '').padStart(n, '0').slice(-n);
-            const A = (v, n) => String(v == null ? '' : v).toUpperCase().substring(0, n).padEnd(n, ' ');
+            const A = (v, n) => cnabTexto(v).toUpperCase().substring(0, n).padEnd(n, ' ');
             const compAg = '00001', compAgDv = '9';
             const ccPad = String(compCc).slice(0, -1).padStart(12, '0');
             const ccDv = String(compCc).slice(-1) || '0';
@@ -5271,10 +5727,855 @@ if (admLabelMatch) {
             localStorage.setItem('cnabSeq', String(nsa + 1));
             const sufixo = (boletos && boletos.length && (!rescisoes || !rescisoes.length))
                 ? '_BOL' : (isPixByKey ? '_CPF' : '_DB');
-            const fileName = `CI240_001_${String(nsa).padStart(7, '0')}${sufixo}.REM`;
+            const fileName = `CI240_001_${String(nsa).padStart(7, '0')}${sufixo}${sufixoEmpresa(compCnpj)}.REM`;
             downloadFile(lines.join('\r\n'), fileName, 'text/plain');
             return fileName;
         }
+
+        // ================================================================
+        // EMPRESAS PAGADORAS (contas Inter do grupo). Selecionadas nas guias
+        // Rescisões e Pagamento Spot. "CNAB" cai nos campos da aba CNAB Inter.
+        // ================================================================
+        // As duas contas Inter do grupo são fixas. Outras empresas/contas (Inter ou Itaú)
+        // são cadastradas pelo próprio usuário e ficam salvas no navegador (localStorage).
+        //   banco '077' -> arquivo CNAB 240 Inter (.REM)   — builders já existentes
+        //   banco '341' -> arquivo Sispag Itaú (.txt)       — itauBuildSispag()
+        const EMPRESAS_PAGADORAS = {
+            ADM:    { id: 'ADM',    fixo: true, banco: '077', apelido: 'ONE WAY ADM',    nome: 'ONE WAY ADMINISTRADORA DE MAO DE OBRA LTDA', cnpj: '63004633000198', agencia: '0001', conta: '49659022', dac: '7', cc: '496590227', sufixo: 'ADM' },
+            GESTAO: { id: 'GESTAO', fixo: true, banco: '077', apelido: 'ONE WAY GESTÃO', nome: 'ONE WAY GESTAO DE MAO DE OBRA LTDA',         cnpj: '69017331000130', agencia: '0001', conta: '56082136', dac: '0', cc: '560821360', sufixo: 'GESTAO' }
+        };
+        const BANCOS_SUPORTADOS = {
+            '077': { nome: 'Inter', arquivo: 'CNAB 240 Inter', ext: '.REM', botao: 'Baixar CNAB .REM' },
+            '341': { nome: 'Itaú',  arquivo: 'Sispag Itaú',    ext: '.txt', botao: 'Baixar Sispag Itaú .txt' }
+        };
+        // Pré-cadastro extraído do arquivo Sispag real (006794.txt) — pode ser editado/excluído
+        const PAGADORES_SEED = [{
+            id: 'ONTIME', banco: '341', apelido: 'ON TIME EXPRESS', nome: 'ON TIME EXPRESS LOGISTICA E TRANSPORTE S/A',
+            cnpj: '09329143000116', agencia: '08145', conta: '1610', dac: '4', sufixo: 'ONTIME', tipoPagto: '20',
+            endereco: { rua: 'AL MADEIRA, 62', numero: '', complemento: 'SALA 803', cidade: 'BARUERI', cep: '06454010', uf: 'SP' }
+        }];
+        function pagadoresCustom() {
+            try { const l = JSON.parse(localStorage.getItem('pagadoresCustom') || '[]'); return Array.isArray(l) ? l : []; }
+            catch (e) { return []; }
+        }
+        function pagadoresSave(list) { localStorage.setItem('pagadoresCustom', JSON.stringify(list)); }
+        (function seedPagadores() {
+            if (localStorage.getItem('pagadoresSeeded')) return;
+            const list = pagadoresCustom();
+            PAGADORES_SEED.forEach(p => { if (!list.some(x => x.id === p.id)) list.push(p); });
+            pagadoresSave(list);
+            localStorage.setItem('pagadoresSeeded', '1');
+        })();
+        function todosPagadores() { return [...Object.values(EMPRESAS_PAGADORAS), ...pagadoresCustom()]; }
+        function pagadorPorId(id) { return todosPagadores().find(p => p.id === id) || null; }
+        function fmtCnpjCpf(d) {
+            d = String(d || '').replace(/\D/g, '');
+            if (d.length === 14) return d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+            if (d.length === 11) return d.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+            return d;
+        }
+        function pagadorLabel(p) {
+            const b = BANCOS_SUPORTADOS[p.banco] || { nome: 'Banco ' + p.banco };
+            const conta = p.conta ? `${String(p.conta).replace(/^0+/, '') || '0'}-${p.dac || ''}` : '';
+            return `${p.apelido || p.nome} — ${fmtCnpjCpf(p.cnpj)} — ${b.nome} c/c ${conta}`;
+        }
+        // (Re)monta os seletores das guias Rescisões e Spot com fixas + cadastradas
+        function renderPagadorSelects() {
+            // Rescisões e Spot seguem a empresa ativa do topo (seletor próprio fica oculto)
+            const ativa = empresaAtivaId();
+            ['rescEmpresa', 'spotEmpresa'].forEach(id => {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                sel.innerHTML = todosPagadores().map(p => `<option value="${p.id}">${pagadorLabel(p).replace(/</g, '&lt;')}</option>`).join('');
+                sel.value = [...sel.options].some(o => o.value === ativa) ? ativa : 'ADM';
+                sel.disabled = true;
+                sel.classList.add('hidden');
+                atualizaInfoPagador(id);
+            });
+            renderEmpresaSwitcher();
+            preencheCnabPagador();
+        }
+        // Devolve o pagador escolhido num seletor. Para Inter mantém `cc` (conta+DV só dígitos)
+        // usado pelos builders antigos. `silencioso` evita alert (uso em renderização).
+        function getPagador(selId, silencioso) {
+            const sel = document.getElementById(selId);
+            const key = sel ? sel.value : 'ADM';
+            const p = pagadorPorId(key);
+            if (p) {
+                const cc = p.cc || (String(p.conta || '').replace(/\D/g, '') + String(p.dac || '').replace(/\D/g, ''));
+                return Object.assign({ banco: '077' }, p, { cc });
+            }
+            if (key === '__NOVA__') return null;
+            // Fallback: aba CNAB Inter
+            const cnpjEl = document.getElementById('compCnpj');
+            const ccEl = document.getElementById('compCc');
+            const cnpj = cnpjEl ? cnpjEl.value.replace(/\D/g, '') : '';
+            const cc = ccEl ? ccEl.value.replace(/\D/g, '') : '';
+            if (!cnpj || cnpj.length < 11) { if (!silencioso) alert('CNPJ da empresa não configurado (aba CNAB Inter).'); return null; }
+            if (!cc || cc.length < 2) { if (!silencioso) alert('Conta corrente não configurada (aba CNAB Inter).'); return null; }
+            const nome = (AppState.companyInfo && AppState.companyInfo.name && AppState.companyInfo.name.trim())
+                ? AppState.companyInfo.name : 'EMPRESA';
+            return { id: 'CNAB', banco: '077', nome, cnpj, cc, sufixo: 'OUTRA' };
+        }
+        function pagadorEhItau(selId) {
+            const sel = document.getElementById(selId);
+            const p = sel ? pagadorPorId(sel.value) : null;
+            return !!(p && p.banco === '341');
+        }
+        // Sufixo de empresa para o nome do arquivo, a partir do CNPJ gravado
+        function sufixoEmpresa(cnpj) {
+            const c = String(cnpj || '').replace(/\D/g, '');
+            const p = todosPagadores().find(x => x.cnpj === c);
+            return p && p.sufixo ? '_' + String(p.sufixo).replace(/[^A-Za-z0-9]/g, '').toUpperCase() : '';
+        }
+        // Linha informativa abaixo do seletor + rótulo do botão de download
+        function atualizaInfoPagador(selId) {
+            const info = document.getElementById(selId + 'Info');
+            const btn = document.getElementById(selId.replace('Empresa', 'BtnGerar'));
+            const sel = document.getElementById(selId);
+            const p = sel ? pagadorPorId(sel.value) : null;
+            const banco = BANCOS_SUPORTADOS[(p && p.banco) || '077'];
+            if (btn) btn.innerHTML = `<i class="fas fa-download"></i> ${banco.botao}`;
+            if (!info) return;
+            if (!p) { info.innerHTML = `<i class="fas fa-file-code mr-1 text-orange-500"></i>Arquivo: <strong>${banco.arquivo}</strong>`; return; }
+            const ag = p.banco === '077' ? '0001' : String(p.agencia || '');
+            let html = `<span class="inline-block px-1.5 py-0.5 rounded text-white text-[10px] font-bold mr-1" style="background:${empresaCor(p)}">${empEsc(p.apelido || p.nome)}</span><i class="fas fa-university mr-1 text-orange-500"></i><strong>${banco.nome}</strong> · ag ${ag} · c/c ${p.conta}-${p.dac} · arquivo <strong>${banco.arquivo}${banco.ext}</strong>`;
+            if (!p.fixo) html += ` · <a href="#" onclick="abrirPagadorModal('${p.id}','${selId}');return false;" class="text-blue-600 hover:underline"><i class="fas fa-pen"></i> editar</a>`;
+            html += '<br><span class="text-gray-400"><i class="fas fa-exchange-alt mr-1"></i>Para trocar a empresa, use o seletor no topo.</span>';
+            info.innerHTML = html;
+        }
+        // Lembra a última empresa escolhida em cada guia; "__NOVA__" abre o cadastro
+        function pagadorOnChange(selId) {
+            const sel = document.getElementById(selId);
+            if (!sel) return;
+            if (sel.value === '__NOVA__') {
+                const anterior = localStorage.getItem('pagador_' + selId) || 'ADM';
+                sel.value = [...sel.options].some(o => o.value === anterior) ? anterior : 'ADM';
+                abrirPagadorModal(null, selId);
+                return;
+            }
+            localStorage.setItem('pagador_' + selId, sel.value);
+            atualizaInfoPagador(selId);
+            if (selId === 'spotEmpresa' && typeof renderSpotList === 'function') renderSpotList();
+        }
+        document.addEventListener('DOMContentLoaded', renderPagadorSelects);
+
+        // ---------- Modal de cadastro ----------
+        function abrirPagadorModal(id, selOrigem) {
+            const p = id ? pagadorPorId(id) : null;
+            const g = x => document.getElementById(x);
+            g('pagId').value = p ? p.id : '';
+            g('pagSelOrigem').value = selOrigem || '';
+            g('pagadorModalTitulo').innerText = p ? 'Editar Empresa Pagadora' : 'Cadastrar Empresa Pagadora';
+            g('pagBanco').value = p ? p.banco : '341';
+            g('pagNome').value = p ? p.nome : '';
+            g('pagApelido').value = p ? (p.apelido || '') : '';
+            g('pagCnpj').value = p ? fmtCnpjCpf(p.cnpj) : '';
+            g('pagSufixo').value = p ? (p.sufixo || '') : '';
+            g('pagAgencia').value = p ? (p.agencia || '') : '';
+            g('pagConta').value = p ? (p.conta || '') : '';
+            g('pagDac').value = p ? (p.dac || '') : '';
+            g('pagTipoPagto').value = (p && p.tipoPagto) || '20';
+            const e = (p && p.endereco) || {};
+            g('pagRua').value = e.rua || ''; g('pagNumero').value = e.numero || ''; g('pagComplemento').value = e.complemento || '';
+            g('pagCidade').value = e.cidade || ''; g('pagCep').value = e.cep || ''; g('pagUf').value = e.uf || '';
+            g('pagBtnExcluir').classList.toggle('hidden', !(p && !p.fixo));
+            pagadorModalBancoChange();
+            const m = g('pagadorModal'); m.classList.remove('hidden'); m.classList.add('flex');
+        }
+        function fecharPagadorModal() {
+            const m = document.getElementById('pagadorModal'); m.classList.add('hidden'); m.classList.remove('flex');
+        }
+        function pagadorModalBancoChange() {
+            const itau = document.getElementById('pagBanco').value === '341';
+            document.getElementById('pagItauBloco').classList.toggle('hidden', !itau);
+            document.getElementById('pagAgenciaWrap').classList.toggle('hidden', !itau);
+            document.getElementById('pagInterNota').classList.toggle('hidden', itau);
+        }
+        function salvarPagador() {
+            const g = x => document.getElementById(x);
+            const v = x => (g(x).value || '').trim();
+            const banco = v('pagBanco');
+            const nome = cnabTexto(v('pagNome')).toUpperCase();
+            const cnpj = v('pagCnpj').replace(/\D/g, '');
+            const conta = v('pagConta').replace(/\D/g, '');
+            const dac = v('pagDac').replace(/[^0-9Xx]/g, '').toUpperCase();
+            let agencia = v('pagAgencia').replace(/\D/g, '');
+            if (!nome) { alert('Informe a razão social.'); return; }
+            if (!(cnpj.length === 14 && validaCNPJ(cnpj)) && !(cnpj.length === 11 && validaCPF(cnpj))) { alert('CNPJ/CPF inválido.'); return; }
+            if (!conta) { alert('Informe a conta (sem o dígito).'); return; }
+            if (!dac) { alert('Informe o dígito da conta.'); return; }
+            if (banco === '077') agencia = '0001';
+            if (banco === '341' && !agencia) { alert('Informe a agência (sem dígito).'); return; }
+            const apelido = v('pagApelido') || nome.split(' ').slice(0, 2).join(' ');
+            let sufixo = (v('pagSufixo') || apelido).replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 12) || 'OUTRA';
+            const endereco = {
+                rua: cnabTexto(v('pagRua')).toUpperCase(), numero: v('pagNumero').replace(/\D/g, ''),
+                complemento: cnabTexto(v('pagComplemento')).toUpperCase(), cidade: cnabTexto(v('pagCidade')).toUpperCase(),
+                cep: v('pagCep').replace(/\D/g, ''), uf: v('pagUf').toUpperCase().replace(/[^A-Z]/g, '')
+            };
+            if (banco === '341') {
+                if (!endereco.rua || !endereco.cidade || endereco.cep.length !== 8 || endereco.uf.length !== 2) {
+                    alert('Para o Itaú preencha logradouro, cidade, CEP (8 dígitos) e UF — o header de lote do Sispag exige o endereço da empresa.');
+                    return;
+                }
+            }
+            const eraNova = !v('pagId');
+            const list = pagadoresCustom();
+            let id = v('pagId');
+            if (!id) {
+                id = sufixo; let n = 2;
+                while (pagadorPorId(id)) id = sufixo + n++;
+            }
+            const existente = list.find(x => x.id === id);
+            const novo = { id, banco, apelido, nome, cnpj, agencia: banco === '341' ? agencia.padStart(5, '0') : '0001', conta, dac, sufixo, tipoPagto: v('pagTipoPagto') || '20', endereco };
+            if (existente) Object.assign(existente, novo); else list.push(novo);
+            pagadoresSave(list);
+            fecharPagadorModal();
+            renderPagadorSelects();
+            if (v('pagSelOrigem') === '__EMPRESA__' && eraNova) { trocarEmpresa(id); return; }
+            // Seleciona a empresa recém-cadastrada na guia que abriu o modal
+            const origem = v('pagSelOrigem');
+            if (origem && document.getElementById(origem)) {
+                document.getElementById(origem).value = id;
+                pagadorOnChange(origem);
+            }
+        }
+        function excluirPagador() {
+            const id = document.getElementById('pagId').value;
+            const p = pagadorPorId(id);
+            if (!p || p.fixo) return;
+            const c = contaDadosEmpresa(id);
+            let msg = `Excluir a empresa "${p.apelido || p.nome}"?\n\n`;
+            if (c.folhas || c.bancos || c.resc || c.spot) {
+                msg += `Também serão APAGADOS deste navegador:\n• ${c.folhas} folha(s) importada(s)\n• ${c.bancos} cadastro(s) bancário(s)\n• ${c.resc} item(ns) de rescisão\n• ${c.spot} item(ns) de pagamento spot\n\nDica: antes, deixe esta empresa ativa e use "Salvar Projeto" para ter um backup.\n\n`;
+            } else msg += 'Não há folhas nem cadastros salvos para ela.\n\n';
+            msg += 'Arquivos já gerados não são afetados.';
+            if (!confirm(msg)) return;
+            pagadoresSave(pagadoresCustom().filter(x => x.id !== id));
+            EMP_SCOPED_KEYS.forEach(k => localStorage.removeItem(empKey(k, id)));
+            fecharPagadorModal();
+            if (empresaAtivaId() === id) { localStorage.setItem('empresaAtiva', 'ADM'); location.reload(); return; }
+            renderPagadorSelects();
+        }
+
+        // ================================================================
+        // SISPAG ITAÚ — CNAB 240, layout de arquivo 080 / lote 040, Pix Transferência (forma 45).
+        // Estrutura copiada posição a posição do arquivo real aceito pelo Itaú (006794.txt,
+        // gerado pelo Protheus) e completada com o Manual Sispag v086 para Pix por chave:
+        //   - Pix por dados bancários: Seg A (113-114 = 01/03/PG) + Seg B (CPF/CNPJ) + Seg J-52
+        //   - Pix por chave:           Seg A (113-114 = 04)       + Seg B Pix (Nota 37: tipo chave; Nota 40: chave)
+        // Numeração sequencial crescente por registro (como no arquivo aceito).
+        // pagamentos: [{ nome, doc, cents, data(DDMMAAAA), modo:'chave'|'conta',
+        //                chave, tipoChave(01 tel/02 email/03 CPF-CNPJ/04 aleatória),
+        //                banco, agencia, conta, dac, tipoConta(01 cc/02 pagamento/03 poupança) }]
+        // ================================================================
+        function itauBuildSispag(pag, pagamentos, opts) {
+            opts = opts || {};
+            const N  = (v, n) => String(v == null ? '' : v).replace(/\D/g, '').padStart(n, '0').slice(-n);
+            const A  = (v, n) => cnabTexto(v).toUpperCase().substring(0, n).padEnd(n, ' ');
+            const AC = (v, n) => cnabTexto(v).substring(0, n).padEnd(n, ' ');       // e-mail / chave aleatória: preserva maiúsculas/minúsculas
+            const B  = n => ' '.repeat(n);
+            const Z  = n => '0'.repeat(n);
+            const banco = '341', lote = '0001';
+            const tipoPagto = N(pag.tipoPagto || '20', 2);
+            const cnpjDigits = String(pag.cnpj || '').replace(/\D/g, '');
+            const tipoInscEmp = cnpjDigits.length === 11 ? '1' : '2';
+            const cnpj = N(cnpjDigits, 14);
+            const contaEmp = N(pag.agencia, 5) + ' ' + N(pag.conta, 12) + ' ' + (String(pag.dac || '0').toUpperCase().slice(-1)); // 053-072
+            const nomeEmp = A(pag.nome, 30);
+            const end = pag.endereco || {};
+            const now = new Date();
+            const dateStr = `${String(now.getDate()).padStart(2,'0')}${String(now.getMonth()+1).padStart(2,'0')}${now.getFullYear()}`;
+            const timeStr = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
+            const lines = [];
+
+            // ---- Header de arquivo (layout 080) ----
+            lines.push(banco + '0000' + '0' + B(6) + '080' + tipoInscEmp + cnpj + B(20) + contaEmp + nomeEmp
+                + A('BANCO ITAU S.A.', 30) + B(10) + '1' + dateStr + timeStr + Z(9) + '00000' + B(69));
+
+            // ---- Header de lote (layout 040): tipo pagto + forma 45 (Pix) + endereço da empresa ----
+            lines.push(banco + lote + '1' + 'C' + tipoPagto + '45' + '040' + ' ' + tipoInscEmp + cnpj + B(4) + B(16) + contaEmp + nomeEmp
+                + B(30) + B(10)
+                + A(end.rua, 30) + N(end.numero, 5) + A(end.complemento, 15) + A(end.cidade, 20) + N(end.cep, 8) + A(end.uf, 2)
+                + B(8) + B(10));
+
+            let seq = 0, total = 0, n = 0;
+            pagamentos.forEach(p => {
+                n++;
+                const cents = Math.round(Number(p.cents) || 0);
+                total += cents;
+                const docDigits = String(p.doc || '').replace(/\D/g, '');
+                const tipoInsc = docDigits.length === 14 ? '2' : '1';
+                const doc14 = docDigits ? N(docDigits, 14) : Z(14);
+                const seuNumero = A((opts.prefixo || 'PGTO') + String(n).padStart(6, '0'), 20);
+                const porChave = (p.modo === 'chave');
+                let bancoFav, agConta, tipoTransf;
+                if (porChave) {
+                    // Nota 11: com "04" nas posições 113-114 os dados bancários são opcionais
+                    bancoFav = '000';
+                    agConta = '00000' + ' ' + Z(12) + ' ' + ' ';
+                    tipoTransf = '04';
+                } else {
+                    // Nota 11 (outros bancos): agência 5 sem DV, branco, conta 12, branco, DAC
+                    bancoFav = N(p.banco, 3);
+                    const dacFav = String(p.dac || '').replace(/[^0-9Xx]/g, '').toUpperCase().slice(-1) || ' ';
+                    agConta = N(p.agencia, 5) + ' ' + N(p.conta, 12) + ' ' + dacFav;
+                    tipoTransf = ({ '01': '01', '02': 'PG', '03': '03' })[String(p.tipoConta || '01')] || '01';   // Nota 36
+                }
+                // Segmento A
+                seq++;
+                lines.push(banco + lote + '3' + String(seq).padStart(5, '0') + 'A' + '000' + '009' + bancoFav + agConta
+                    + A(p.nome, 30) + seuNumero + p.data + 'BRL' + B(8) + tipoTransf + Z(5) + String(cents).padStart(15, '0')
+                    + B(15) + B(5) + Z(8) + Z(15) + B(20) + Z(6) + doc14 + B(2) + '00005' + B(5) + '0' + B(10));
+                // Segmento B
+                seq++;
+                if (porChave) {
+                    // Seg B obrigatório para Pix por chave (manual pág. 22): 15-16 tipo chave, 18 tipo insc, 19-32 CPF/CNPJ, 128-227 chave
+                    lines.push(banco + lote + '3' + String(seq).padStart(5, '0') + 'B' + N(p.tipoChave, 2) + ' ' + tipoInsc + doc14
+                        + B(30) + B(65) + AC(p.chave, 100) + B(3) + B(10));
+                } else {
+                    // Seg B opcional (CPF/CNPJ do favorecido) + J-52, como no arquivo aceito
+                    lines.push(banco + lote + '3' + String(seq).padStart(5, '0') + 'B' + B(3) + tipoInsc + doc14 + B(208));
+                    seq++;
+                    lines.push(banco + lote + '3' + String(seq).padStart(5, '0') + 'J' + '000' + '52'
+                        + tipoInscEmp + N(cnpj, 15) + A(pag.nome, 40)          // sacado = empresa pagadora
+                        + tipoInsc + N(doc14, 15) + A(p.nome, 40)              // cedente = favorecido
+                        + B(109));
+                }
+            });
+
+            // ---- Trailer de lote: qtde = header lote + detalhes + trailer lote ----
+            lines.push(banco + lote + '5' + B(9) + String(lines.length).padStart(6, '0') + String(total).padStart(18, '0') + Z(18) + B(171) + B(10));
+            // ---- Trailer de arquivo ----
+            lines.push(banco + '9999' + '9' + B(9) + '000001' + String(lines.length + 1).padStart(6, '0') + B(211));
+
+            lines.forEach((l, i) => { if (l.length !== 240) throw new Error(`Sispag: registro ${i + 1} ficou com ${l.length} posições (esperado 240).`); });
+
+            const seqArq = parseInt(localStorage.getItem('sispagSeq') || '1', 10);
+            localStorage.setItem('sispagSeq', String(seqArq + 1));
+            const suf = String(pag.sufixo || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+            const fileName = `SISPAG_341_${String(seqArq).padStart(6, '0')}_${opts.sufixoTipo || 'PGTO'}${suf ? '_' + suf : ''}.txt`;
+            downloadFile(lines.join('\r\n') + '\r\n', fileName, 'text/plain');
+            return fileName;
+        }
+        // Separa agência/conta do cadastro (Dados Bancários) no formato que o Itaú espera:
+        // agência SEM dígito; conta sem o último dígito; DAC = último dígito da conta.
+        function itauAgConta(agencyIn, accountIn) {
+            const agIn = String(agencyIn == null ? '' : agencyIn).trim();
+            let ag;
+            if (/[^0-9]/.test(agIn)) ag = (agIn.split(/[^0-9]+/)[0] || '');           // "1234-5" -> 1234
+            else if (agIn.length === 5 && agIn.charAt(0) === '0') ag = agIn;          // "08145" = agência com zero à esquerda (sem DV)
+            else ag = agIn.length > 4 ? agIn.slice(0, -1) : agIn;                      // "12345" -> 1234 (último é DV)
+            const acc = String(accountIn == null ? '' : accountIn).replace(/\D/g, '');
+            return { ag: ag.replace(/\D/g, ''), conta: acc.slice(0, -1), dac: acc.slice(-1) };
+        }
+
+        // ================================================================
+        // Sanitização para CNAB: o arquivo é lido byte a byte pelo banco,
+        // então todo campo alfanumérico precisa ser ASCII puro. Um acento em
+        // UTF-8 ocupa 2 bytes e desalinharia o registro de 240 posições.
+        //   "JOSÉ DA CONCEIÇÃO" -> "JOSE DA CONCEICAO"
+        // ================================================================
+        function cnabTexto(s) {
+            return String(s == null ? '' : s)
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')   // remove acentos
+                .replace(/[ªº]/g, '')                                // ordinais
+                .replace(/[–—]/g, '-').replace(/[’‘`´]/g, "'")       // traços e aspas tipográficas
+                .replace(/[“”]/g, '"')
+                .replace(/\u00A0/g, ' ')
+                .replace(/[^\x20-\x7E]/g, '')                        // descarta o que não for ASCII imprimível
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+        // Verifica se um texto tem caractere que o CNAB não aceita
+        function temCaractereInvalido(s) {
+            return /[^\x20-\x7E]/.test(String(s == null ? '' : s));
+        }
+
+        // ================================================================
+        // MÓDULO: PAGAMENTO SPOT
+        // Cola Nome / Valor / Chave Pix e gera remessa CNAB 240 Inter (forma 45).
+        // A forma de iniciação do Segmento B é detectada por chave:
+        //   "01" Telefone · "02" E-mail · "03" CPF/CNPJ · "04" Aleatória (EVP)
+        // ================================================================
+        const SpotState = {
+            items: JSON.parse(localStorage.getItem(empKey('spotItems')) || '[]')
+        };
+        function spotSave() { localStorage.setItem(empKey('spotItems'), JSON.stringify(SpotState.items)); }
+
+        // Remove caracteres invisíveis que vêm colados de planilha/WhatsApp
+        function spotLimpaInvisivel(s) {
+            return String(s == null ? '' : s)
+                .replace(/[​-‏‪-‮⁠﻿ ]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function validaCPF(c) {
+            c = String(c || '').replace(/\D/g, '');
+            if (c.length !== 11 || /^(\d)\1{10}$/.test(c)) return false;
+            let s = 0;
+            for (let i = 0; i < 9; i++) s += parseInt(c[i], 10) * (10 - i);
+            let d1 = (s * 10) % 11; if (d1 === 10) d1 = 0;
+            if (d1 !== parseInt(c[9], 10)) return false;
+            s = 0;
+            for (let i = 0; i < 10; i++) s += parseInt(c[i], 10) * (11 - i);
+            let d2 = (s * 10) % 11; if (d2 === 10) d2 = 0;
+            return d2 === parseInt(c[10], 10);
+        }
+        function validaCNPJ(c) {
+            c = String(c || '').replace(/\D/g, '');
+            if (c.length !== 14 || /^(\d)\1{13}$/.test(c)) return false;
+            const calc = (base, pesos) => {
+                let s = 0;
+                for (let i = 0; i < pesos.length; i++) s += parseInt(base[i], 10) * pesos[i];
+                const r = s % 11;
+                return r < 2 ? 0 : 11 - r;
+            };
+            const d1 = calc(c, [5,4,3,2,9,8,7,6,5,4,3,2]);
+            if (d1 !== parseInt(c[12], 10)) return false;
+            const d2 = calc(c, [6,5,4,3,2,9,8,7,6,5,4,3,2]);
+            return d2 === parseInt(c[13], 10);
+        }
+
+        // Detecta o tipo da chave Pix e devolve a chave já normalizada para o CNAB
+        function detectChavePix(raw) {
+            const r = { tipoChave: null, forma: null, chave: '', doc: '', valido: false, motivo: '', rotulo: '' };
+            const s = spotLimpaInvisivel(raw);
+            if (!s) { r.motivo = 'chave vazia'; return r; }
+            // O CNAB só aceita ASCII imprimível no campo da chave
+            if (temCaractereInvalido(s)) {
+                r.chave = s;
+                r.motivo = 'chave tem caractere não permitido (acento ou símbolo): ' +
+                           [...new Set([...s].filter(c => c.charCodeAt(0) > 126))].join(' ');
+                return r;
+            }
+
+            // E-mail
+            if (/@/.test(s)) {
+                const e = s.replace(/\s/g, '').toLowerCase();
+                if (/^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[a-z]{2,}$/.test(e)) {
+                    r.tipoChave = 'email'; r.forma = '02'; r.chave = e; r.valido = true; r.rotulo = 'E-mail';
+                    // BUG CONHECIDO DO INTER: o validador do CNAB extrai os dígitos da chave e,
+                    // se sobrar só "0", recusa com "Chave Pix inválida: composta apenas por zeros".
+                    // Ex.: raissalaranja0@gmail.com -> dígitos "0" -> rejeitado. A chave é válida,
+                    // mas não passa pelo CNAB. Marcamos para o usuário pagar por outra chave ou à parte.
+                    const dig = e.replace(/\D/g, '');
+                    if (dig && /^0+$/.test(dig)) {
+                        r.valido = false;
+                        r.bugInter = true;
+                        r.motivo = 'e-mail válido, mas o Inter recusa no CNAB (único dígito é 0). Use CPF/telefone ou pague à parte.';
+                    }
+                } else { r.motivo = 'e-mail com formato inválido'; r.chave = e; r.rotulo = 'E-mail'; }
+                return r;
+            }
+            // Chave aleatória (EVP) — UUID
+            const uuid = s.toLowerCase().replace(/\s/g, '');
+            if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(uuid)) {
+                r.tipoChave = 'aleatoria'; r.forma = '04'; r.chave = uuid; r.valido = true; r.rotulo = 'Aleatória';
+                return r;
+            }
+
+            const d = s.replace(/\D/g, '');
+            const temMascaraCPF = /\d{3}[.\-\/]\d{3}[.\-\/]\d{3}[.\-\/]?\d{2}/.test(s);
+            const temMascaraTel = /^\+?55/.test(s.replace(/\s/g, '')) || /\(\d{2}\)/.test(s) || /\d{4,5}-\d{4}/.test(s);
+
+            // CNPJ
+            if (d.length === 14) {
+                r.tipoChave = 'cnpj'; r.forma = '03'; r.doc = d; r.chave = d; r.rotulo = 'CNPJ';
+                r.valido = validaCNPJ(d);
+                if (!r.valido) r.motivo = 'CNPJ com dígito verificador inválido';
+                return r;
+            }
+            // 11 dígitos: CPF ou celular — decide pelo dígito verificador / máscara
+            if (d.length === 11) {
+                if (validaCPF(d) && !temMascaraTel) {
+                    r.tipoChave = 'cpf'; r.forma = '03'; r.doc = d; r.chave = d; r.valido = true; r.rotulo = 'CPF';
+                } else {
+                    r.tipoChave = 'telefone'; r.forma = '01'; r.chave = '+55' + d; r.valido = true; r.rotulo = 'Telefone';
+                    if (temMascaraCPF) { r.valido = false; r.motivo = 'parece CPF mas o dígito verificador não confere'; }
+                }
+                return r;
+            }
+            // Telefone com DDI
+            if ((d.length === 12 || d.length === 13) && d.startsWith('55')) {
+                r.tipoChave = 'telefone'; r.forma = '01'; r.chave = '+' + d; r.valido = true; r.rotulo = 'Telefone';
+                return r;
+            }
+            // 10 dígitos: muitas vezes é um CPF que perdeu o zero à esquerda na planilha
+            if (d.length === 10) {
+                if (validaCPF('0' + d)) {
+                    r.tipoChave = 'cpf'; r.forma = '03'; r.doc = '0' + d; r.chave = '0' + d;
+                    r.valido = true; r.rotulo = 'CPF';
+                    r.motivo = 'zero à esquerda restaurado (planilha removeu)';
+                    r.corrigido = true;
+                    return r;
+                }
+                if (temMascaraCPF) { r.rotulo = 'CPF'; r.motivo = 'CPF com 10 dígitos (falta 1)'; r.chave = d; return r; }
+                r.tipoChave = 'telefone'; r.forma = '01'; r.chave = '+55' + d; r.valido = true; r.rotulo = 'Telefone fixo';
+                return r;
+            }
+            // 9 dígitos: CPF que perdeu dois zeros à esquerda
+            if (d.length === 9 && validaCPF('00' + d)) {
+                r.tipoChave = 'cpf'; r.forma = '03'; r.doc = '00' + d; r.chave = '00' + d;
+                r.valido = true; r.rotulo = 'CPF';
+                r.motivo = 'zeros à esquerda restaurados (planilha removeu)';
+                r.corrigido = true;
+                return r;
+            }
+            r.chave = s;
+            r.motivo = `não reconheci a chave (${d.length} dígitos)`;
+            return r;
+        }
+
+        // Processa o texto colado (3 colunas separadas por TAB)
+        function spotProcessPaste() {
+            const txt = document.getElementById('spotPaste').value || '';
+            const linhas = txt.split('\n').map(l => l.replace(/\r/g, '')).filter(l => l.trim());
+            if (!linhas.length) { alert('Cole a lista antes de processar.'); return; }
+            let add = 0, puladas = 0;
+            linhas.forEach(linha => {
+                let cols = linha.split('\t');
+                if (cols.length < 3) cols = linha.split(/\s{2,}|;/);   // tolera colagem sem TAB
+                if (cols.length < 3) { puladas++; return; }
+                const nome = spotLimpaInvisivel(cols[0]).toUpperCase();
+                const valor = parseValorBR(spotLimpaInvisivel(cols[1]).replace(/R\$\s*/i, ''));
+                // 4ª coluna opcional: CPF/CNPJ do favorecido (usado no Itaú quando a chave não é CPF/CNPJ)
+                let chaveRaw, docExtra = '';
+                const c4 = cols.length >= 4 ? spotLimpaInvisivel(cols[3]).replace(/\D/g, '') : '';
+                if (c4.length === 11 || c4.length === 14) { docExtra = c4; chaveRaw = spotLimpaInvisivel(cols[2]); }
+                else chaveRaw = spotLimpaInvisivel(cols.slice(2).join(' '));
+                // Ignora a linha de cabeçalho
+                if (/^(NOME|TRABALHADOR|FAVORECIDO)$/i.test(nome) || /^(PIX|CHAVE)/i.test(chaveRaw) && isNaN(valor)) { puladas++; return; }
+                if (!nome && !chaveRaw) { puladas++; return; }
+                const det = detectChavePix(chaveRaw);
+                const validoAqui = det.valido || (det.bugInter && pagadorEhItau('spotEmpresa'));   // o bug é só do validador do Inter
+                SpotState.items.push({
+                    id: 'sp_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
+                    nome: nome,
+                    valor: isNaN(valor) ? 0 : Math.round(valor * 100) / 100,
+                    chaveRaw: chaveRaw,
+                    chave: det.chave, forma: det.forma, doc: det.doc, docExtra: docExtra,
+                    rotulo: det.rotulo, valido: det.valido, motivo: det.motivo, corrigido: !!det.corrigido, bugInter: !!det.bugInter,
+                    removido: !validoAqui || !valor || isNaN(valor)
+                });
+                add++;
+            });
+            spotSave();
+            renderSpotList();
+            document.getElementById('spotPaste').value = '';
+            if (puladas) console.log(`Spot: ${puladas} linha(s) ignorada(s) (cabeçalho ou colunas insuficientes).`);
+        }
+
+        function renderSpotList() {
+            const tbody = document.getElementById('spotListBody');
+            if (!tbody) return;
+            if (SpotState.items.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-400 text-sm italic">Cole a lista no painel ao lado e clique em Processar.</td></tr>';
+                document.getElementById('spotTotal').innerText = 'R$ 0,00';
+                updateSpotHeader(0, 0);
+                document.getElementById('spotAlertas').classList.add('hidden');
+                return;
+            }
+            // Chaves repetidas entre pessoas diferentes
+            const cont = {};
+            SpotState.items.forEach(i => { if (i.chave) cont[i.chave] = (cont[i.chave] || 0) + 1; });
+
+            // No Itaú o bug do validador do Inter não existe; e o CPF/CNPJ do favorecido é recomendado
+            const ehItau = pagadorEhItau('spotEmpresa');
+
+            let total = 0, incluidos = 0, nInval = 0, nDup = 0, nSemDoc = 0;
+            const rows = SpotState.items.map(item => {
+                const rem = !!item.removido;
+                if (!rem) { total += item.valor; incluidos++; }
+                const dup = item.chave && cont[item.chave] > 1;
+                if (dup) nDup++;
+                const valorFalta = !item.valor || item.valor <= 0;
+                const validoAqui = item.valido || (ehItau && item.bugInter);
+                if (!validoAqui || valorFalta) nInval++;
+                const docFav = item.doc || item.docExtra || '';
+                const semDoc = ehItau && !rem && !docFav;
+                if (semDoc) nSemDoc++;
+
+                const badge = {
+                    'CPF':  'bg-gray-100 text-gray-700', 'CNPJ': 'bg-purple-100 text-purple-700',
+                    'Telefone': 'bg-blue-100 text-blue-700', 'Telefone fixo': 'bg-blue-100 text-blue-700',
+                    'E-mail': 'bg-green-100 text-green-700', 'Aleatória': 'bg-amber-100 text-amber-700'
+                }[item.rotulo] || 'bg-red-100 text-red-700';
+
+                const tipoCell = validoAqui
+                    ? `<span class="text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap ${badge}">${item.rotulo}</span>`
+                    : (item.bugInter
+                        ? `<span class="text-[10px] px-1.5 py-0.5 rounded font-bold bg-orange-100 text-orange-700 whitespace-nowrap" title="${(item.motivo||'').replace(/"/g,'&quot;')}">Inter recusa</span>`
+                        : `<span class="text-[10px] px-1.5 py-0.5 rounded font-bold bg-red-100 text-red-700 whitespace-nowrap" title="${(item.motivo||'').replace(/"/g,'&quot;')}">inválida</span>`);
+
+                // Campo CPF/CNPJ do favorecido: só no Itaú e só quando a chave não é CPF/CNPJ
+                const docCell = (ehItau && item.forma !== '03')
+                    ? `<input type="text" value="${fmtCnpjCpf(item.docExtra || '')}" placeholder="CPF/CNPJ do favorecido (Itaú)"
+                               onchange="spotUpdate('${item.id}','doc',this.value)" title="Recomendado pelo Itaú quando a chave é telefone, e-mail ou aleatória"
+                               class="w-full border rounded p-1 text-[10px] font-mono mt-1 ${item.docExtra ? 'border-gray-200' : 'border-amber-300 bg-amber-50'}">`
+                    : '';
+
+                return `<tr class="border-b border-gray-100 ${rem ? 'bg-gray-50 opacity-60' : (!validoAqui || valorFalta ? 'bg-red-50' : '')}">
+                    <td class="p-3 text-center">
+                        <input type="checkbox" class="w-4 h-4 accent-orange-600 cursor-pointer" ${rem ? '' : 'checked'}
+                               onchange="toggleSpotRow('${item.id}', this.checked)" title="Incluir/Excluir do arquivo">
+                    </td>
+                    <td class="p-3 text-sm font-medium ${rem ? 'line-through text-gray-400' : ''}">
+                        <input type="text" value="${String(item.nome).replace(/"/g,'&quot;')}" placeholder="Nome"
+                               onchange="spotUpdate('${item.id}','nome',this.value)"
+                               class="w-full border rounded p-1 text-xs border-gray-200">
+                        ${docCell}
+                    </td>
+                    <td class="p-3">
+                        <input type="text" value="${String(item.chaveRaw).replace(/"/g,'&quot;')}" placeholder="Chave Pix"
+                               onchange="spotUpdate('${item.id}','chave',this.value)"
+                               class="w-full border rounded p-1 text-xs font-mono ${!validoAqui ? 'border-red-400 bg-red-50' : 'border-gray-200'}">
+                        ${!validoAqui && item.motivo ? `<div class="text-[10px] text-red-500 mt-0.5">${item.motivo}</div>` : ''}
+                        ${item.valido && item.corrigido ? `<div class="text-[10px] text-blue-600 mt-0.5"><i class="fas fa-wand-magic-sparkles"></i> ${item.motivo} → ${item.chave}</div>` : ''}
+                        ${dup ? '<div class="text-[10px] text-orange-600 mt-0.5"><i class="fas fa-exclamation-triangle"></i> chave repetida no lote</div>' : ''}
+                    </td>
+                    <td class="p-3 text-center">${tipoCell}</td>
+                    <td class="p-3 text-right">
+                        <input type="text" inputmode="decimal" value="${item.valor ? formatValorBR(item.valor) : ''}" placeholder="0,00"
+                               onchange="spotUpdate('${item.id}','valor',this.value)" onfocus="this.select()"
+                               class="text-right border rounded p-1 text-xs w-28 ${valorFalta ? 'border-red-400 bg-red-50' : ''}">
+                    </td>
+                    <td class="p-3 text-center">
+                        <button onclick="spotRemove('${item.id}')" title="Remover" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`;
+            }).join('');
+            tbody.innerHTML = rows;
+            spotSave();
+            document.getElementById('spotTotal').innerText = formatMoney(total);
+            updateSpotHeader(incluidos, SpotState.items.length);
+
+            const alertas = document.getElementById('spotAlertas');
+            const partes = [];
+            if (nInval) partes.push(`<span class="text-red-600">${nInval} com problema</span>`);
+            if (nDup) partes.push(`<span class="text-orange-600">${nDup} com chave repetida</span>`);
+            if (nSemDoc) partes.push(`<span class="text-amber-600">${nSemDoc} sem CPF/CNPJ (Itaú pode recusar)</span>`);
+            if (partes.length) { alertas.classList.remove('hidden'); alertas.innerHTML = '<i class="fas fa-triangle-exclamation mr-1"></i>' + partes.join(' • '); }
+            else alertas.classList.add('hidden');
+        }
+
+        function updateSpotHeader(incluidos, total) {
+            const m = document.getElementById('spotMasterCheck');
+            const c = document.getElementById('spotRowCounter');
+            if (c) c.innerText = `${incluidos} de ${total} incluído(s)`;
+            if (m) {
+                if (incluidos === 0) { m.checked = false; m.indeterminate = false; }
+                else if (incluidos === total) { m.checked = true; m.indeterminate = false; }
+                else { m.checked = false; m.indeterminate = true; }
+            }
+        }
+        function toggleSpotRow(id, incluir) {
+            const i = SpotState.items.find(x => x.id === id);
+            if (!i) return;
+            i.removido = !incluir; spotSave(); renderSpotList();
+        }
+        function toggleAllSpot(incluir) {
+            SpotState.items.forEach(i => { i.removido = !incluir; });
+            spotSave(); renderSpotList();
+        }
+        function spotDeselectInvalidos() {
+            let n = 0;
+            SpotState.items.forEach(i => {
+                if (!i.valido || !i.valor || i.valor <= 0) { if (!i.removido) n++; i.removido = true; }
+            });
+            spotSave(); renderSpotList();
+            if (n === 0) alert('Nenhum item marcado com problema.');
+        }
+        function spotUpdate(id, campo, valor) {
+            const i = SpotState.items.find(x => x.id === id);
+            if (!i) return;
+            if (campo === 'valor') {
+                const v = parseValorBR(valor);
+                if (isNaN(v) || v < 0) { renderSpotList(); return; }
+                i.valor = Math.round(v * 100) / 100;
+                if (i.valor > 0 && i.valido) i.removido = false;
+            } else if (campo === 'nome') {
+                i.nome = spotLimpaInvisivel(valor).toUpperCase();
+            } else if (campo === 'doc') {
+                const d = String(valor || '').replace(/\D/g, '');
+                if (d && !((d.length === 11 && validaCPF(d)) || (d.length === 14 && validaCNPJ(d)))) {
+                    alert('CPF/CNPJ inválido (dígito verificador não confere).');
+                }
+                i.docExtra = d;
+            } else if (campo === 'chave') {
+                const det = detectChavePix(valor);
+                i.chaveRaw = spotLimpaInvisivel(valor);
+                i.chave = det.chave; i.forma = det.forma; i.doc = det.doc;
+                i.rotulo = det.rotulo; i.valido = det.valido; i.motivo = det.motivo; i.corrigido = !!det.corrigido; i.bugInter = !!det.bugInter;
+                if ((det.valido || (det.bugInter && pagadorEhItau('spotEmpresa'))) && i.valor > 0) i.removido = false;
+            }
+            spotSave(); renderSpotList();
+        }
+        function spotRemove(id) {
+            SpotState.items = SpotState.items.filter(x => x.id !== id);
+            spotSave(); renderSpotList();
+        }
+        function spotClearAll() {
+            if (!SpotState.items.length) return;
+            if (!confirm(`Remover todos os ${SpotState.items.length} itens da lista?`)) return;
+            SpotState.items = []; spotSave(); renderSpotList();
+        }
+
+        // ---------- Geração do CNAB 240 Inter (forma 45 - Pix) ----------
+        function spotGenerate() {
+            try {
+                const sel = SpotState.items.filter(i => !i.removido);
+                if (!sel.length) { alert('Nenhum item marcado.'); return; }
+
+                const pag = getPagador('spotEmpresa');
+                if (!pag) return;
+                const ehItau = (pag.banco === '341');
+
+                // O bug "composta apenas por zeros" é do validador do Inter; no Itaú a chave é válida
+                const inval = sel.filter(i => !i.valido && !(ehItau && i.bugInter));
+                if (inval.length) {
+                    alert(`${inval.length} item(ns) com chave Pix inválida:\n\n${inval.map(i => `${i.nome}: ${i.chaveRaw} (${i.motivo})`).join('\n')}\n\nCorrija a chave ou desmarque a linha.`);
+                    return;
+                }
+                const semValor = sel.filter(i => !i.valor || i.valor <= 0);
+                if (semValor.length) { alert(`${semValor.length} item(ns) sem valor.`); return; }
+
+                const dataStr = document.getElementById('spotDate').value;
+                if (!dataStr) { alert('Informe a data de pagamento.'); return; }
+                const payDDMMAAAA = dataStr.split('-').reverse().join('');
+
+                const compCnpj = pag.cnpj, compCcRaw = pag.cc, compName = pag.nome;
+                const desc = document.getElementById('spotDesc').value || 'PAGAMENTOS DIVERSOS';
+
+                let fileName;
+                if (ehItau) {
+                    const semDoc = sel.filter(i => !(i.doc || i.docExtra));
+                    if (semDoc.length) {
+                        const ok = confirm(`${semDoc.length} item(ns) sem CPF/CNPJ do favorecido (chave telefone/e-mail/aleatória):\n\n${semDoc.map(i => i.nome).join(', ')}\n\nO Itaú exige a identificação do favorecido no Pix e pode recusar esses lançamentos. Preencha o campo "CPF/CNPJ do favorecido" na lista ou gere mesmo assim.\n\nGerar mesmo assim?`);
+                        if (!ok) return;
+                    }
+                    const pagamentos = sel.map(i => ({
+                        nome: i.nome, doc: i.doc || i.docExtra || '', cents: Math.round(i.valor * 100), data: payDDMMAAAA,
+                        modo: 'chave', chave: i.chave, tipoChave: i.forma
+                    }));
+                    fileName = itauBuildSispag(pag, pagamentos, { prefixo: 'SPOT', sufixoTipo: 'SPOT' });
+                } else {
+                    fileName = spotBuildCnab(sel, payDDMMAAAA, compName, compCnpj, compCcRaw, desc);
+                }
+                const total = sel.reduce((s, i) => s + i.valor, 0);
+                const porTipo = {};
+                sel.forEach(i => { porTipo[i.rotulo] = (porTipo[i.rotulo] || 0) + 1; });
+                const resumo = Object.entries(porTipo).map(([k, v]) => `${v} ${k}`).join(' · ');
+                alert(`Arquivo de remessa ${ehItau ? 'Sispag Itaú' : 'CNAB Inter'} gerado:\n\n✅ ${fileName}\n\nEmpresa: ${pag.apelido || pag.nome}\nLançamentos: ${sel.length}\nChaves: ${resumo}\nData: ${dataStr.split('-').reverse().join('/')}\nTotal: ${formatMoney(total)}`);
+            } catch (err) {
+                console.error('Erro ao gerar Spot:', err);
+                alert('Erro ao gerar arquivo:\n\n' + (err && err.message ? err.message : String(err)));
+            }
+        }
+
+        function spotBuildCnab(items, payDate, compName, compCnpj, compCc, desc) {
+            const N = (v, n) => String(v == null ? '' : v).replace(/\D/g, '').padStart(n, '0').slice(-n);
+            const A = (v, n) => cnabTexto(v).toUpperCase().substring(0, n).padEnd(n, ' ');
+            // Preserva maiúsculas/minúsculas: e-mail e chave aleatória são case-sensitive no DICT
+            const AC = (v, n) => cnabTexto(v).substring(0, n).padEnd(n, ' ');
+            const compAg = '00001', compAgDv = '9';
+            const ccPad = String(compCc).slice(0, -1).padStart(12, '0');
+            const ccDv = String(compCc).slice(-1) || '0';
+            const cnpjPad = N(compCnpj, 14);
+            const namePad = A(compName, 30);
+            const now = new Date();
+            const dateStr = `${String(now.getDate()).padStart(2,'0')}${String(now.getMonth()+1).padStart(2,'0')}${now.getFullYear()}`;
+            const timeStr = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
+            const nsa = parseInt(localStorage.getItem('cnabSeq') || '1', 10);
+
+            const lines = [];
+            // Header do arquivo
+            let h = '077' + '0000' + '0' + ' '.repeat(9);
+            h += '2' + cnpjPad + ' '.repeat(20);
+            h += compAg + compAgDv + ccPad + ccDv + ' ';
+            h += namePad + A('BANCO INTER', 30) + ' '.repeat(10);
+            h += '1' + dateStr + timeStr + String(nsa).padStart(6, '0') + '107' + '01600';
+            h += ' '.repeat(20) + ' '.repeat(20) + ' '.repeat(29);
+            lines.push(h);
+
+            // Header do lote — tipo de serviço 98 (Diversos), forma 45 (Pix)
+            let lh = '077' + '0001' + '1' + 'C' + '98' + '45' + '046' + ' ';
+            lh += '2' + cnpjPad + ' '.repeat(20);
+            lh += compAg + compAgDv + ccPad + ccDv + ' ';
+            lh += namePad + A(desc, 40);
+            lh += ' '.repeat(30) + '00000' + ' '.repeat(15) + ' '.repeat(20);
+            lh += '00000000' + 'SP' + ' '.repeat(8) + ' '.repeat(10);
+            lines.push(lh);
+
+            let seq = 0, total = 0, nDoc = 0;
+            items.forEach(item => {
+                const cents = Math.round(item.valor * 100);
+                total += cents;
+                nDoc++;
+                const ehCnpj = (item.rotulo === 'CNPJ');
+                // Manual 6.3 item 08: campo Alfa, preencher SÓ nas formas "03" e "05".
+                // Nas formas 01/02/04 vai em BRANCO — zeros aqui fazem o Inter recusar
+                // com "Chave Pix inválida: composta apenas por zeros".
+                const docSegB = (item.forma === '03') ? N(item.doc, 14) : ' '.repeat(14);
+                // No Segmento A (identificação do pagamento) o campo é numérico: zeros quando não há documento
+                const docSegA = item.doc ? N(item.doc, 14) : '0'.repeat(14);
+
+                // Segmento A (seção 6.2) — Pix por chave: banco/ag/conta/ISPB/tipo conta zerados
+                seq++;
+                let segA = '077' + '0001' + '3' + String(seq).padStart(5, '0') + 'A' + '0' + '00' + '000';
+                segA += '000' + '00000' + '0' + '000000000000' + '0' + ' ';
+                segA += A(item.nome, 30);                       // 44-73 nome favorecido
+                segA += A('SPOT' + String(nDoc).padStart(6, '0'), 20); // 74-93 nº documento
+                segA += payDate + 'BRL' + '0'.repeat(15) + String(cents).padStart(15, '0');
+                segA += ' '.repeat(20) + '0'.repeat(8) + '0'.repeat(15);
+                segA += docSegA + '0'.repeat(8) + '00' + ' '.repeat(29) + ' '.repeat(10);
+                lines.push(segA);
+
+                // Segmento B (seção 6.3) — forma de iniciação conforme o tipo da chave
+                seq++;
+                let segB = '077' + '0001' + '3' + String(seq).padStart(5, '0') + 'B';
+                segB += A(item.forma, 3);                       // 15-17 "01 " / "02 " / "03 " / "04 "
+                segB += (ehCnpj ? '2' : '1');                   // 18 tipo de documento
+                segB += docSegB;                                // 19-32 CPF/CNPJ (branco fora das formas 03/05)
+                segB += ' '.repeat(35);                         // 33-67 TX ID
+                segB += ' '.repeat(60);                         // 68-127 branco
+                // 128-226 chave Pix — Manual 6.3 item 11: preencher só nas formas
+                // "01" (telefone), "02" (e-mail) e "04" (aleatória). Na forma "03"
+                // o CPF/CNPJ já identifica o favorecido em 19-32, então aqui vai branco.
+                segB += (item.forma === '03') ? ' '.repeat(99) : AC(item.chave, 99);
+                segB += ' '.repeat(6);                          // 227-232 branco
+                segB += '0'.repeat(8);                          // 233-240 ISPB
+                lines.push(segB);
+            });
+
+            // Trailer do lote
+            let tl = '077' + '0001' + '5' + ' '.repeat(9);
+            tl += String(items.length * 2 + 2).padStart(6, '0');
+            tl += String(total).padStart(18, '0') + '0'.repeat(18) + '0'.repeat(6) + ' '.repeat(165) + ' '.repeat(10);
+            lines.push(tl);
+
+            // Trailer do arquivo
+            let ta = '077' + '9999' + '9' + ' '.repeat(9) + '000001';
+            ta += String(lines.length + 1).padStart(6, '0') + ' '.repeat(211);
+            lines.push(ta);
+
+            localStorage.setItem('cnabSeq', String(nsa + 1));
+            const fileName = `CI240_001_${String(nsa).padStart(7, '0')}_SPOT${sufixoEmpresa(compCnpj)}.REM`;
+            downloadFile(lines.join('\r\n'), fileName, 'text/plain');
+            return fileName;
+        }
+
+        // Data padrão = hoje ao carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            const d = document.getElementById('spotDate');
+            if (d && !d.value) {
+                const t = new Date();
+                d.value = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+            }
+        });
+
     </script>
 
 
