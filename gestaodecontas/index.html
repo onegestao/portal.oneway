@@ -257,6 +257,54 @@ tr:last-child td{border-bottom:none}
 .cf-mini:hover{border-color:var(--orange);color:var(--orange)}
 #cf-set-list{display:flex;flex-direction:column;max-height:200px;overflow-y:auto}
 
+/* ═══════════════════ EMPRESA (coluna P) ═══════════════════ */
+.app-hdr{border-top:3px solid #111}
+.emp-sw{position:relative}
+.emp-btn{display:flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--border);border-radius:9px;padding:4px 10px 4px 5px;cursor:pointer;transition:all .15s;font-family:inherit}
+.emp-btn:hover{border-color:var(--orange)}
+.emp-dot{width:28px;height:28px;border-radius:7px;color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;background:#111;flex-shrink:0;letter-spacing:.2px}
+.emp-txt{display:flex;flex-direction:column;line-height:1.15;text-align:left}
+.emp-lbl{font-size:8px;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);font-weight:700}
+.emp-nm{font-size:12px;font-weight:700;color:#111;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.emp-chev{font-size:9px;color:var(--text3)}
+.emp-menu{position:absolute;right:0;top:calc(100% + 6px);width:340px;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 14px 44px rgba(0,0,0,.18);z-index:95;padding:6px;display:none;max-height:440px;overflow-y:auto}
+.emp-menu.open{display:block}
+.emp-mh{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);padding:6px 8px}
+.emp-it{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:8px;cursor:pointer}
+.emp-it:hover{background:#FFF8F3}
+.emp-it.on{background:rgba(244,118,32,.1)}
+.emp-it-tx{min-width:0;flex:1}
+.emp-it-nm{font-weight:700;font-size:12px;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.emp-it-sub{font-size:10px;color:var(--text3)}
+.emp-it-sub b{color:var(--red);font-weight:700}
+.emp-it-ck{color:var(--orange);font-weight:800}
+.emp-hint{font-size:10px;color:var(--amber);padding:8px;border-top:1px solid var(--border);margin-top:4px;line-height:1.4}
+.emp-fix .td-emp{display:none}
+.emp-aviso{margin:14px 18px 0;padding:10px 14px;border:1px solid rgba(217,119,6,.35);background:#FFFBEB;color:#92400E;border-radius:10px;font-size:12px;line-height:1.5}
+.emp-aviso b{color:#78350F}
+.emp-tag{display:inline-block;padding:2px 7px;border-radius:5px;font-size:9px;font-weight:800;color:#fff;letter-spacing:.3px;max-width:180px;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}
+/* ═══════════════════ SELEÇÃO / STATUS ═══════════════════ */
+.td-ck{width:34px;padding-left:8px!important;padding-right:4px!important}
+.td-ck input{width:14px;height:14px;accent-color:var(--orange);cursor:pointer;vertical-align:middle}
+tr.sel td{background:#FFF1E6}
+.st-click{cursor:pointer;border-radius:20px;display:inline-block;transition:box-shadow .12s}
+.st-click:hover{box-shadow:0 0 0 2px rgba(244,118,32,.35)}
+.sel-bar{display:none;align-items:center;gap:12px;background:#171717;color:#E8E8E8;border-radius:10px;padding:8px 12px;margin-bottom:9px;font-size:12px;flex-wrap:wrap}
+.sel-bar.open{display:flex}
+.sel-bar strong{color:#fff}
+.sb-val{color:#FDBA74;font-family:'SF Mono',monospace;font-weight:700}
+.sb-btn{background:var(--orange);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-weight:700;font-size:11px;cursor:pointer}
+.sb-btn:hover{background:var(--orange-h)}
+.sb-lnk{background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;margin-left:auto}
+.sb-lnk:hover{color:#fff}
+.st-form{display:flex;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border);background:#FAFAFA;flex-wrap:wrap;align-items:flex-end}
+.st-form label{display:flex;flex-direction:column;gap:4px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3)}
+.st-form select,.st-form input{border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;color:#111;background:#fff;outline:none;min-width:190px;font-family:inherit}
+.st-form select:focus,.st-form input:focus{border-color:var(--orange)}
+.st-form input:disabled{background:#F3F4F6;color:var(--text3)}
+.st-note{font-size:10px;color:var(--text2);line-height:1.4;max-width:300px;text-transform:none;letter-spacing:0;font-weight:400}
+.st-arrow{color:var(--text3);margin:0 4px}
+.conc-row.same{opacity:.45}
 .hidden{display:none!important}
 </style>
 </head>
@@ -300,6 +348,14 @@ tr:last-child td{border-bottom:none}
       <div class="hdr-info">Pagamentos &middot; <strong id="hdr-file">—</strong></div>
     </div>
     <div class="hdr-right">
+      <div class="emp-sw" id="empSwitcher">
+        <button class="emp-btn" onclick="toggleEmpMenu(event)" title="Trocar empresa">
+          <span class="emp-dot" id="emp-dot">&#8721;</span>
+          <span class="emp-txt"><span class="emp-lbl">Empresa</span><span class="emp-nm" id="emp-nm">Todas as empresas</span></span>
+          <span class="emp-chev">&#9662;</span>
+        </button>
+        <div class="emp-menu" id="emp-menu"></div>
+      </div>
       <span class="hdr-badge" id="hdr-count">0 registros</span>
       <button class="btn-sm" onclick="atualizarDados()">&#8635; Atualizar dados</button>
     </div>
@@ -324,6 +380,10 @@ tr:last-child td{border-bottom:none}
       <div class="fg">
         <div class="fl">Status</div>
         <div class="pills" id="f-status"></div>
+      </div>
+      <div class="fg">
+        <div class="fl">Empresa</div>
+        <select class="fselect" id="f-emp" onchange="setEmpresa(this.value)"></select>
       </div>
       <div class="fg">
         <div class="fl">Tipo</div>
@@ -369,6 +429,7 @@ tr:last-child td{border-bottom:none}
 
       <!-- ─── TAB: BENEFÍCIOS ─── -->
       <div id="ct-benef">
+        <div id="emp-aviso" class="emp-aviso hidden"></div>
         <div class="kpi-row">
           <div class="kpi">
             <div class="kpi-lbl">Total Pago</div>
@@ -410,10 +471,16 @@ tr:last-child td{border-bottom:none}
               <button class="btn-exp" onclick="exportCSV()">⬇ CSV</button>
             </div>
           </div>
+          <div class="sel-bar" id="sel-bar">
+            <span><strong id="sb-count">0</strong> selecionado(s) &middot; <span class="sb-val" id="sb-total">R$ 0,00</span></span>
+            <button class="sb-btn" onclick="abrirModalStatus()">&#9998; Alterar status / data de pagamento</button>
+            <button class="sb-lnk" onclick="limparSelecao()">&#10005; Limpar seleção</button>
+          </div>
           <div class="tbl-box">
             <table>
               <thead>
                 <tr class="frow">
+                  <th class="td-ck"></th>
                   <th><button class="fr-btn" id="cf-r-data" onclick="openColFilter(event,'data')">&#9662; D/M/A</button></th>
                   <th><input class="fr-in" data-cfkey="nome" placeholder="filtrar nome…" oninput="cfTxtSync('nome',this.value,this)"></th>
                   <th><input class="fr-in" data-cfkey="desc" placeholder="filtrar descrição…" oninput="cfTxtSync('desc',this.value,this)"></th>
@@ -425,8 +492,10 @@ tr:last-child td{border-bottom:none}
                   <th><input class="fr-in" data-cfkey="agencia" placeholder="agência…" oninput="cfTxtSync('agencia',this.value,this)"></th>
                   <th><input class="fr-in" data-cfkey="conta" placeholder="conta…" oninput="cfTxtSync('conta',this.value,this)"></th>
                   <th><button class="fr-btn" id="cf-r-status" onclick="openColFilter(event,'status')">&#9662; status</button></th>
+                  <th class="td-emp"><button class="fr-btn" id="cf-r-empresa" onclick="openColFilter(event,'empresa')">&#9662; empresa</button></th>
                 </tr>
                 <tr>
+                  <th class="td-ck"><input type="checkbox" id="ck-all" onchange="selTodos(this.checked)" title="Marcar / desmarcar todos os filtrados"></th>
                   <th class="td-date" id="sh-dataRef"><span class="th-w"><span class="th-lab" onclick="doSort('dataRef')">Data</span><button class="th-f" id="cf-i-data" onclick="openColFilter(event,'data')">&#9662;</button></span></th>
                   <th class="td-nome" id="sh-nome"><span class="th-w"><span class="th-lab" onclick="doSort('nome')">Nome</span><button class="th-f" id="cf-i-nome" onclick="openColFilter(event,'nome')">&#9662;</button></span></th>
                   <th class="td-desc"><span class="th-w"><span class="th-lab">Descrição</span><button class="th-f" id="cf-i-desc" onclick="openColFilter(event,'desc')">&#9662;</button></span></th>
@@ -438,6 +507,7 @@ tr:last-child td{border-bottom:none}
                   <th class="td-bank"><span class="th-w"><span class="th-lab">Agência</span><button class="th-f" id="cf-i-agencia" onclick="openColFilter(event,'agencia')">&#9662;</button></span></th>
                   <th class="td-bank"><span class="th-w"><span class="th-lab">Conta</span><button class="th-f" id="cf-i-conta" onclick="openColFilter(event,'conta')">&#9662;</button></span></th>
                   <th class="td-st" id="sh-status"><span class="th-w"><span class="th-lab" onclick="doSort('status')">Status</span><button class="th-f" id="cf-i-status" onclick="openColFilter(event,'status')">&#9662;</button></span></th>
+                  <th class="td-emp" id="sh-empresa"><span class="th-w"><span class="th-lab" onclick="doSort('empresa')">Empresa</span><button class="th-f" id="cf-i-empresa" onclick="openColFilter(event,'empresa')">&#9662;</button></span></th>
                 </tr>
               </thead>
               <tbody id="tbody"></tbody>
@@ -515,6 +585,38 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
+<!-- ══════════ MODAL STATUS MANUAL ══════════ -->
+<div class="mod-ov" id="st-ov">
+  <div class="mod">
+    <div class="mod-h">
+      <div class="mod-t" id="st-ttl">&#9998; Atualizar status na planilha</div>
+      <button class="mod-x" onclick="fecharModalStatus()">&#10005;</button>
+    </div>
+    <div class="st-form" id="st-form">
+      <label>Novo status (coluna N)
+        <select id="st-status" onchange="stStatusChange()">
+          <option value="PAGO">PAGO</option>
+          <option value="PAGO PIX">PAGO PIX</option>
+          <option value="PAGO FLASH">PAGO FLASH</option>
+          <option value="PENDENTE">PENDENTE (limpa N e O)</option>
+        </select>
+      </label>
+      <label>Data do pagamento (coluna O)
+        <input type="date" id="st-data" onchange="renderModalStatus()">
+      </label>
+      <span class="st-note">Grava direto na planilha original. Só altera a linha se nome, valor e status ainda forem os mesmos lidos pela ferramenta.</span>
+    </div>
+    <div class="mod-b" id="st-body"></div>
+    <div class="mod-f">
+      <div class="conc-sum" id="st-sum"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-sec" style="width:auto;padding:8px 16px" id="st-cancel" onclick="fecharModalStatus()">Cancelar</button>
+        <button class="btn-up" style="padding:8px 20px" id="st-apply" onclick="aplicarStatus()">Gravar na planilha</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════ POPUP FILTRO DE COLUNA ══════════ -->
 <div id="colf"></div>
 
@@ -529,7 +631,7 @@ const S = {
 };
 
 // ═══════════════ APPS SCRIPT ═══════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxDfqrtBb8WGxIDwI2UALlCSfodhsp_PU6Eq0eWjFF9Seq64kK3c-MbksA5YbpvDhGAXA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxOnC1pGpJuo-3Bt8YOhqqvRK3xKUtUBsbtdCh1EUKtDrh1XYKpo20YmcVnU7o3apCpwg/exec';
 
 function carregarDrive() {
   setLoadingState(true);
@@ -539,6 +641,7 @@ function carregarDrive() {
       const dados = JSON.parse(txt);
       if (!dados.ok) throw new Error(dados.erro || 'Erro na resposta');
       parseApiData(dados);
+      S.fonte = 'drive';
       S.fileName = dados.planilha || 'Planilha OneWay';
       showApp();
     })
@@ -661,6 +764,8 @@ function resolveCompetencia(comp, d1, d2) {
 }
 
 function parseApiData(dados) {
+  const _b = dados.beneficios || [];
+  S.apiTemEmpresa = !_b.length || Object.prototype.hasOwnProperty.call(_b[0], 'empresa');
   S.all = (dados.beneficios || []).map(r => {
     const desc = cleanText(r.descricao);
     const dRef = parseFlexDate(r.dataRef);
@@ -681,6 +786,7 @@ function parseApiData(dados) {
       competencia: resolveCompetencia(r.competencia, dRef, dVen),
       status:      cleanText(r.status).toUpperCase(),
       dataPgto:    parseFlexDate(r.dataPgto),
+      empresa:     cleanText(r.empresa).toUpperCase(),
       tipo:        getTipo(desc)
     };
   });
@@ -699,7 +805,7 @@ S.cf = {
   dataD: new Set(), dataM: new Set(), dataA: new Set(),
   vencD: new Set(), vencM: new Set(), vencA: new Set(),
   nome: '', desc: '', cpf: '', nbco: '', agencia: '', conta: '',
-  valor: new Set(), status: new Set(), banco: new Set()
+  valor: new Set(), status: new Set(), banco: new Set(), empresa: new Set()
 };
 
 const MES_ABREV = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
@@ -715,7 +821,8 @@ const COLF_DEFS = {
   conta:  { tipo:'text', lbl:'Conta',           key:'conta', ph:'Digite a conta…' },
   banco:  { tipo:'set',  lbl:'Banco',  key:'banco',  get:r => r.banco || '—',     fmt:v => v,        sort:(a,b)=>a.localeCompare(b) },
   valor:  { tipo:'set',  lbl:'Valor',  key:'valor',  get:r => r.valor.toFixed(2), fmt:v => fmtR(+v), sort:(a,b)=>(+a)-(+b) },
-  status: { tipo:'set',  lbl:'Status', key:'status', get:r => r.status || '—',    fmt:v => v,        sort:(a,b)=>a.localeCompare(b) }
+  status: { tipo:'set',  lbl:'Status', key:'status', get:r => r.status || '—',    fmt:v => v,        sort:(a,b)=>a.localeCompare(b) },
+  empresa:{ tipo:'set',  lbl:'Empresa', key:'empresa', get:r => r.empresa || '—', fmt:v => v,        sort:(a,b)=>a.localeCompare(b) }
 };
 
 function openColFilter(ev, id) {
@@ -726,7 +833,7 @@ function openColFilter(ev, id) {
 
   if (def.tipo === 'date') {
     const dias = new Set(), meses = new Set(), anos = new Set();
-    S.all.forEach(r => {
+    rowsEmpresa().forEach(r => {
       const d = r[def.campo];
       if (d) { dias.add(d.getUTCDate()); meses.add(d.getUTCMonth()+1); anos.add(d.getUTCFullYear()); }
     });
@@ -744,7 +851,7 @@ function openColFilter(ev, id) {
 
   } else { // set (estilo Excel: busca + selecionar/limpar todos + checkboxes)
     const counts = {};
-    S.all.forEach(r => { const v = def.get(r); counts[v] = (counts[v]||0)+1; });
+    rowsEmpresa().forEach(r => { const v = def.get(r); counts[v] = (counts[v]||0)+1; });
     const vals = Object.keys(counts).sort(def.sort);
     html += `<input class="cf-in" placeholder="Digite para buscar…" oninput="cfSetSearch(this.value)" id="cf-txt-in">`;
     html += `<div class="cf-mini-row">
@@ -830,7 +937,7 @@ function cfClearAll() {
   S.cf.dataD.clear(); S.cf.dataM.clear(); S.cf.dataA.clear();
   S.cf.vencD.clear(); S.cf.vencM.clear(); S.cf.vencA.clear();
   S.cf.nome = ''; S.cf.desc = ''; S.cf.cpf = ''; S.cf.nbco = ''; S.cf.agencia = ''; S.cf.conta = '';
-  S.cf.valor.clear(); S.cf.status.clear(); S.cf.banco.clear();
+  S.cf.valor.clear(); S.cf.status.clear(); S.cf.banco.clear(); S.cf.empresa.clear();
   document.querySelectorAll('[data-cfkey]').forEach(i => i.value = '');
   document.getElementById('colf').classList.remove('open');
 }
@@ -850,7 +957,8 @@ function updateColfIcons() {
     venc:   S.cf.vencD.size || S.cf.vencM.size || S.cf.vencA.size,
     nome:   !!S.cf.nome, desc: !!S.cf.desc, cpf: !!S.cf.cpf,
     nbco: !!S.cf.nbco, agencia: !!S.cf.agencia, conta: !!S.cf.conta,
-    valor:  S.cf.valor.size, status: S.cf.status.size, banco: S.cf.banco.size
+    valor:  S.cf.valor.size, status: S.cf.status.size, banco: S.cf.banco.size,
+    empresa: S.cf.empresa.size
   };
   for (const id in on) {
     ['cf-i-', 'cf-r-', 'cf-s-'].forEach(pfx => {
@@ -938,6 +1046,8 @@ dz.addEventListener('drop', e => {
 
 function loadFile(file) {
   S.fileName = file.name;
+  S.fonte = 'arquivo';
+  S.apiTemEmpresa = true;
   const r = new FileReader();
   r.onload = e => {
     const wb = XLSX.read(e.target.result, { type:'array', cellDates:true });
@@ -976,7 +1086,9 @@ function parse(wb) {
     if (hn === 'ESTADO') ci.EST = i;
     if (hn.startsWith('COMPET')) ci.COMP = i;
     if (hn === 'FINANCEIRO') ci.FIN = i;
+    if (hn.startsWith('EMPRESA')) ci.EMP = i;
   });
+  if (ci.EMP === undefined) ci.EMP = 15; // coluna P
   for (let i = hdrs.length - 1; i >= 0; i--) {
     const hn = hdrs[i].toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     if (hn === 'DATA') { ci.DPGTO = i; break; }
@@ -1022,6 +1134,7 @@ function parse(wb) {
       competencia: resolveCompetencia(r[ci.COMP], dRef, dVen),
       status:   statusFinal,
       dataPgto: pgtoDate,
+      empresa:  cleanText(r[ci.EMP]).toUpperCase(),
       tipo
     });
   }
@@ -1066,7 +1179,9 @@ function showApp() {
   app.style.display = 'flex';
   document.getElementById('hdr-file').textContent = S.fileName;
   document.getElementById('hdr-count').textContent = `${S.all.length} registros`;
+  S.sel = new Set();
   buildFilters();
+  renderEmpSwitcher();
   applyFilters();
   renderAdt();
   renderResumo();
@@ -1170,7 +1285,7 @@ function applyFilters() {
   const cf = S.cf;
   const cpfDig = cf.cpf.replace(/\D/g, '');
 
-  S.filtered = S.all.filter(r => {
+  S.filtered = rowsEmpresa().filter(r => {
     // filtros da sidebar
     if (q && !r.nome.toLowerCase().includes(q) && !r.descricao.toLowerCase().includes(q)) return false;
     if (comp  && r.competencia !== comp)  return false;
@@ -1194,6 +1309,7 @@ function applyFilters() {
     if (cf.agencia && !normTok(r.agencia).includes(normTok(cf.agencia))) return false;
     if (cf.conta   && !normTok(r.conta).includes(normTok(cf.conta)))     return false;
     if (cf.status.size && !cf.status.has(r.status || '—'))    return false;
+    if (cf.empresa.size && !cf.empresa.has(r.empresa || '—')) return false;
 
     return true;
   });
@@ -1209,10 +1325,17 @@ function applyFilters() {
     return av < bv ? -dir : av > bv ? dir : 0;
   });
 
+  // seleção vale só para o que está visível no filtro
+  if (S.sel && S.sel.size) {
+    const vis = new Set(S.filtered.map(r => r.linha));
+    [...S.sel].forEach(l => { if (!vis.has(l)) S.sel.delete(l); });
+  }
+
   updateColfIcons();
   renderKPIs();
   renderChart();
   renderTable();
+  renderSelBar();
 }
 
 function doSort(col) {
@@ -1351,14 +1474,17 @@ function renderTable() {
 
   const tb = document.getElementById('tbody');
   if (!rows.length) {
-    tb.innerHTML = `<tr><td colspan="11"><div class="empty"><div class="empty-ico">🔍</div><span>Nenhum registro com esses filtros</span></div></td></tr>`;
+    tb.innerHTML = `<tr><td colspan="13"><div class="empty"><div class="empty-ico">🔍</div><span>Nenhum registro com esses filtros</span></div></td></tr>`;
     document.getElementById('pg-info').textContent = '';
     document.getElementById('pg-btns').innerHTML = '';
     return;
   }
 
+  const grava = podeGravar();
+  tb.closest('table').classList.toggle('emp-fix', !!S.emp);
   tb.innerHTML = rows.map(r => `
-    <tr>
+    <tr id="tr-${r.linha}" class="${S.sel.has(r.linha) ? 'sel' : ''}">
+      <td class="td-ck">${grava && r.linha > 0 ? `<input type="checkbox" ${S.sel.has(r.linha) ? 'checked' : ''} onchange="selLinha(${r.linha}, this.checked)">` : ''}</td>
       <td class="td-date">${fmtD(r.dataRef)}</td>
       <td class="td-nome" title="${r.nome}">${r.nome}</td>
       <td class="td-desc" title="${r.descricao}">${r.descricao}</td>
@@ -1369,7 +1495,10 @@ function renderTable() {
       <td class="td-bank">${r.nbco || '—'}</td>
       <td class="td-bank">${r.agencia || '—'}</td>
       <td class="td-bank">${r.conta || '—'}</td>
-      <td class="td-st">${badge(r.status)}</td>
+      <td class="td-st">${grava && r.linha > 0
+        ? `<span class="st-click" onclick="abrirStatusLinha(${r.linha})" title="Clique para alterar o status desta linha${r.dataPgto ? ' · pago em ' + fmtD(r.dataPgto) : ''}">${badge(r.status)}</span>`
+        : badge(r.status)}</td>
+      <td class="td-emp">${empTag(r.empresa)}</td>
     </tr>`).join('');
 
   document.getElementById('pg-info').textContent =
@@ -1423,7 +1552,7 @@ function renderAdt() {
 
 // ═══════════════ RESUMO TAB ═══════════════
 function renderResumo() {
-  const rows = S.all;
+  const rows = rowsEmpresa();
 
   const byComp = {}, byTipo = {}, byNome = {}, byBanco = {};
   rows.forEach(r => {
@@ -1540,11 +1669,11 @@ function iniciarConciliacao(txs, forcar) {
 
   // Por padrão concilia só PENDENTES. Em modo "forçar", inclui também
   // os já marcados como PAGO (para reconciliar após apagar/corrigir).
-  const alvos = S.all.filter(r => r.linha > 0 &&
+  const alvos = rowsEmpresa().filter(r => r.linha > 0 &&
     (forcar ? true : r.status === 'PENDENTE'));
 
-  const pendentes = S.all.filter(r => r.status === 'PENDENTE' && r.linha > 0).length;
-  const pagos     = S.all.filter(r => r.linha > 0 && r.status && r.status !== 'PENDENTE').length;
+  const pendentes = rowsEmpresa().filter(r => r.status === 'PENDENTE' && r.linha > 0).length;
+  const pagos     = rowsEmpresa().filter(r => r.linha > 0 && r.status && r.status !== 'PENDENTE').length;
 
   if (!alvos.length) {
     alert('Não há lançamentos para conciliar.');
@@ -1702,21 +1831,307 @@ async function aplicarConciliacao() {
   }
 }
 
+// ═══════════════ EMPRESA (coluna P) ═══════════════
+const EMP_SEM = '(SEM EMPRESA)';
+const EMP_PALETA = ['#16A34A','#9333EA','#DB2777','#0891B2','#CA8A04','#4F46E5','#DC2626','#0D9488'];
+S.emp = (() => { try { return localStorage.getItem('gcEmpresa') || ''; } catch (e) { return ''; } })();
+S.sel = new Set();
+S.fonte = 'drive';
+
+function empNome(r) { return r.empresa || EMP_SEM; }
+function rowsEmpresa() { return S.emp ? S.all.filter(r => empNome(r) === S.emp) : S.all; }
+function empCor(nome) {
+  if (!nome) return '#111111';
+  const n = normM(nome);
+  if (n === EMP_SEM) return '#9CA3AF';
+  if (/GEST/.test(n)) return '#2563EB';
+  if (/\bADM\b|ADMINISTRADORA/.test(n)) return '#EA580C';
+  let h = 0; n.split('').forEach(c => { h = (h * 31 + c.charCodeAt(0)) >>> 0; });
+  return EMP_PALETA[h % EMP_PALETA.length];
+}
+function empSigla(nome) {
+  if (!nome) return '∑';
+  if (nome === EMP_SEM) return '?';
+  const fora = ['ONE','WAY','LTDA','DE','DA','DO','DOS','DAS','E','ME','EPP','SA','S','A','EIRELI'];
+  const w = normM(nome).replace(/[^A-Z0-9 ]/g, ' ').split(/\s+/).filter(x => x && !fora.includes(x));
+  return (w[0] || normM(nome).replace(/[^A-Z0-9]/g, '')).slice(0, 3);
+}
+function empEsc(t) { return String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function empTag(nome) {
+  if (!nome) return '<span style="color:var(--text4)">—</span>';
+  return `<span class="emp-tag" style="background:${empCor(nome)}" title="${empEsc(nome)}">${empEsc(nome)}</span>`;
+}
+function empresasLista() {
+  const m = {};
+  S.all.forEach(r => {
+    const n = empNome(r);
+    if (!m[n]) m[n] = { nome: n, qt: 0, pend: 0, vPend: 0 };
+    m[n].qt++;
+    if (r.status === 'PENDENTE') { m[n].pend++; m[n].vPend += r.valor; }
+  });
+  return Object.values(m).sort((a, b) => (a.nome === EMP_SEM) - (b.nome === EMP_SEM) || a.nome.localeCompare(b.nome));
+}
+function renderEmpSwitcher() {
+  const lista = empresasLista();
+  if (S.emp && !lista.some(e => e.nome === S.emp)) { S.emp = ''; try { localStorage.setItem('gcEmpresa', ''); } catch (e) {} }
+  const fe = document.getElementById('f-emp');
+  if (fe) {
+    fe.innerHTML = '<option value="">Todas</option>' +
+      lista.map(e => `<option value="${empEsc(e.nome)}">${empEsc(e.nome)}</option>`).join('');
+    fe.value = S.emp;
+  }
+  const dot = document.getElementById('emp-dot');
+  dot.textContent = empSigla(S.emp);
+  dot.style.background = empCor(S.emp);
+  document.getElementById('emp-nm').textContent = S.emp || 'Todas as empresas';
+  document.querySelector('.app-hdr').style.borderTopColor = empCor(S.emp);
+  document.title = (S.emp ? S.emp + ' · ' : '') + 'OneWay · Relatório de Pagamentos 2026';
+  const av = document.getElementById('emp-aviso');
+  if (av) {
+    const semCampo = S.apiTemEmpresa === false;
+    const tudoVazio = !semCampo && S.all.length > 0 && S.all.every(r => !r.empresa);
+    av.classList.toggle('hidden', !(semCampo || tudoVazio));
+    av.innerHTML = semCampo
+      ? '&#9888; <b>O script do Google ainda é a versão antiga</b> — ele não está enviando a empresa (coluna P). No Apps Script, cole o código da v6 e depois vá em <b>Implantar → Gerenciar implantações → lápis → Versão: Nova versão → Implantar</b>. Só salvar não basta.'
+      : '&#9888; <b>A coluna P veio vazia em todas as linhas.</b> Confira se o nome da empresa está mesmo na coluna P da aba BENEFICIOS (ou se o cabeçalho dela começa com "EMPRESA").';
+  }
+}
+function renderEmpMenu() {
+  const lista = empresasLista();
+  const pendT = lista.reduce((s, e) => s + e.pend, 0);
+  const vPendT = lista.reduce((s, e) => s + e.vPend, 0);
+  const item = (valor, nome, qt, pend, vPend) => `
+    <div class="emp-it ${S.emp === valor ? 'on' : ''}" onclick="setEmpresaIdx(${S.empLista.push(valor) - 1})">
+      <span class="emp-dot" style="background:${empCor(valor)}">${empEsc(empSigla(valor))}</span>
+      <span class="emp-it-tx">
+        <div class="emp-it-nm">${empEsc(nome)}</div>
+        <div class="emp-it-sub">${fmtN(qt)} lançamento(s)${pend ? ` · <b>${fmtN(pend)} pendente(s) · ${fmtR(vPend)}</b>` : ' · nada pendente'}</div>
+      </span>
+      ${S.emp === valor ? '<span class="emp-it-ck">&#10003;</span>' : ''}
+    </div>`;
+  S.empLista = [];
+  let html = '<div class="emp-mh">Trocar empresa</div>';
+  html += item('', 'Todas as empresas', S.all.length, pendT, vPendT);
+  lista.forEach(e => { html += item(e.nome, e.nome, e.qt, e.pend, e.vPend); });
+  if (lista.length === 1 && lista[0].nome === EMP_SEM) {
+    html += '<div class="emp-hint">&#9888; A coluna P (empresa) não veio nos dados. Atualize o script do Google para a v6.</div>';
+  }
+  document.getElementById('emp-menu').innerHTML = html;
+}
+function toggleEmpMenu(ev) {
+  if (ev) ev.stopPropagation();
+  const m = document.getElementById('emp-menu');
+  if (m.classList.contains('open')) { m.classList.remove('open'); return; }
+  renderEmpMenu();
+  m.classList.add('open');
+}
+function fecharEmpMenu() { const m = document.getElementById('emp-menu'); if (m) m.classList.remove('open'); }
+document.addEventListener('click', e => { if (!e.target.closest('#empSwitcher')) fecharEmpMenu(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharEmpMenu(); });
+function setEmpresaIdx(i) { setEmpresa((S.empLista || [])[i] || ''); }
+function setEmpresa(nome) {
+  S.emp = nome;
+  try { localStorage.setItem('gcEmpresa', nome); } catch (e) {}
+  S.sel.clear();
+  S.cf.empresa.clear();
+  S.page = 1;
+  fecharEmpMenu();
+  renderEmpSwitcher();
+  applyFilters();
+  renderResumo();
+}
+
+// ═══════════════ SELEÇÃO + STATUS MANUAL (colunas N e O) ═══════════════
+function podeGravar() { return S.fonte === 'drive'; }
+function selLinha(l, on) {
+  if (on) S.sel.add(l); else S.sel.delete(l);
+  const tr = document.getElementById('tr-' + l);
+  if (tr) tr.classList.toggle('sel', on);
+  renderSelBar();
+}
+function selTodos(on) {
+  S.filtered.forEach(r => { if (r.linha > 0) { if (on) S.sel.add(r.linha); else S.sel.delete(r.linha); } });
+  renderTable();
+  renderSelBar();
+}
+function limparSelecao() { S.sel.clear(); renderTable(); renderSelBar(); }
+function linhasSelecionadas() { return S.filtered.filter(r => S.sel.has(r.linha)); }
+function renderSelBar() {
+  const bar = document.getElementById('sel-bar');
+  const ck = document.getElementById('ck-all');
+  if (!bar) return;
+  const grava = podeGravar();
+  if (ck) {
+    ck.style.visibility = grava ? '' : 'hidden';
+    const elegiveis = S.filtered.filter(r => r.linha > 0).length;
+    ck.checked = elegiveis > 0 && S.sel.size === elegiveis;
+    ck.indeterminate = S.sel.size > 0 && S.sel.size < elegiveis;
+  }
+  const sel = linhasSelecionadas();
+  bar.classList.toggle('open', grava && sel.length > 0);
+  document.getElementById('sb-count').textContent = fmtN(sel.length);
+  document.getElementById('sb-total').textContent = fmtR(sel.reduce((s, r) => s + r.valor, 0));
+}
+
+const ST = { linhas: [], gravando: false };
+function hojeISO() {
+  const t = new Date();
+  return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+}
+function isoParaBR(iso) { const p = (iso || '').split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : ''; }
+function abrirStatusLinha(l) {
+  const r = S.all.find(x => x.linha === l);
+  if (r) abrirModalStatus([r]);
+}
+function abrirModalStatus(linhas) {
+  if (!podeGravar()) { alert('Os dados vieram de um arquivo .xlsx local. Para gravar na planilha, carregue pelo Google Drive.'); return; }
+  ST.linhas = linhas || linhasSelecionadas();
+  if (!ST.linhas.length) return;
+  const todasPend = ST.linhas.every(r => r.status === 'PENDENTE');
+  const todasPagas = ST.linhas.every(r => r.status && r.status !== 'PENDENTE');
+  document.getElementById('st-status').value = todasPagas && !todasPend ? 'PENDENTE' : 'PAGO';
+  document.getElementById('st-data').value = hojeISO();
+  document.getElementById('st-ttl').innerHTML = `&#9998; Atualizar status na planilha <span style="font-size:11px;color:var(--text3);font-weight:600">· ${ST.linhas.length} linha(s)${S.emp ? ' · ' + empEsc(S.emp) : ''}</span>`;
+  const ap = document.getElementById('st-apply');
+  ap.style.display = ''; ap.disabled = false; ap.innerHTML = 'Gravar na planilha';
+  const cancel = document.getElementById('st-cancel');
+  cancel.disabled = false; cancel.textContent = 'Cancelar'; cancel.onclick = fecharModalStatus;
+  document.getElementById('st-form').classList.remove('hidden');
+  stStatusChange();
+  document.getElementById('st-ov').classList.add('open');
+}
+function stStatusChange() {
+  const pend = document.getElementById('st-status').value === 'PENDENTE';
+  document.getElementById('st-data').disabled = pend;
+  renderModalStatus();
+}
+function stNovo() {
+  const status = document.getElementById('st-status').value;
+  const data = status === 'PENDENTE' ? '' : isoParaBR(document.getElementById('st-data').value);
+  return { status, data };
+}
+function stMudaLinha(r, novo) {
+  const dAtual = r.dataPgto ? fmtD(r.dataPgto) : '';
+  if (novo.status === 'PENDENTE') return r.status !== 'PENDENTE';
+  return r.status !== novo.status || dAtual !== novo.data;
+}
+function renderModalStatus() {
+  const novo = stNovo();
+  const muda = ST.linhas.filter(r => stMudaLinha(r, novo));
+  const igual = ST.linhas.filter(r => !stMudaLinha(r, novo));
+  const novoBadge = badge(novo.status) + (novo.data ? ` <span style="font-size:10px;color:var(--text2)">${novo.data}</span>` : '');
+  const linha = (r, off) => `
+    <div class="conc-row ${off ? 'same' : ''}">
+      <div class="conc-info">
+        <div class="conc-nm">${empEsc(r.nome)} <span style="font-weight:400;color:var(--text3)">· linha ${r.linha}</span> ${r.empresa && !S.emp ? empTag(r.empresa) : ''}</div>
+        <div class="conc-dt">${empEsc(r.descricao || '')} · venc. ${fmtD(r.venc)}</div>
+      </div>
+      <span>${badge(r.status)}${r.dataPgto ? ` <span style="font-size:10px;color:var(--text3)">${fmtD(r.dataPgto)}</span>` : ''}<span class="st-arrow">&#8594;</span>${off ? '<span style="font-size:10px;color:var(--text3)">sem alteração</span>' : novoBadge}</span>
+      <span class="conc-val">${fmtR(r.valor)}</span>
+    </div>`;
+  let html = '';
+  if (muda.length) html += `<div class="conc-sec">Vão ser gravadas</div>` + muda.map(r => linha(r, false)).join('');
+  if (igual.length) html += `<div class="conc-sec">Já estão assim — nada a fazer</div>` + igual.map(r => linha(r, true)).join('');
+  document.getElementById('st-body').innerHTML = html;
+  const tot = muda.reduce((s, r) => s + r.valor, 0);
+  document.getElementById('st-sum').textContent = `${muda.length} linha(s) para gravar · ${fmtR(tot)}` + (igual.length ? ` · ${igual.length} sem alteração` : '');
+  document.getElementById('st-apply').disabled = !muda.length || (novo.status !== 'PENDENTE' && !novo.data);
+}
+function fecharModalStatus() {
+  if (ST.gravando) return;
+  document.getElementById('st-ov').classList.remove('open');
+}
+async function aplicarStatus() {
+  const novo = stNovo();
+  if (novo.status !== 'PENDENTE' && !novo.data) { alert('Informe a data do pagamento.'); return; }
+  const lista = ST.linhas.filter(r => stMudaLinha(r, novo));
+  if (!lista.length) return;
+  const updates = lista.map(r => ({
+    linha: r.linha, nome: r.nome, valor: r.valor,
+    statusLido: r.status, status: novo.status, data: novo.data
+  }));
+  const btn = document.getElementById('st-apply');
+  const cancel = document.getElementById('st-cancel');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="conc-spin"></span>Gravando na planilha...';
+  cancel.disabled = true;
+  ST.gravando = true;
+  try {
+    const resp = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'atualizarStatus', updates })
+    });
+    const res = JSON.parse(await resp.text());
+    if (!res.ok) {
+      if (/Acao desconhecida/i.test(res.erro || '')) throw new Error('O script do Google ainda é a versão antiga. Cole a v6 no Apps Script e publique uma nova versão da implantação.');
+      throw new Error(res.erro || 'Erro desconhecido');
+    }
+    // Atualiza na tela as linhas gravadas (sem recarregar e sem perder filtros)
+    const puladas = new Set((res.pulados || []).map(p => +p.linha));
+    const gravadas = res.gravadas ? new Set(res.gravadas.map(Number)) : new Set(lista.map(r => r.linha).filter(l => !puladas.has(l)));
+    lista.forEach(r => {
+      if (!gravadas.has(r.linha)) return;
+      r.status = novo.status;
+      r.dataPgto = novo.status === 'PENDENTE' ? null : parseFlexDate(novo.data);
+      S.sel.delete(r.linha);
+    });
+    let html = `<div class="conc-sec">Resultado da gravação</div>`;
+    html += `<div class="conc-row"><div class="conc-info"><span class="res-ok">&#10003; ${res.aplicados} linha(s) gravada(s)</span> — coluna N = ${novo.status === 'PENDENTE' ? '(vazia)' : novo.status}, coluna O = ${novo.data || '(vazia)'}</div></div>`;
+    if (res.pulados && res.pulados.length) {
+      html += `<div class="conc-sec">&#9888; Puladas (não alteradas)</div>`;
+      html += res.pulados.map(p => `<div class="conc-nf"><span class="res-skip">linha ${p.linha}</span> · ${empEsc(p.nome || '')} — ${empEsc(p.motivo)}</div>`).join('');
+      html += `<div class="conc-nf">Dica: clique em "Atualizar dados" no topo para reler a planilha e tentar de novo.</div>`;
+    }
+    document.getElementById('st-form').classList.add('hidden');
+    document.getElementById('st-body').innerHTML = html;
+    document.getElementById('st-sum').textContent = res.modo || '';
+    btn.style.display = 'none';
+    cancel.disabled = false;
+    cancel.textContent = 'Fechar';
+    ST.gravando = false;
+    rebuildStatusPills();
+    applyFilters();
+    renderResumo();
+  } catch (err) {
+    ST.gravando = false;
+    btn.disabled = false;
+    btn.innerHTML = 'Tentar novamente';
+    cancel.disabled = false;
+    document.getElementById('st-sum').innerHTML = `<span style="color:#DC2626">Erro: ${empEsc(err.message)}</span>`;
+  }
+}
+// Recria os botões de status da barra lateral mantendo os que estavam ativos
+function rebuildStatusPills() {
+  const sts = [...new Set(S.all.map(r => r.status).filter(Boolean))];
+  const ps = document.getElementById('f-status');
+  ps.innerHTML = '';
+  S.f.status = S.f.status.filter(s => sts.includes(s));
+  sts.forEach(s => {
+    const lbl = s === 'PAGO FLASH' ? 'FLASH' : s === 'PAGO PIX' ? 'PIX' : s;
+    const el = pill(lbl, s, 'status');
+    if (S.f.status.includes(s)) el.classList.add('active');
+    ps.appendChild(el);
+  });
+}
+
 // ═══════════════ EXPORT ═══════════════
 function exportCSV() {
-  const hdrs = ['Data','Nome','Descrição','Valor','Vencimento','CPF/CNPJ','Banco','Nº Bco','Agência','Conta','Status'];
+  const hdrs = ['Data','Nome','Descrição','Valor','Vencimento','CPF/CNPJ','Banco','Nº Bco','Agência','Conta','Status','Data Pgto','Empresa'];
   const lines = [hdrs.join(';')];
   S.filtered.forEach(r => {
     lines.push([
       fmtD(r.dataRef), r.nome, r.descricao,
       r.valor.toFixed(2).replace('.',','),
-      fmtD(r.venc), r.cpf || '', r.banco || '', r.nbco || '', r.agencia || '', r.conta || '', r.status
+      fmtD(r.venc), r.cpf || '', r.banco || '', r.nbco || '', r.agencia || '', r.conta || '', r.status,
+      r.dataPgto ? fmtD(r.dataPgto) : '', r.empresa || ''
     ].map(v => `"${(v||'').toString().replace(/"/g,'""')}"`).join(';'));
   });
   const blob = new Blob(['\ufeff' + lines.join('\n')], {type:'text/csv;charset=utf-8;'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `oneway_pagamentos_${new Date().toISOString().slice(0,10)}.csv`;
+  const _suf = S.emp ? '_' + normM(S.emp).replace(/[^A-Z0-9]+/g, '_').replace(/^_|_$/g, '') : '';
+  a.download = `oneway_pagamentos${_suf}_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
   URL.revokeObjectURL(a.href);
 }
