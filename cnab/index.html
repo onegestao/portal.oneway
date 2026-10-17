@@ -69,12 +69,33 @@
 <!-- MAIN -->
 <div class="flex-1 flex flex-col h-screen overflow-hidden bg-gray-50">
 
-  <header class="h-16 bg-white border-b border-gray-200 flex justify-between items-center px-8 shadow-sm z-10">
+  <header id="topHeader" style="border-top:3px solid transparent" class="h-16 bg-white border-b border-gray-200 flex justify-between items-center px-8 shadow-sm z-10">
     <div>
       <h2 id="pageTitle" class="text-xl font-bold text-gray-800">Colar Lançamentos</h2>
       <p id="pageSubtitle" class="text-xs text-gray-500">Cole a relação de contas a pagar copiada da planilha</p>
     </div>
     <div class="flex items-center gap-4">
+      <!-- EMPRESA ATIVA (trocar empresa) -->
+      <div class="relative" id="empSwitcher">
+        <button onclick="toggleEmpMenu()" class="flex items-center gap-3 pl-2 pr-3 py-1.5 rounded-xl border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition" title="Trocar empresa">
+          <span id="empDot" class="w-9 h-9 rounded-lg text-white text-[11px] font-bold flex items-center justify-center" style="background:#ea580c">ADM</span>
+          <span class="text-left leading-tight">
+            <span class="block text-[10px] uppercase tracking-wide text-gray-400">Empresa</span>
+            <span id="empNome" class="block text-sm font-semibold text-gray-800">ONE WAY ADM</span>
+            <span id="empSub" class="block text-[11px] text-gray-500"></span>
+          </span>
+          <i class="fas fa-chevron-down text-xs text-gray-400 ml-1"></i>
+        </button>
+        <div id="empMenu" class="hidden absolute right-0 mt-2 w-[26rem] bg-white border border-gray-200 rounded-xl shadow-2xl z-50 py-2">
+          <div class="px-4 pt-1 pb-2 text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Trocar empresa</div>
+          <div id="empMenuList" class="max-h-96 overflow-auto space-y-0.5"></div>
+          <div class="border-t border-gray-100 mt-2 pt-2 px-2">
+            <button onclick="fecharEmpMenu();abrirPagadorModal(null)" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-orange-700 hover:bg-orange-50">
+              <i class="fas fa-plus-circle"></i> Nova empresa (conta Inter)
+            </button>
+          </div>
+        </div>
+      </div>
       <div class="flex flex-col items-end">
         <span class="text-sm font-semibold text-gray-700"><span id="lancCountTop">0</span> lançamentos</span>
         <span class="text-xs text-gray-400"><span id="totalTop">R$ 0,00</span></span>
@@ -218,7 +239,9 @@
               </div>
 
               <div class="pt-4 border-t border-gray-100">
-                <h4 class="text-sm font-bold text-gray-700 mb-3">Pagador (Sua Empresa)</h4>
+                <h4 class="text-sm font-bold text-gray-700 mb-1">Pagador</h4>
+                <p id="pagadorTag" class="text-[11px] text-gray-600 mb-1"></p>
+                <p class="text-[11px] text-gray-400 mb-3"><i class="fas fa-info-circle mr-1"></i>Definido pela empresa ativa no topo.</p>
                 <div class="grid grid-cols-2 gap-3">
                   <div class="col-span-2">
                     <label class="text-xs text-gray-400">CNPJ</label>
@@ -339,7 +362,225 @@
   </main>
 </div>
 
+<!-- MODAL EMPRESA (conta Inter) -->
+<div id="pagadorModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg">
+    <div class="flex justify-between items-center px-6 py-4 border-b border-gray-100">
+      <h3 id="pagadorModalTitulo" class="font-bold text-gray-800">Cadastrar Empresa (conta Inter)</h3>
+      <button onclick="fecharPagadorModal()" class="text-gray-400 hover:text-gray-700"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="p-6 space-y-3 text-sm">
+      <input type="hidden" id="pagId">
+      <div><label class="text-xs text-gray-500">Razão social</label><input id="pagNome" class="w-full border border-gray-300 rounded-lg p-2"></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-xs text-gray-500">Apelido (aparece no seletor)</label><input id="pagApelido" class="w-full border border-gray-300 rounded-lg p-2"></div>
+        <div><label class="text-xs text-gray-500">CNPJ</label><input id="pagCnpj" class="w-full border border-gray-300 rounded-lg p-2" placeholder="00.000.000/0000-00"></div>
+        <div><label class="text-xs text-gray-500">Conta Inter (sem o dígito)</label><input id="pagConta" class="w-full border border-gray-300 rounded-lg p-2"></div>
+        <div><label class="text-xs text-gray-500">Dígito da conta</label><input id="pagDac" maxlength="1" class="w-full border border-gray-300 rounded-lg p-2"></div>
+        <div class="col-span-2"><label class="text-xs text-gray-500">Sufixo no nome do arquivo (opcional)</label><input id="pagSufixo" maxlength="12" class="w-full border border-gray-300 rounded-lg p-2" placeholder="ex.: COWORK"></div>
+      </div>
+      <p class="text-[11px] text-gray-500 leading-snug"><i class="fas fa-info-circle mr-1"></i>A agência Inter é sempre 0001. Este cadastro é o mesmo da ferramenta da Folha: o que você criar ou editar aqui aparece lá também.</p>
+    </div>
+    <div class="flex items-center px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl">
+      <button id="pagBtnExcluir" onclick="excluirPagador()" class="text-red-600 text-sm hover:underline hidden"><i class="fas fa-trash mr-1"></i>Excluir empresa</button>
+      <div class="flex gap-2 ml-auto">
+        <button onclick="fecharPagadorModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-100">Cancelar</button>
+        <button onclick="salvarPagador()" class="px-5 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700">Salvar empresa</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
+/* ============================================================
+   EMPRESA ATIVA — seletor no topo (só contas Inter)
+   - Cadastro compartilhado com a ferramenta da Folha (chave 'pagadoresCustom').
+   - Os dados desta ferramenta ficam por empresa: oneway_pagamentos_v1__<ID>.
+   - Prefixos de conciliação e numeração do arquivo (NSA) valem para todas.
+============================================================ */
+const EMPRESAS_FIXAS = {
+  ADM:    { id:'ADM',    fixo:true, banco:'077', apelido:'ONE WAY ADM',    nome:'ONE WAY ADMINISTRADORA DE MAO DE OBRA LTDA', cnpj:'63004633000198', agencia:'0001', conta:'49659022', dac:'7', sufixo:'ADM' },
+  GESTAO: { id:'GESTAO', fixo:true, banco:'077', apelido:'ONE WAY GESTÃO', nome:'ONE WAY GESTAO DE MAO DE OBRA LTDA',         cnpj:'69017331000130', agencia:'0001', conta:'56082136', dac:'0', sufixo:'GESTAO' }
+};
+const PAG_KEY_LEGADO = 'oneway_pagamentos_v1';
+function pagadoresCustom() {
+  try { const l = JSON.parse(localStorage.getItem('pagadoresCustom') || '[]'); return Array.isArray(l) ? l : []; }
+  catch (e) { return []; }
+}
+function pagadoresSave(l) { localStorage.setItem('pagadoresCustom', JSON.stringify(l)); }
+function todosPagadoresGeral() { return [...Object.values(EMPRESAS_FIXAS), ...pagadoresCustom()]; }
+function empresasInter() { return todosPagadoresGeral().filter(p => String(p.banco || '077') === '077'); }
+function empresaPorId(id) { return empresasInter().find(p => p.id === id) || null; }
+function empresaAtivaId() { try { return localStorage.getItem('empresaAtivaPagDiv') || 'ADM'; } catch (e) { return 'ADM'; } }
+function empresaAtiva() { return empresaPorId(empresaAtivaId()) || EMPRESAS_FIXAS.ADM; }
+function storageKeyEmp(id) { return PAG_KEY_LEGADO + '__' + (id || empresaAtivaId()); }
+
+// Migração única: o que estava salvo antes passa a ser da ONE WAY ADM (cópia; a chave antiga fica como backup)
+(function migrarPagDiv() {
+  try {
+    if (localStorage.getItem('pagDivMigrado')) return;
+    const v = localStorage.getItem(PAG_KEY_LEGADO);
+    if (v !== null && localStorage.getItem(PAG_KEY_LEGADO + '__ADM') === null) {
+      localStorage.setItem(PAG_KEY_LEGADO + '__ADM', v);
+      try {
+        const d = JSON.parse(v);
+        if (d && d.cnabSeq) localStorage.setItem('oneway_pagamentos_nsa', String(d.cnabSeq));
+        if (d && d.prefixes) localStorage.setItem('oneway_pagamentos_prefixos', JSON.stringify(d.prefixes));
+      } catch (e) {}
+    }
+    localStorage.setItem('pagDivMigrado', '1');
+  } catch (e) { console.warn('Migração por empresa não concluída:', e); }
+})();
+
+const EMP_CORES_FIXAS = { ADM: '#ea580c', GESTAO: '#2563eb' };
+const EMP_PALETA = ['#16a34a', '#9333ea', '#db2777', '#0891b2', '#ca8a04', '#4f46e5', '#dc2626', '#0d9488'];
+function empresaCor(p) {
+  if (!p) return '#6b7280';
+  if (EMP_CORES_FIXAS[p.id]) return EMP_CORES_FIXAS[p.id];
+  let h = 0; String(p.id).split('').forEach(c => { h = (h * 31 + c.charCodeAt(0)) >>> 0; });
+  return EMP_PALETA[h % EMP_PALETA.length];
+}
+function empresaSigla(p) { let t = String((p && (p.sufixo || p.id)) || '?').replace(/[^A-Za-z0-9]/g, '').toUpperCase(); const r = t.replace(/^ONE(WAY)?/, ''); if (r.length >= 2) t = r; return t.slice(0, 3); }
+function empEsc(t) { return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function fmtCnpj(d) {
+  d = String(d || '').replace(/\D/g, '');
+  if (d.length === 14) return d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+  if (d.length === 11) return d.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+  return d;
+}
+function sufixoArquivo() { return String(empresaAtiva().sufixo || empresaAtiva().id || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase(); }
+// Texto ASCII para o arquivo CNAB (um acento ocupa 2 bytes e desalinha as 240 posições)
+function cnabTexto(t) {
+  return String(t == null ? '' : t).normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[ªº]/g, '').replace(/[–—]/g, '-').replace(/ /g, ' ')
+    .replace(/[^\x20-\x7E]/g, '').replace(/\s+/g, ' ').trim();
+}
+function qtdLancamentos(id) {
+  try { const d = JSON.parse(localStorage.getItem(storageKeyEmp(id)) || '{}'); return (d.lancamentos || []).length; }
+  catch (e) { return 0; }
+}
+function trocarEmpresa(id) {
+  if (id === empresaAtivaId()) { fecharEmpMenu(); return; }
+  const atual = document.querySelector('.nav-item.active');
+  try { sessionStorage.setItem('viewAposTrocaPD', atual ? atual.id.replace('nav-', '') : ''); } catch (e) {}
+  localStorage.setItem('empresaAtivaPagDiv', id);
+  location.reload();
+}
+function renderEmpresaSwitcher() {
+  if (!empresaPorId(empresaAtivaId()) && empresaAtivaId() !== 'ADM') { localStorage.setItem('empresaAtivaPagDiv', 'ADM'); location.reload(); return; }
+  const p = empresaAtiva();
+  const cor = empresaCor(p);
+  const g = x => document.getElementById(x);
+  g('empDot').textContent = empresaSigla(p); g('empDot').style.background = cor;
+  g('empNome').textContent = p.apelido || p.nome;
+  g('empSub').textContent = `${fmtCnpj(p.cnpj)} · Inter c/c ${p.conta}-${p.dac}`;
+  g('topHeader').style.borderTopColor = cor;
+  document.title = `${p.apelido || p.nome} · OneWay - Pagamentos Diversos`;
+  preenchePagador();
+}
+function renderEmpMenuList() {
+  const ativa = empresaAtivaId();
+  document.getElementById('empMenuList').innerHTML = empresasInter().map(x => {
+    const ehAtiva = x.id === ativa;
+    return `<div class="flex items-center gap-1 px-2 mx-2 rounded-lg ${ehAtiva ? 'bg-orange-50' : 'hover:bg-gray-50'}">
+      <button onclick="trocarEmpresa('${x.id}')" class="flex-1 flex items-center gap-3 py-2 text-left min-w-0">
+        <span class="w-9 h-9 rounded-lg text-white text-[11px] font-bold flex items-center justify-center shrink-0" style="background:${empresaCor(x)}">${empresaSigla(x)}</span>
+        <span class="leading-tight min-w-0">
+          <span class="block text-sm font-semibold text-gray-800 truncate">${empEsc(x.apelido || x.nome)}</span>
+          <span class="block text-[11px] text-gray-500">${fmtCnpj(x.cnpj)} · Inter c/c ${empEsc(x.conta)}-${empEsc(x.dac)}</span>
+          <span class="block text-[10px] text-gray-400">${qtdLancamentos(x.id)} lançamento(s) salvo(s)</span>
+        </span>
+      </button>
+      ${ehAtiva ? '<i class="fas fa-check text-orange-600 text-sm px-1" title="Empresa ativa"></i>' : ''}
+      ${x.fixo ? '<i class="fas fa-lock text-gray-300 text-xs px-2" title="Empresa fixa do grupo"></i>'
+               : `<button onclick="fecharEmpMenu();abrirPagadorModal('${x.id}')" class="text-gray-400 hover:text-blue-600 px-2 py-2" title="Editar / excluir"><i class="fas fa-pen text-xs"></i></button>`}
+    </div>`;
+  }).join('');
+}
+function toggleEmpMenu() {
+  const m = document.getElementById('empMenu');
+  if (m.classList.contains('hidden')) { renderEmpMenuList(); m.classList.remove('hidden'); }
+  else m.classList.add('hidden');
+}
+function fecharEmpMenu() { const m = document.getElementById('empMenu'); if (m) m.classList.add('hidden'); }
+document.addEventListener('click', e => { if (!e.target.closest('#empSwitcher')) fecharEmpMenu(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharEmpMenu(); });
+
+// Tela "Gerar CNAB": dados do pagador vêm da empresa ativa (somente leitura)
+function preenchePagador() {
+  const p = empresaAtiva();
+  const g = x => document.getElementById(x);
+  const ro = el => { if (!el) return; el.readOnly = true; el.classList.add('bg-gray-100', 'text-gray-600', 'cursor-not-allowed'); el.title = 'Definido pela empresa ativa (seletor no topo)'; };
+  if (g('compCnpj')) { g('compCnpj').value = fmtCnpj(p.cnpj); ro(g('compCnpj')); }
+  if (g('compName')) { g('compName').value = p.nome || ''; ro(g('compName')); }
+  if (g('compCc'))   { g('compCc').value = `${p.conta}-${p.dac}`; ro(g('compCc')); }
+  if (g('compAg'))   g('compAg').value = '00001-9';
+  if (g('pagadorTag')) g('pagadorTag').innerHTML = `<span class="inline-block px-1.5 py-0.5 rounded text-white text-[10px] font-bold mr-1" style="background:${empresaCor(p)}">${empEsc(p.apelido || p.nome)}</span>Banco Inter · arquivo <strong>.REM</strong>`;
+}
+
+// ---------- Cadastro de empresa (somente Inter) ----------
+function validaCNPJ(c) {
+  c = String(c || '').replace(/\D/g, '');
+  if (c.length !== 14 || /^(\d)\1+$/.test(c)) return false;
+  const calc = n => { let s = 0, p = n - 7; for (let i = 0; i < n; i++) { s += +c[i] * p--; if (p < 2) p = 9; } const r = s % 11; return r < 2 ? 0 : 11 - r; };
+  return calc(12) === +c[12] && calc(13) === +c[13];
+}
+function abrirPagadorModal(id) {
+  const p = id ? empresaPorId(id) : null;
+  const g = x => document.getElementById(x);
+  g('pagId').value = p ? p.id : '';
+  g('pagadorModalTitulo').innerText = p ? 'Editar Empresa (conta Inter)' : 'Cadastrar Empresa (conta Inter)';
+  g('pagNome').value = p ? p.nome : '';
+  g('pagApelido').value = p ? (p.apelido || '') : '';
+  g('pagCnpj').value = p ? fmtCnpj(p.cnpj) : '';
+  g('pagConta').value = p ? (p.conta || '') : '';
+  g('pagDac').value = p ? (p.dac || '') : '';
+  g('pagSufixo').value = p ? (p.sufixo || '') : '';
+  g('pagBtnExcluir').classList.toggle('hidden', !(p && !p.fixo));
+  const m = g('pagadorModal'); m.classList.remove('hidden'); m.classList.add('flex');
+}
+function fecharPagadorModal() { const m = document.getElementById('pagadorModal'); m.classList.add('hidden'); m.classList.remove('flex'); }
+function salvarPagador() {
+  const v = x => (document.getElementById(x).value || '').trim();
+  const nome = cnabTexto(v('pagNome')).toUpperCase();
+  const cnpj = v('pagCnpj').replace(/\D/g, '');
+  const conta = v('pagConta').replace(/\D/g, '');
+  const dac = v('pagDac').replace(/\D/g, '');
+  if (!nome) { alert('Informe a razão social.'); return; }
+  if (!validaCNPJ(cnpj)) { alert('CNPJ inválido.'); return; }
+  if (!conta) { alert('Informe a conta Inter (sem o dígito).'); return; }
+  if (!dac) { alert('Informe o dígito da conta.'); return; }
+  const apelido = v('pagApelido') || nome.split(' ').slice(0, 2).join(' ');
+  const sufixo = (v('pagSufixo') || apelido).replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 12) || 'OUTRA';
+  const eraNova = !v('pagId');
+  let id = v('pagId');
+  if (!id) { id = sufixo; let n = 2; while (todosPagadoresGeral().some(x => x.id === id)) id = sufixo + n++; }
+  const list = pagadoresCustom();
+  const existente = list.find(x => x.id === id);
+  const dados = { id, banco: '077', apelido, nome, cnpj, agencia: '0001', conta, dac, sufixo };
+  if (existente) Object.assign(existente, dados);
+  else list.push(Object.assign({ tipoPagto: '20', endereco: {} }, dados));
+  pagadoresSave(list);
+  fecharPagadorModal();
+  if (eraNova) { trocarEmpresa(id); return; }
+  renderEmpresaSwitcher();
+}
+function excluirPagador() {
+  const id = document.getElementById('pagId').value;
+  const p = empresaPorId(id);
+  if (!p || p.fixo) return;
+  const qt = qtdLancamentos(id);
+  let msg = `Excluir a empresa "${p.apelido || p.nome}"?\n\n`;
+  msg += qt ? `Os ${qt} lançamento(s) salvos dela nesta ferramenta serão APAGADOS deste navegador.\n\n` : 'Não há lançamentos salvos para ela nesta ferramenta.\n\n';
+  msg += 'Atenção: o cadastro é o mesmo da ferramenta da Folha, então ela também sai de lá.\nArquivos já gerados não são afetados.';
+  if (!confirm(msg)) return;
+  pagadoresSave(pagadoresCustom().filter(x => x.id !== id));
+  localStorage.removeItem(storageKeyEmp(id));
+  fecharPagadorModal();
+  if (empresaAtivaId() === id) { localStorage.setItem('empresaAtivaPagDiv', 'ADM'); location.reload(); return; }
+  renderEmpresaSwitcher();
+}
+
 /* ============================================================
    STATE
 ============================================================ */
@@ -359,17 +600,16 @@ window.addEventListener('load', () => {
   loadFromStorage();
   document.getElementById('cnabDate').valueAsDate = new Date();
   bindInputs();
+  renderEmpresaSwitcher();
   renderAll();
+  // Depois de trocar de empresa, volta para a mesma tela
+  let v = null;
+  try { v = sessionStorage.getItem('viewAposTrocaPD'); sessionStorage.removeItem('viewAposTrocaPD'); } catch (e) {}
+  if (v && document.getElementById('view-' + v)) switchView(v);
 });
 
 function bindInputs() {
-  ['compCnpj','compName','compAg','compCc'].forEach(id => {
-    document.getElementById(id).addEventListener('change', e => {
-      const k = id.replace('comp','').toLowerCase();
-      State.company[k === 'cnpj' ? 'cnpj' : k === 'name' ? 'name' : k] = e.target.value;
-      saveToStorage();
-    });
-  });
+  // Dados do pagador agora vêm da empresa ativa (seletor no topo) — campos somente leitura
   ['prefVR','prefVT','prefRMB','prefOUT'].forEach(id => {
     document.getElementById(id).addEventListener('change', e => {
       State.prefixes[id.replace('pref','')] = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
@@ -380,24 +620,32 @@ function bindInputs() {
 
 function loadFromStorage() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    const data = JSON.parse(raw);
-    Object.assign(State, data);
+    const raw = localStorage.getItem(storageKeyEmp());
+    if (raw) {
+      const data = JSON.parse(raw);
+      ['lancamentos', 'filter', 'cnabExcluded', 'cnabBancoFiltro'].forEach(k => { if (data[k] !== undefined) State[k] = data[k]; });
+    }
+    if (!Array.isArray(State.lancamentos)) State.lancamentos = [];
     if (!State.cnabExcluded) State.cnabExcluded = [];
     if (!State.cnabBancoFiltro) State.cnabBancoFiltro = 'ALL';
-    document.getElementById('compCnpj').value = State.company.cnpj || '';
-    document.getElementById('compName').value = State.company.name || '';
-    document.getElementById('compAg').value   = State.company.ag   || '';
-    document.getElementById('compCc').value   = State.company.cc   || '';
+    const pf = localStorage.getItem('oneway_pagamentos_prefixos');
+    if (pf) State.prefixes = Object.assign({}, State.prefixes, JSON.parse(pf));
+    State.cnabSeq = parseInt(localStorage.getItem('oneway_pagamentos_nsa') || '1', 10) || 1;
     document.getElementById('prefVR').value   = State.prefixes.VR  || 'VR';
     document.getElementById('prefVT').value   = State.prefixes.VT  || 'VT';
     document.getElementById('prefRMB').value  = State.prefixes.RMB || 'REEMB';
     document.getElementById('prefOUT').value  = State.prefixes.OUT || 'DIV';
   } catch(e) { console.warn('Falha ao carregar storage', e); }
+  preenchePagador();
 }
 function saveToStorage() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(State));
+  // Lançamentos e seleção: por empresa. Prefixos e numeração do arquivo: comuns a todas.
+  localStorage.setItem(storageKeyEmp(), JSON.stringify({
+    lancamentos: State.lancamentos, filter: State.filter,
+    cnabExcluded: State.cnabExcluded, cnabBancoFiltro: State.cnabBancoFiltro
+  }));
+  localStorage.setItem('oneway_pagamentos_prefixos', JSON.stringify(State.prefixes));
+  localStorage.setItem('oneway_pagamentos_nsa', String(State.cnabSeq || 1));
 }
 
 /* ============================================================
@@ -432,6 +680,7 @@ function processPaste() {
 
   let added = 0, errs = 0;
   rows.forEach(r => {
+    r = alinhaLinha(r);
     if (r.length < 6) { errs++; return; }
     const [dataLanc, nome, motivo, valorStr, vencimento, cpfStr] = r.map(s => s.trim());
     // Colunas bancárias opcionais: Banco | CódBanco | Agência | Conta (cols 7-10)
@@ -460,6 +709,15 @@ function processPaste() {
   notify(`${added} lançamento(s) importado(s)${errs ? `, ${errs} ignorado(s)` : ''}.`, 'green');
   switchView('preview');
   renderAll();
+}
+
+/* Linhas coladas às vezes chegam com coluna(s) vazia(s) na frente (TAB extra no começo).
+   Se as primeiras células estão vazias e a seguinte é uma data, descarta as vazias. */
+function alinhaLinha(r) {
+  const ehData = s => /^\s*\d{1,2}\/\d{1,2}\/\d{2,4}\s*$/.test(String(s || ''));
+  let k = 0;
+  while (k < r.length && !String(r[k] || '').trim()) k++;
+  return (k > 0 && ehData(r[k])) ? r.slice(k) : r;
 }
 
 /* Parser TSV simples — respeita aspas para campos com quebra de linha */
@@ -858,9 +1116,10 @@ function generateCNAB() {
   }
 
   // --- Dados do pagador ---
-  const cnpj    = (document.getElementById('compCnpj').value || '').replace(/\D/g,'').padStart(14,'0');
-  const name    = (document.getElementById('compName').value || 'EMPRESA').toUpperCase().padEnd(30,' ').substring(0,30);
-  const ccRaw   = document.getElementById('compCc').value.replace(/[^0-9]/g,'');
+  const _emp    = empresaAtiva();
+  const cnpj    = String(_emp.cnpj || '').replace(/\D/g,'').padStart(14,'0');
+  const name    = cnabTexto(_emp.nome || 'EMPRESA').toUpperCase().padEnd(30,' ').substring(0,30);
+  const ccRaw   = String(_emp.conta || '').replace(/\D/g,'') + String(_emp.dac || '').replace(/\D/g,'');
   // Manual Inter v1.21: agência FIXA "00001" + DV "9" para Inter Empresas
   const compAg    = '00001';
   const compAgDv  = '9';
@@ -955,7 +1214,7 @@ function generateCNAB() {
     const amountCents = Math.round(l.valor * 100);
     totalCents       += amountCents;
     const amountStr   = amountCents.toString().padStart(15,'0');
-    const favName     = (l.nome || '').toUpperCase().padEnd(30,' ').substring(0,30);
+    const favName     = cnabTexto(l.nome || '').toUpperCase().padEnd(30,' ').substring(0,30);
     const favCpf      = l.cpf.padStart(14,'0');
     const isCnpj      = l.cpf.length === 14;
     const docTypeCode = isCnpj ? '2' : '1';
@@ -1097,12 +1356,12 @@ function generateCNAB() {
   State.cnabSeq = nsa + 1;
   saveToStorage();
 
-  const fileName = `CI240_001_${nsaFile}.REM`;
+  const fileName = `CI240_001_${nsaFile}_${sufixoArquivo()}.REM`;
   downloadFile(content, fileName, 'text/plain');
 
   const numLanc = validos.length;
   const totalFmt = money(totalCents / 100);
-  let msg = `<i class="fas fa-check-circle"></i> Arquivo <strong>${fileName}</strong> gerado com ${numLanc} lançamento(s) • ${totalFmt}`;
+  let msg = `<i class="fas fa-check-circle"></i> Arquivo <strong>${fileName}</strong> gerado com ${numLanc} lançamento(s) • ${totalFmt} • pagador <strong>${empEsc(_emp.apelido || _emp.nome)}</strong>`;
   if (semBanco > 0) msg += ` <span class="text-yellow-700 ml-2">⚠ ${semBanco} sem dados bancários → Pix por chave CPF</span>`;
   fb.innerHTML = `<span class="text-green-700">${msg}</span>`;
 }
@@ -1168,7 +1427,7 @@ function exportReportXLSX() {
   XLSX.utils.book_append_sheet(wb, ws3, 'Por Favorecido');
 
   const wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
-  saveAs(new Blob([wbout], {type:'application/octet-stream'}), 'Relatorio_Pagamentos.xlsx');
+  saveAs(new Blob([wbout], {type:'application/octet-stream'}), `Relatorio_Pagamentos_${sufixoArquivo()}.xlsx`);
 }
 
 function exportConcilCSV() {
@@ -1181,14 +1440,16 @@ function exportConcilCSV() {
     rows.push([buildDocNumber(l,counters[l.categoria]), labelCat(l.categoria), formatCpf(l.cpf), docType(l.cpf), l.nome, l.motivo, l.valor.toFixed(2).replace('.',','), payDate]);
   });
   const csv = rows.map(r => r.map(c => /[",;\n]/.test(String(c)) ? `"${String(c).replace(/"/g,'""')}"` : c).join(';')).join('\n');
-  saveAs(new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'}), 'Conciliacao_Pagamentos.csv');
+  saveAs(new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'}), `Conciliacao_Pagamentos_${sufixoArquivo()}.csv`);
 }
 
 /* ============================================================
    BACKUP / CLEAR
 ============================================================ */
 function saveProject() {
-  saveAs(new Blob([JSON.stringify(State, null, 2)], {type:'application/json'}), 'OneWay_Pagamentos_Backup.json');
+  const dados = Object.assign({}, State, { _empresa: empresaAtivaId() });
+  delete dados.company;
+  saveAs(new Blob([JSON.stringify(dados, null, 2)], {type:'application/json'}), `OneWay_Pagamentos_Backup_${sufixoArquivo()}.json`);
 }
 function loadProjectFromFile(input) {
   if (!input.files[0]) return;
@@ -1196,7 +1457,16 @@ function loadProjectFromFile(input) {
   r.onload = e => {
     try {
       const data = JSON.parse(e.target.result);
-      Object.assign(State, data);
+      const pa = empresaAtiva(), pb = data._empresa ? empresaPorId(data._empresa) : null;
+      const nA = pa.apelido || pa.nome;
+      let m = `Carregar este backup na empresa ativa "${nA}"?\n\nIsso substitui os lançamentos dela.`;
+      if (data._empresa && data._empresa !== empresaAtivaId())
+        m = `ATENÇÃO: este backup é da empresa "${pb ? (pb.apelido || pb.nome) : data._empresa}", mas a empresa ativa é "${nA}".\n\n` + m;
+      if (!confirm(m)) { input.value = ''; return; }
+      ['lancamentos', 'filter', 'cnabExcluded', 'cnabBancoFiltro'].forEach(k => { if (data[k] !== undefined) State[k] = data[k]; });
+      if (data.prefixes) State.prefixes = Object.assign({}, State.prefixes, data.prefixes);
+      // numeração do arquivo nunca volta para trás (evita NSA repetido)
+      State.cnabSeq = Math.max(State.cnabSeq || 1, parseInt(data.cnabSeq, 10) || 1);
       saveToStorage();
       loadFromStorage();
       renderAll();
@@ -1206,7 +1476,8 @@ function loadProjectFromFile(input) {
   r.readAsText(input.files[0]);
 }
 function clearAll() {
-  if (!confirm('Apagar TODOS os lançamentos? Esta ação não pode ser desfeita.')) return;
+  const _p = empresaAtiva();
+  if (!confirm(`Apagar TODOS os lançamentos da empresa "${_p.apelido || _p.nome}"? Esta ação não pode ser desfeita.`)) return;
   State.lancamentos = [];
   State.cnabExcluded = [];
   State.cnabBancoFiltro = 'ALL';
