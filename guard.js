@@ -26,9 +26,9 @@
     // Senha da porta de entrada do portal
     portal:   '628bef66da82b5949a64b5d8f6226537fa5aa9579614cf17dcfcbc92dae85f8d',
     // Gestão de Pagamentos > pasta Notas Fiscais
-    nf:       'c1b9bc7e1694f16f31cca82b332fc613587be25c788dc44fa6965d0aa467025e',
+    nf:       '628bef66da82b5949a64b5d8f6226537fa5aa9579614cf17dcfcbc92dae85f8d',
     // Recrutamento > excluir candidato
-    exclusao: '106ddc24c188b2d1b0725489663d2062e179a32279cee9e2d29b4c8b345c3f44'
+    exclusao: '628bef66da82b5949a64b5d8f6226537fa5aa9579614cf17dcfcbc92dae85f8d'
   };
 
   // Não alterar os itens abaixo sem atualizar o gerar-hash.html junto.
