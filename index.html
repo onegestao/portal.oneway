@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <script src="./guard.js"></script>
     <title>HUB | ONE WAY - Gestão Integrada</title>
     <!-- Ícone da aba do navegador -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><text y='203' font-size='224'>🏢</text></svg>">
@@ -118,6 +120,19 @@
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.7; transform: scale(1.1); }
         }
+
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .btn-sair {
+            background: transparent; border: 1px solid rgba(255,255,255,0.2);
+            color: #e4e4e7; font-family: var(--font-body); font-size: 12px; font-weight: 600;
+            padding: 6px 14px; border-radius: 20px; cursor: pointer;
+            display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;
+        }
+        .btn-sair:hover { border-color: var(--orange-mid); color: #fff; background: rgba(234, 88, 12, 0.15); }
+        .tool-card--off { cursor: default; opacity: 0.6; }
+        .tool-card--off .btn-access { background: var(--gray-light) !important; color: var(--text-3) !important; }
+        .tool-card--off .card-title, .tool-card--off .card-desc { color: var(--text-3); }
+        .tool-card--off:hover { transform: none !important; box-shadow: var(--shadow-sm) !important; }
 
         main {
             flex: 1; padding: 48px; max-width: 1280px; margin: 0 auto;
@@ -334,6 +349,9 @@
         <span class="header-pill">
             <i class="ph-fill ph-circles-three"></i> Integração DP & Financeiro
         </span>
+        <button type="button" class="btn-sair" onclick="OWAuth.sair()" title="Sair do portal">
+            <i class="ph-bold ph-sign-out"></i> Sair
+        </button>
     </div>
 </header>
 
@@ -348,7 +366,7 @@
     <div class="tools-grid" id="grid">
 
         <!-- Card 1: Folha de Pagamento -->
-        <a href="./acesso-folha.html" class="tool-card" target="_self">
+        <a href="./gestaodefolha/" class="tool-card" target="_self">
             <div class="card-accent"></div>
             <div class="card-header">
                 <div class="card-icon"><i class="ph-fill ph-receipt"></i></div>
@@ -365,7 +383,7 @@
         </a>
 
         <!-- Card 2: Controle de Contas a Pagar -->
-        <a href="./acesso-contas.html" class="tool-card" target="_self">
+        <a href="./gestaodecontas/" class="tool-card" target="_self">
             <div class="card-accent"></div>
             <div class="card-header">
                 <div class="card-icon"><i class="ph-fill ph-invoice"></i></div>
@@ -382,7 +400,7 @@
         </a>
 
         <!-- Card 3: Onboarding de Colaboradores — CORRIGIDO (era "/gestaodeadmissoes/", agora "./gestaodeadmissoes/") -->
-        <a href="./acesso-admissoes.html" class="tool-card" target="_self">
+        <a href="./gestaodeadmissoes/" class="tool-card" target="_self">
             <div class="card-accent"></div>
             <div class="card-header">
                 <div class="card-icon"><i class="ph-fill ph-chart-bar"></i></div>
@@ -416,7 +434,7 @@
         </a>
 
         <!-- Card 5: Gestão de Benefícios (badge alinhado com texto "EM BREVE") -->
-        <a href="./acesso-cnab.html" class="tool-card" target="_self">
+        <a href="./cnab/" class="tool-card" target="_self">
             <div class="card-accent"></div>
             <div class="card-header">
                 <div class="card-icon"><i class="ph-fill ph-invoice"></i></div>
@@ -433,7 +451,7 @@
         </a>
 
         <!-- Card 6: Relatórios & Dashboards -->
-        <a href="recrutamento" class="tool-card" target="_self">
+        <a href="./recrutamento/" class="tool-card" target="_self">
             <div class="card-accent"></div>
             <div class="card-header">
                  <div class="card-icon"><i class="ph-fill ph-receipt"></i></div>
@@ -450,7 +468,7 @@
         </a>
 
         <!-- Card 7: Conciliador de Pagamentos -->
-        <a href="./acesso-conciliador.html" class="tool-card" target="_self">
+        <a href="./conciliadorbancario/" class="tool-card" target="_self">
             <div class="card-accent"></div>
             <div class="card-header">
                 <div class="card-icon"><i class="ph-fill ph-arrows-left-right"></i></div>
@@ -467,7 +485,7 @@
         </a>
 
         <!-- Card 8: Quadro de Pessoal -->
-        <a href="./acesso-quadro.html" class="tool-card" target="_self">
+        <a href="./quadrodepessoal/" class="tool-card" target="_self">
             <div class="card-accent"></div>
             <div class="card-header">
                 <div class="card-icon"><i class="ph-fill ph-users-three"></i></div>
@@ -484,21 +502,22 @@
         </a>
 
         <!-- Card 9: Outros Apps -->
-        <a href="./acesso-outros.html" class="tool-card" target="_self">
+        <!-- A pasta ./outros/ ainda não existe: card desativado até a ferramenta ser criada -->
+        <div class="tool-card tool-card--off" aria-disabled="true">
             <div class="card-accent"></div>
             <div class="card-header">
                 <div class="card-icon"><i class="ph-fill ph-squares-four"></i></div>
                 <span class="card-category">GERAL</span>
             </div>
             <div class="card-content">
-                <h3 class="card-title">Outros Apps 🟢</h3>
+                <h3 class="card-title">Outros Apps</h3>
                 <p class="card-desc">Central de acesso a ferramentas complementares e aplicações diversas do ecossistema ONE WAY.</p>
             </div>
             <div class="card-footer">
-                <span class="status-badge active"><i class="ph-fill ph-check-circle"></i> Ativo</span>
-                <span class="btn-access">Acessar <i class="ph-bold ph-arrow-right"></i></span>
+                <span class="status-badge dev"><i class="ph-fill ph-clock"></i> Em breve</span>
+                <span class="btn-access">Indisponível</span>
             </div>
-        </a>
+        </div>
 
     </div>
 </main>

@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<meta name="robots" content="noindex, nofollow">
+<script src="../guard.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Central de Guias & Pagamentos | ONE WAY</title>
@@ -680,7 +682,7 @@ let selectedIds = new Set();
 //  Usa sessionStorage: sobrevive ao refresh (F5),
 //  mas é zerado ao fechar a aba/navegador.
 // ══════════════════════════════════════════════════
-const NF_PASSWORD    = 'adm@2907one';
+// A senha das NFs fica só como hash, no guard.js (HASHES.nf).
 const NF_SESSION_KEY = 'ow_nf_unlocked';
 let nfUnlocked = false;   // espelho em memória
 let nfPending  = null;    // ação pendente após desbloquear
@@ -701,9 +703,11 @@ function closeNfModal(){
 }
 function handleNfOvClick(ev){ if(ev.target===document.getElementById('nfOv')) closeNfModal(); }
 
-function submitNfPass(){
+async function submitNfPass(){
   const v=document.getElementById('nfPass').value;
-  if(v===NF_PASSWORD){
+  let ok=false;
+  try{ ok = await OWAuth.verificar('nf', v); }catch(e){ ok=false; }
+  if(ok){
     nfUnlocked=true;
     try{ sessionStorage.setItem(NF_SESSION_KEY,'1'); }catch(e){}
     document.getElementById('nfOv').classList.remove('open');

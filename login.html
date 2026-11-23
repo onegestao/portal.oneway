@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Acesso | HUB ONE WAY</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><text y='203' font-size='224'>🏢</text></svg>">
+
+    <script src="./guard.js" data-pagina="login"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --black: #111111;
+            --black-mid: #27272a;
+            --orange: #ea580c;
+            --orange-mid: #f97316;
+            --orange-light: #ffedd5;
+            --orange-glow: rgba(255, 110, 0, 0.15);
+            --bg: #f9fafb;
+            --surface: #ffffff;
+            --text-1: #18181b;
+            --text-2: #52525b;
+            --text-3: #a1a1aa;
+            --border: #e4e4e7;
+            --red: #dc2626;
+            --font-display: 'Syne', sans-serif;
+            --font-body: 'DM Sans', sans-serif;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text-1);
+            font-family: var(--font-body);
+            display: flex; flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .topbar {
+            height: 6px;
+            background: linear-gradient(90deg, var(--orange), var(--orange-mid));
+        }
+
+        .wrap {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            padding: 32px 20px;
+            background:
+                radial-gradient(circle at 15% 20%, var(--orange-glow), transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(17,17,17,0.05), transparent 45%);
+        }
+
+        .card {
+            width: 100%; max-width: 420px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(234, 88, 12, 0.10), 0 4px 14px rgba(0,0,0,0.06);
+            animation: subir .5s ease both;
+        }
+        @keyframes subir { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+        .card-top {
+            background: linear-gradient(135deg, var(--black) 0%, #1a1a2e 50%, var(--black-mid) 100%);
+            border-bottom: 3px solid var(--orange);
+            padding: 26px 30px;
+            display: flex; align-items: center; gap: 14px;
+        }
+        .brand-icon {
+            width: 44px; height: 44px; border-radius: 11px;
+            background: linear-gradient(135deg, var(--surface), var(--orange-light));
+            color: var(--orange); font-size: 26px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 10px rgba(234, 88, 12, 0.25);
+        }
+        .brand-name {
+            font-family: var(--font-display); font-weight: 800; font-size: 19px;
+            color: #fff; letter-spacing: .5px; text-transform: uppercase;
+        }
+        .brand-name span { color: var(--text-3); font-weight: 700; }
+        .brand-sub { color: #d4d4d8; font-size: 12px; margin-top: 2px; }
+
+        .card-body { padding: 30px; }
+        h1 {
+            font-family: var(--font-display); font-size: 22px; color: var(--black);
+            margin-bottom: 6px;
+        }
+        .desc { font-size: 14px; color: var(--text-2); line-height: 1.55; margin-bottom: 24px; }
+
+        label { display: block; font-size: 13px; font-weight: 600; color: var(--text-1); margin-bottom: 8px; }
+        .campo { position: relative; margin-bottom: 14px; }
+        .campo i.ico {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            color: var(--text-3); font-size: 18px; pointer-events: none;
+        }
+        input[type=password], input[type=text].senha {
+            width: 100%; padding: 14px 46px 14px 42px;
+            border: 1.5px solid var(--border); border-radius: 10px;
+            font-family: var(--font-body); font-size: 15px; color: var(--text-1);
+            background: #fff; outline: none; transition: border-color .2s, box-shadow .2s;
+        }
+        input:focus { border-color: var(--orange); box-shadow: 0 0 0 4px var(--orange-glow); }
+        .olho {
+            position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; cursor: pointer;
+            color: var(--text-3); font-size: 18px; padding: 6px; border-radius: 6px;
+        }
+        .olho:hover { color: var(--orange); }
+
+        .erro {
+            display: none; align-items: center; gap: 6px;
+            color: var(--red); font-size: 13px; margin-bottom: 12px;
+        }
+        .erro.show { display: flex; }
+
+        button.entrar {
+            width: 100%; padding: 14px; border: none; border-radius: 10px;
+            background: linear-gradient(135deg, var(--orange), var(--orange-mid));
+            color: #fff; font-family: var(--font-body); font-weight: 700; font-size: 15px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+            box-shadow: 0 4px 16px rgba(234, 88, 12, 0.3);
+            transition: transform .15s, box-shadow .15s, opacity .15s;
+        }
+        button.entrar:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(234, 88, 12, 0.35); }
+        button.entrar:disabled { opacity: .7; cursor: wait; transform: none; }
+
+        .nota {
+            margin-top: 18px; font-size: 12px; color: var(--text-3);
+            display: flex; align-items: center; gap: 6px; justify-content: center; text-align: center;
+        }
+
+        footer {
+            text-align: center; font-size: 12px; color: var(--text-3); padding: 18px;
+        }
+
+        .oculto { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+    </style>
+</head>
+<body>
+
+<div class="topbar"></div>
+
+<div class="wrap">
+    <div class="card">
+        <div class="card-top">
+            <div class="brand-icon"><i class="ph-bold ph-buildings"></i></div>
+            <div>
+                <div class="brand-name">HUB <span>ONE WAY</span></div>
+                <div class="brand-sub">Gestão Integrada</div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <h1>Acesso restrito</h1>
+            <p class="desc">Digite a senha de acesso para entrar nas ferramentas de Departamento Pessoal, RH e Financeiro.</p>
+
+            <form id="form" method="post" action="#" autocomplete="on">
+                <!-- Campo de usuário fixo: necessário para o navegador oferecer "salvar senha". -->
+                <input class="oculto" type="text" name="username" id="usuario" autocomplete="username" value="HUB ONE WAY" tabindex="-1" aria-hidden="true">
+
+                <label for="senha">Senha de acesso</label>
+                <div class="campo">
+                    <i class="ph-bold ph-lock-key ico"></i>
+                    <input type="password" name="password" id="senha" autocomplete="current-password" placeholder="Digite a senha" required autofocus>
+                    <button type="button" class="olho" id="olho" aria-label="Mostrar senha"><i class="ph-bold ph-eye" id="olhoIco"></i></button>
+                </div>
+
+                <div class="erro" id="erro"><i class="ph-fill ph-warning-circle"></i> <span id="erroTxt">Senha incorreta. Tente novamente.</span></div>
+
+                <button type="submit" class="entrar" id="btn"><span id="btnTxt">Entrar</span> <i class="ph-bold ph-arrow-right"></i></button>
+            </form>
+
+            <p class="nota"><i class="ph-fill ph-clock"></i> O acesso fica liberado por 24 horas neste navegador.</p>
+        </div>
+    </div>
+</div>
+
+<footer>&copy; ONE WAY - Terceirização de Mão de Obra e Apoio Administrativo.</footer>
+
+<script>
+(function () {
+    var params = new URLSearchParams(location.search);
+    var destino = OWAuth.destinoSeguro(params.get('volta'));
+
+    // Já está logado? Vai direto.
+    if (OWAuth.logado()) { location.replace(destino); return; }
+
+    var form = document.getElementById('form');
+    var senha = document.getElementById('senha');
+    var erro = document.getElementById('erro');
+    var erroTxt = document.getElementById('erroTxt');
+    var btn = document.getElementById('btn');
+    var btnTxt = document.getElementById('btnTxt');
+
+    document.getElementById('olho').addEventListener('click', function () {
+        var mostrar = senha.type === 'password';
+        senha.type = mostrar ? 'text' : 'password';
+        senha.classList.toggle('senha', mostrar);
+        document.getElementById('olhoIco').className = mostrar ? 'ph-bold ph-eye-slash' : 'ph-bold ph-eye';
+    });
+
+    form.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        erro.classList.remove('show');
+        if (!senha.value) return;
+        btn.disabled = true; btnTxt.textContent = 'Verificando...';
+
+        OWAuth.entrar(senha.value).then(function (ok) {
+            if (ok) {
+                btnTxt.textContent = 'Entrando...';
+                senha.type = 'password';
+                // Pequena pausa para o navegador registrar o login e oferecer salvar a senha.
+                setTimeout(function () { location.replace(destino); }, 250);
+            } else {
+                erroTxt.textContent = 'Senha incorreta. Tente novamente.';
+                erro.classList.add('show');
+                senha.value = ''; senha.focus();
+                btn.disabled = false; btnTxt.textContent = 'Entrar';
+            }
+        }).catch(function (e) {
+            erroTxt.textContent = e.message || 'Não foi possível verificar a senha.';
+            erro.classList.add('show');
+            btn.disabled = false; btnTxt.textContent = 'Entrar';
+        });
+    });
+})();
+</script>
+</body>
+</html>

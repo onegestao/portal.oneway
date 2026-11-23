@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<meta name="robots" content="noindex, nofollow">
+<script src="../guard.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Recrutamento · Parecer de Candidatos</title>
@@ -1089,10 +1091,12 @@ const app = {
     setTimeout(()=>p.focus(),60);
   },
   closeDanger(){ document.getElementById('dangerModal').classList.remove('show'); this._delCand=null; },
-  confirmDanger(){
+  async confirmDanger(){
     const pass=document.getElementById('dangerPass').value;
     const err=document.getElementById('dangerErr');
-    if(pass!=='adm@2907'){ err.textContent='Senha incorreta.'; err.classList.add('show'); document.getElementById('dangerPass').focus(); return; }
+    let ok=false;
+    try{ ok = await OWAuth.verificar('exclusao', pass); }catch(e){ ok=false; }
+    if(!ok){ err.textContent='Senha incorreta.'; err.classList.add('show'); document.getElementById('dangerPass').focus(); return; }
     const id=this._delCand; this.closeDanger();
     if(id!=null) this.doDeleteCandidate(id);
   },
